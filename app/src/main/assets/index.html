@@ -21,7 +21,7 @@ button{font:inherit;color:var(--fg)}
 .tile{height:68px;padding:3px;border:2px solid var(--ln);border-radius:8px;background:var(--pan);display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10px;line-height:1.2;overflow:hidden}
 .tile b{font-size:11px}.tile.u{border-color:var(--k);border-width:3px}.tile.p{background:#3b8a4a26}.tile.e{background:#b3402a26}
 .tile.mv{border:2px dashed #e0b030;background:#e0b03022}
-.card{position:relative;display:flex;flex-direction:column;gap:1px;width:100%;height:122px;padding:4px 3px 3px;border:2px solid var(--k);border-top-width:6px;border-radius:8px;background:var(--pan);text-align:center;overflow:hidden}
+.card{position:relative;display:flex;flex-direction:column;gap:1px;width:100%;height:132px;padding:4px 3px 3px;border:2px solid var(--k);border-top-width:6px;border-radius:8px;background:var(--pan);text-align:center;overflow:hidden}
 .card b{font-size:10.5px;line-height:1.1;margin:1px 8px 0 10px}
 .card em{font-size:8.5px;line-height:1.15;flex:1;opacity:.85}
 .card small{font-size:8.5px;opacity:.8;line-height:1.2}
@@ -43,29 +43,53 @@ small{opacity:.8}h3{margin:6px 0 0}
 </style></head>
 <body><div id="app"></div>
 <script>
+const SET={name:'First Adventures',size:90};
+const SAVE_KEY='delvers2';
 const KW={heal:'Heals hero 1/turn',regen:'Regenerates 2',keen:'Keen aim'};
-const CL={F:['Fighter','#b3402a'],W:['Wizard','#3a62b8'],C:['Cleric','#b8921f'],T:['Thief','#7a4aa8'],R:['Ranger','#3b8a4a'],B:['Beast','#7a6648'],I:['Item','#2f8f8f']};
+const CL={F:['Fighter','#b3402a'],W:['Wizard','#3a62b8'],C:['Cleric','#b8921f'],T:['Thief','#7a4aa8'],R:['Ranger','#3b8a4a'],B:['Beast','#7a6648'],U:['Undead','#5a5a7a'],G:['Giant','#8a5a2b'],D:['Dragon','#b02a4a'],E:['Elemental','#2a8aa0'],K:['Construct','#6b6b6b'],P:['Weapon','#9a4a2a'],A:['Armour','#4a6a9a'],I:['Magic Item','#2f8f8f']};
 const RN=['Common','Uncommon','Rare','Legendary'],RC=['#8a8a8a','#3b8a4a','#3a62b8','#c98a1a'];
-// name,class,cost,atk,hp,THAC0,AC,initiative,save,rarity,alignment,keyword
-const CR=[['Squire','F',1,1,2,20,8,1,16,0,'LG'],['Town Guard','F',2,2,3,19,6,1,15,0,'LN'],['Orc Raider','F',2,3,1,18,6,2,16,0,'CE'],['Dwarf Fighter','F',4,3,5,16,3,1,10,1,'LG'],['Paladin','F',5,4,5,15,2,1,11,2,'LG','heal'],
-['Apprentice','W',1,1,1,20,9,1,13,0,'NG'],['Skeleton','W',3,2,4,18,7,1,14,0,'NE'],['Illusionist','W',3,2,3,19,8,2,11,1,'N'],['Lich','W',7,5,6,13,0,1,6,3,'LE','regen'],
-['Acolyte','C',2,1,3,19,7,1,12,0,'LG','heal'],['Priest','C',4,2,5,18,5,1,10,1,'NG','heal'],
-['Cutpurse','T',1,1,1,20,7,3,14,0,'CN'],['Goblin Skulker','T',1,1,2,19,6,2,15,0,'NE'],['Assassin','T',4,4,2,15,5,3,12,2,'LE'],
-['Woodsman','R',2,2,2,18,7,2,14,0,'NG'],['Elven Ranger','R',3,2,3,14,5,2,13,1,'CG','keen'],
-['Dire Wolf','B',3,3,3,17,6,3,15,0,'N'],['Giant Spider','B',4,3,3,16,4,2,12,1,'CE'],['Ogre','B',5,5,5,17,5,1,14,1,'CE'],['Owlbear','B',5,4,6,16,5,2,13,1,'N'],['Griffon','B',5,4,4,15,4,3,11,2,'N'],['Troll','B',6,5,6,15,4,1,12,2,'CE','regen'],['Red Dragon','B',8,7,8,11,-1,3,6,3,'CE']
-].map(a=>({t:'c',name:a[0],cls:a[1],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||''}));
-const SP=[['Magic Missile','W',1,0,'any','dmg',3,'3 dmg, no attack roll. Save halves.'],['Lightning Bolt','W',3,1,'any','dmg',5,'5 dmg. Save halves.'],['Fireball','W',4,2,'none','aoe',3,'3 dmg to all enemy creatures. Save halves.'],['Sleep','W',2,1,'enemyC','sleep',0,'Foe skips its next turn. Save negates.'],['Cure Light Wounds','C',1,0,'ally','heal',4,'Heal 4.'],['Bless','C',2,0,'allyC','bless',0,'+1 attack, +1 health.'],['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.']
-].map(a=>({t:'s',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:a[4],kind:a[5],n:a[6],txt:a[7]}));
-const IT=[['Dagger',1,0,{atk:1},'+1 attack'],['Shield',1,0,{ac:-2},'AC -2'],['Long Sword',2,1,{atk:2,thac0:-1},'+2 attack, +1 to hit'],['Chain Mail',2,1,{ac:-3},'AC -3'],['Boots of Speed',2,1,{init:1},'+1 initiative'],['Ring of Protection',3,2,{ac:-1,save:-2},'AC -1, Save -2'],['Vorpal Blade',4,3,{atk:4,thac0:-3},'+4 attack, +3 to hit']
-].map(a=>({t:'i',name:a[0],cls:'I',cost:a[1],rar:a[2],tg:'allyC',kind:'gear',d:a[3],txt:a[4]}));
+// name,class,cost,attack,health,THAC0,AC,initiative (movement),save,rarity,alignment,keyword,reach (default 1)
+const CR=[
+['Squire','F',1,1,2,20,8,1,16,0,'LG'],['Town Guard','F',2,2,3,19,6,1,15,0,'LN'],['Orc Raider','F',2,3,1,18,6,2,16,0,'CE'],['Pikeman','F',2,2,2,19,7,1,15,0,'LN','',2],['Dwarf Fighter','F',4,3,5,16,3,1,10,1,'LG'],['Paladin','F',5,4,5,15,2,1,11,2,'LG','heal'],
+['Apprentice','W',1,1,1,20,9,1,13,0,'NG'],['Illusionist','W',3,2,3,19,8,2,11,1,'N'],['Evoker','W',4,3,2,18,8,1,10,1,'N','',2],['Archmage','W',6,4,5,13,4,1,7,2,'NG','',2],
+['Acolyte','C',2,1,3,19,7,1,12,0,'LG','heal'],['Priest','C',4,2,5,18,5,1,10,1,'NG','heal'],['War Cleric','C',3,3,3,17,4,1,11,1,'LN'],['High Priestess','C',6,3,6,16,4,1,8,2,'LG','heal'],
+['Cutpurse','T',1,1,1,20,7,3,14,0,'CN'],['Goblin Skulker','T',1,1,2,19,6,2,15,0,'NE'],['Cat Burglar','T',2,2,1,18,6,3,13,1,'CN'],['Assassin','T',4,4,2,15,5,3,12,2,'LE'],
+['Woodsman','R',2,2,2,18,7,2,14,0,'NG'],['Hunter','R',2,2,2,19,7,2,14,0,'N','',2],['Elven Ranger','R',3,2,3,14,5,2,13,1,'CG','keen',2],['Beastmaster','R',5,3,4,15,5,2,11,2,'CG','',2],
+['Giant Rat','B',1,1,1,20,7,2,15,0,'N'],['Dire Wolf','B',3,3,3,17,6,3,15,0,'N'],['Giant Spider','B',4,3,3,16,4,2,12,1,'CE'],['Owlbear','B',5,4,6,16,5,2,13,1,'N'],['Griffon','B',5,4,4,15,4,3,11,2,'N'],
+['Skeleton','U',3,2,4,18,7,1,14,0,'NE'],['Zombie','U',2,2,3,19,8,1,16,0,'NE'],['Ghoul','U',4,3,4,17,6,2,13,1,'CE'],['Wight','U',5,4,5,15,5,2,10,2,'LE'],['Lich','U',7,5,6,13,0,1,6,3,'LE','regen',2],
+['Ogre','G',5,5,5,17,5,1,14,1,'CE'],['Hill Giant','G',6,5,6,16,4,1,12,2,'CE','',2],['Troll','G',6,5,6,15,4,1,12,2,'CE','regen'],['Cyclops','G',7,6,7,14,3,1,10,2,'CN','',2],
+['Pseudodragon','D',2,1,2,19,5,3,12,1,'NG'],['Wyvern','D',4,3,4,16,4,3,11,2,'N','',2],['Red Dragon','D',8,7,8,11,-1,3,6,3,'CE','',2],
+['Fire Elemental','E',4,4,3,16,5,2,12,1,'N'],['Air Elemental','E',4,3,3,16,3,3,12,1,'N','',2],['Earth Elemental','E',5,4,6,16,2,1,11,2,'N'],
+['Gargoyle','K',3,2,3,17,4,2,13,1,'CE'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N']
+].map(a=>({t:'c',name:a[0],cls:a[1],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
+// name,class,cost,rarity,target,kind,amount,text
+const SP=[
+['Magic Missile','W',1,0,'any','dmg',3,'3 dmg, no attack roll. Save halves.'],['Burning Hands','W',2,0,'any','dmg',4,'4 dmg. Save halves.'],['Lightning Bolt','W',3,1,'any','dmg',5,'5 dmg. Save halves.'],
+['Fireball','W',4,2,'none','aoe',3,'3 dmg to all enemy creatures. Save halves.'],['Cone of Cold','W',5,2,'none','aoe',4,'4 dmg to all enemy creatures. Save halves.'],['Meteor Swarm','W',7,3,'none','aoe',6,'6 dmg to all enemy creatures. Save halves.'],
+['Sleep','W',2,1,'enemyC','sleep',1,'Foe skips its next turn. Save negates.'],['Hold Person','W',3,2,'enemyC','sleep',2,'Foe skips its next 2 turns. Save negates.'],
+['Cure Light Wounds','C',1,0,'ally','heal',4,'Heal 4.'],['Cure Serious Wounds','C',3,1,'ally','heal',8,'Heal 8.'],['Bless','C',2,0,'allyC','bless',1,'+1 attack, +1 health.'],['Smite','C',3,1,'enemyC','dmg',4,'4 dmg to a creature. Save halves.'],
+['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.'],['Potion of Heroism','I',2,1,'allyC','bless',2,'+2 attack, +2 health.'],['Potion of Greater Healing','I',3,1,'ally','heal',10,'Heal 10.'],['Wand of Lightning','I',4,2,'any','dmg',6,'6 dmg. Save halves.']
+].map(a=>({t:'s',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:a[4],kind:a[5],n:a[6],txt:a[7],sub:a[1]=='I'?'Magic Item':'Spell'}));
+const GT=d=>[d.atk&&`+${d.atk} attack`,d.thac0&&(d.thac0<0?`+${-d.thac0} to hit`:`${-d.thac0} to hit`),d.ac&&`AC ${d.ac}`,d.hp&&`+${d.hp} health`,d.init&&`+${d.init} initiative`,d.rch&&`+${d.rch} reach`,d.save&&`Save ${d.save}`,d.kw&&KW[d.kw]].filter(Boolean).join(', ');
+// name,class (P weapon, A armour, I magic),cost,rarity,effects. A creature carries one weapon and one armour.
+const IT=[
+['Dagger','P',1,0,{atk:1}],['Club','P',1,0,{atk:2,thac0:1}],['Spear','P',2,0,{atk:1,rch:1}],['Rapier','P',2,1,{atk:1,thac0:-1,init:1}],['Long Sword','P',2,1,{atk:2,thac0:-1}],['Halberd','P',3,1,{atk:2,rch:1}],['Longbow','P',3,1,{atk:1,thac0:-2,rch:1}],['War Hammer','P',3,2,{atk:3}],['Flame Tongue','P',4,2,{atk:3,thac0:-2}],['Vorpal Blade','P',5,3,{atk:4,thac0:-3}],
+['Leather Armor','A',1,0,{ac:-1,hp:1}],['Shield','A',1,0,{ac:-2}],['Chain Mail','A',2,1,{ac:-3}],['Tower Shield','A',2,1,{ac:-2,hp:2}],['Scale Mail','A',3,1,{ac:-4}],['Mithril Shirt','A',3,2,{ac:-3,init:1}],['Plate Armor','A',4,2,{ac:-5,hp:2}],['Dragonscale Mail','A',5,3,{ac:-6,hp:3,save:-2}],
+['Boots of Speed','I',2,1,{init:1}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
+].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
-// name,hp,AI level,max rarity,reward,bonus mana
-const OP=[['Grik the Cutpurse',14,0,0,40,0],['Mara, Bandit Captain',18,1,1,60,0],['Vorn, Lich’s Apprentice',22,1,2,90,0],['Dugash the Orc Warlord',26,2,2,130,1],['Sylra, Drow Matron',30,2,3,180,1],['Tharaxis the Ancient',36,3,3,300,2]];
-const ST={'Squire':3,'Town Guard':3,'Orc Raider':2,'Apprentice':2,'Skeleton':2,'Acolyte':2,'Cutpurse':2,'Goblin Skulker':2,'Woodsman':2,'Dire Wolf':2,'Dwarf Fighter':1,'Ogre':1,'Magic Missile':2,'Cure Light Wounds':2,'Bless':1,'Dagger':2,'Shield':2};
-let S=null,G=null,V={v:'duel',rev:[],msg:''};
+// name,hero health,AI level,max rarity,reward,bonus mana,favoured creature types
+const OP=[
+['Grik the Cutpurse',14,0,0,40,0,['T','R']],['Mara, Bandit Captain',18,1,1,60,0,['T','F','R']],['Gnarlfang, Goblin Chieftain',20,1,1,75,0,['T','F','B']],
+['Vorn, Lich’s Apprentice',22,1,2,90,0,['W','U']],['Brother Malachar',24,1,2,110,0,['C','U']],['Dugash the Orc Warlord',26,2,2,130,1,['F','G','B']],
+['Hrothgar Stonefist',28,2,2,150,1,['G','B']],['Sylra, Drow Matron',30,2,3,180,1,['T','W','B']],['Zerrik the Elementalist',32,2,3,210,1,['E','W','K']],
+['Lord Vexmoor, Death Knight',34,3,3,250,2,['U','F']],['Ignarra the Wyrm Queen',36,3,3,280,2,['D','F','W']],['Tharaxis the Ancient',40,3,3,350,2,['D','G','E']]
+];
+const ST={'Squire':3,'Town Guard':3,'Orc Raider':2,'Pikeman':2,'Apprentice':2,'Skeleton':2,'Acolyte':2,'Cutpurse':2,'Goblin Skulker':2,'Woodsman':2,'Hunter':2,'Dire Wolf':2,'Giant Rat':2,'Zombie':1,'Dwarf Fighter':1,'Ogre':1,'Magic Missile':2,'Cure Light Wounds':2,'Bless':1,'Burning Hands':1,'Dagger':2,'Spear':1,'Shield':2,'Leather Armor':1,'Potion of Healing':1};
+let S=null,G=null,V={v:'duel',rev:[],msg:'',saveMsg:''};
 function loadSave(){
  try{
-  const raw=localStorage.getItem('delvers1');
+  const raw=localStorage.getItem(SAVE_KEY);
   if(raw===null)return null;
   const data=JSON.parse(raw);
   if(!data||typeof data!='object'||Array.isArray(data))throw new Error('Invalid save data');
@@ -83,11 +107,14 @@ function loadSave(){
   };
  }catch(e){V.saveMsg='Saved progress could not be loaded. A new game was started.';return null}
 }
-const sv=keepLoadWarning=>{try{localStorage.setItem('delvers1',JSON.stringify(S));if(!keepLoadWarning)V.saveMsg='';return true}catch(e){V.saveMsg='Progress could not be saved. Check device storage and try again.';return false}};
+const sv=keepLoadWarning=>{try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));if(!keepLoadWarning)V.saveMsg='';return true}catch(e){V.saveMsg='Progress could not be saved. Check device storage and try again.';return false}};
 const own=n=>S.col[n]||0,sh=a=>a.sort(()=>Math.random()-.5),pick=a=>a[Math.floor(Math.random()*a.length)];
-function auto(){const d=[];[...ALL].sort((a,b)=>b.rar-a.rar||a.cost-b.cost).forEach(c=>{for(let i=0;i<Math.min(3,own(c.name));i++)if(d.length<30)d.push(c.name)});return d}
+// Auto deck: up to 18 creatures (cheaper ones first), then spells and items, up to 30 cards.
+function auto(){const d=[],add=(c,lim)=>{for(let i=0;i<Math.min(3,own(c.name))&&d.length<lim;i++)d.push(c.name)},
+ srt=[...ALL].sort((a,b)=>(a.cost>5)-(b.cost>5)||b.rar-a.rar||a.cost-b.cost);
+ srt.filter(c=>c.t=='c').forEach(c=>add(c,18));srt.filter(c=>c.t!='c').forEach(c=>add(c,30));srt.forEach(c=>add(c,30));return d}
 S=loadSave();
-if(!S){S={gold:150,col:{...ST},deck:[],prog:0,packs:{std:0,pre:0}};S.deck=auto();sv(true)}
+if(!S){S={gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,packs:{std:0,pre:0}};S.deck=auto();sv(true)}
 const d20=()=>1+Math.floor(Math.random()*20),sl=ms=>new Promise(r=>setTimeout(r,ms)),opp=s=>s=='p'?'e':'p';
 const row=i=>Math.floor(i/3),dist=(a,b)=>Math.abs(row(a)-row(b))+Math.abs(a%3-b%3);
 const mk=d=>d.t=='c'?{...d,mhp:d.hp,mv:0,ready:false,sleep:0}:{...d};
@@ -96,7 +123,7 @@ const log=m=>{G.log.unshift(m);G.log=G.log.slice(0,3)};
 function newGame(oi){const o=OP[oi],mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
  G={oi,opp:{n:o[0],lvl:o[2]},b:Array(9).fill(null),p:mkp(20),e:mkp(o[1]),turn:'p',busy:false,over:null,sel:null,msg:'',log:['Battle begins!']};
  G.p.deck=sh(S.deck.map(n=>mk(BN[n])));
- const pool=ALL.filter(c=>c.rar<=o[3]),cs=pool.filter(c=>c.t=='c');
+ const pool=ALL.filter(c=>c.rar<=o[3]),all=pool.filter(c=>c.t=='c'),fav=all.filter(c=>o[6].includes(c.cls)),cs=fav.length?fav:all;
  for(let i=0;i<30;i++)G.e.deck.push(mk(Math.random()<.6?pick(cs):pick(pool)));
  G.e.max=o[5];for(let i=0;i<3;i++){draw('p');draw('e')}draw('e');startTurn('p');render()}
 function draw(s){const X=G[s];if(!X.deck.length){X.hp-=2;log('Out of cards! 2 damage.');if(X.hp<=0)G.over=opp(s);return}const c=X.deck.pop();if(X.hand.length<7)X.hand.push(c)}
@@ -105,19 +132,21 @@ function dmg(s,c,n){if(c){c.hp-=n;if(c.hp<=0){G.b[G.b.indexOf(c)]=null;log(c.nam
 function heal(s,c,n){if(c)c.hp=Math.min(c.mhp,c.hp+n);else G[s].hp=Math.min(G[s].mx,G[s].hp+n)}
 function saves(c){if(!c)return 0;const r=d20(),k=r>=c.save;if(k)log(`${c.name} saves (${r})!`);return k}
 function roll(a,ac){const need=Math.min(20,Math.max(2,a.thac0-ac)),r=d20(),hit=r==20||(r>1&&r>=need);log(`${a.name} rolls ${r} (needs ${need}+): ${r==20?'CRIT!':hit?'hit':'miss'}`);return hit?(r==20?2:1):0}
-function attack(s,a,t){const o=opp(s),tc=t.c,m=roll(a,tc?tc.ac:10);if(m)dmg(o,tc,a.atk*m);a.ready=false;if(tc&&tc.hp>0&&a.hp>0&&!G.over){const m2=roll(tc,a.ac);if(m2)dmg(s,a,tc.atk*m2)}}
-function ok(tg,s,t){const en=t.side!=s;return tg=='any'?en:tg=='enemyC'?en&&!!t.c:tg=='ally'?!en:tg=='allyC'?!en&&!!t.c:false}
+// A creature may strike any foe within its reach. The foe only strikes back if the attacker is within the foe's own reach.
+function attack(s,a,t){const o=opp(s),tc=t.c,d=tc?dist(G.b.indexOf(a),G.b.indexOf(tc)):0,m=roll(a,tc?tc.ac:10);if(m)dmg(o,tc,a.atk*m);a.ready=false;
+ if(tc&&tc.hp>0&&a.hp>0&&!G.over){if(d<=tc.rch){const m2=roll(tc,a.ac);if(m2)dmg(s,a,tc.atk*m2)}else log(`${tc.name} cannot reach ${a.name}.`)}}
+function ok(tg,s,t,c){const en=t.side!=s;if(tg=='allyC'&&c&&c.slot&&t.c&&t.c['s'+c.slot])return false;return tg=='any'?en:tg=='enemyC'?en&&!!t.c:tg=='ally'?!en:tg=='allyC'?!en&&!!t.c:false}
 function cast(s,c,t){const o=opp(s);log((s=='p'?'You use ':'Foe uses ')+c.name+'.');
  if(c.kind=='dmg'){let n=c.n;if(saves(t.c))n>>=1;dmg(t.side,t.c,n)}
  else if(c.kind=='heal')heal(t.side,t.c,c.n);
  else if(c.kind=='aoe')units(o).forEach(x=>{let n=c.n;if(saves(x))n>>=1;dmg(o,x,n)});
- else if(c.kind=='sleep'){if(!saves(t.c)){t.c.sleep=1;t.c.ready=false;t.c.mv=0}}
- else if(c.kind=='bless'){t.c.atk++;t.c.hp++;t.c.mhp++}
- else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0}}
+ else if(c.kind=='sleep'){if(!saves(t.c)){t.c.sleep=c.n||1;t.c.ready=false;t.c.mv=0}}
+ else if(c.kind=='bless'){const b=c.n||1;t.c.atk+=b;t.c.hp+=b;t.c.mhp+=b}
+ else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0;u.hp+=d.hp||0;u.mhp+=d.hp||0;u.rch+=d.rch||0;if(d.kw&&!u.kw)u.kw=d.kw;if(c.slot)u['s'+c.slot]=1}}
 function play(s,c,t,pos){const X=G[s];X.hand=X.hand.filter(x=>x!==c);X.mp-=c.cost;if(c.t=='c'){c.o=s;c.mv=0;c.ready=false;G.b[pos]=c;log((s=='p'?'You summon ':'Foe summons ')+c.name+'.')}else cast(s,c,t)}
 function handle(a,i){
  if(G.over||G.busy||G.turn!='p')return;const P=G.p,sel=G.sel;G.msg='';
- const spell=t=>{if(sel&&sel.m=='spell'&&ok(sel.c.tg,'p',t)){play('p',sel.c,t);G.sel=null;return 1}};
+ const spell=t=>{if(sel&&sel.m=='spell'){if(ok(sel.c.tg,'p',t,sel.c)){play('p',sel.c,t);G.sel=null;return 1}if(t.c&&t.side=='p'&&sel.c.slot&&t.c['s'+sel.c.slot]){G.msg='That creature already carries a '+sel.c.sub.toLowerCase()+'.';return 1}}};
  if(a=='hand'){const c=P.hand[i];if(sel&&sel.c===c)G.sel=null;else if(c.cost>P.mp)G.msg='Not enough mana.';else if(c.t=='c')G.sel={m:'place',c};else if(c.tg=='none'){play('p',c);G.sel=null}else G.sel={m:'spell',c}}
  else if(a=='cell'){const u=G.b[i];
   if(sel&&sel.m=='place'){if(!u&&row(i)==2){play('p',sel.c,null,i);G.sel=null}else G.msg='Place on your back row (bottom).'}
@@ -125,24 +154,25 @@ function handle(a,i){
   else if(u&&u.o=='p'){if(u.mv>0||u.ready)G.sel=sel&&sel.c===u?null:{m:'unit',c:u};else G.msg='Already acted.'}
   else if(sel&&sel.m=='unit'){const a=sel.c,p=G.b.indexOf(a);
    if(!u){if(dist(p,i)<=a.mv){G.b[i]=a;G.b[p]=null;a.mv-=dist(p,i)}else G.msg='Too far: initiative '+a.mv+' left.'}
-   else if(a.ready&&dist(p,i)==1){attack('p',a,{side:'e',c:u});G.sel=null}else G.msg='Move adjacent to attack.'}}
- else if(a=='ehero'){if(!spell({side:'e',c:null})&&sel&&sel.m=='unit'){const u=sel.c;if(u.ready&&row(G.b.indexOf(u))==0){attack('p',u,{side:'e',c:null});G.sel=null}else G.msg='Reach the far row first.'}}
+   else if(a.ready&&dist(p,i)<=a.rch){attack('p',a,{side:'e',c:u});G.sel=null}else G.msg=a.ready?'Out of reach (reach '+a.rch+'). Move closer.':'Already attacked.'}}
+ else if(a=='ehero'){if(!spell({side:'e',c:null})&&sel&&sel.m=='unit'){const u=sel.c;if(u.ready&&row(G.b.indexOf(u))<u.rch){attack('p',u,{side:'e',c:null});G.sel=null}else G.msg=u.ready?'Get within reach of their side first.':'Already attacked.'}}
  else if(a=='phero')spell({side:'p',c:null});
  render()}
 function aiT(c){const P=units('p'),E=units('e'),big=l=>l.reduce((m,x)=>!m||x.atk>m.atk?x:m,null);
  if(c.t=='c'){const f=[0,1,2].filter(q=>!G.b[q]);return f.length?pick(f):null}
  if(c.kind=='aoe')return P.length>=2;
- if(c.kind=='dmg'){const k=P.find(x=>x.hp<=c.n);return k?{side:'p',c:k}:P.length?{side:'p',c:big(P)}:{side:'p',c:null}}
+ if(c.kind=='dmg'){const k=P.find(x=>x.hp<=c.n);return k?{side:'p',c:k}:P.length?{side:'p',c:big(P)}:c.tg=='any'?{side:'p',c:null}:null}
  if(c.kind=='sleep')return P.length?{side:'p',c:big(P)}:null;
  if(c.kind=='heal'){if(G.e.hp<=G.e.mx-5)return{side:'e',c:null};const h=E.find(x=>x.hp<x.mhp-2);return h?{side:'e',c:h}:null}
+ if(c.kind=='gear'){const f=E.filter(x=>!c.slot||!x['s'+c.slot]);return f.length?{side:'e',c:big(f)}:null}
  return E.length?{side:'e',c:big(E)}:null}
 async function aiUnit(u,L){for(let k=0;k<2&&!G.over;k++){if(u.hp<=0)return;const p=G.b.indexOf(u);
-  if(u.ready&&row(p)==2){attack('e',u,{side:'p',c:null});render();await sl(750);return}
-  const adj=units('p').filter(x=>dist(p,G.b.indexOf(x))==1);
-  if(u.ready&&adj.length){const t=L?adj.sort((a,b)=>a.hp-b.hp)[0]:pick(adj);attack('e',u,{side:'p',c:t});render();await sl(750);return}
+  if(u.ready&&2-row(p)<u.rch){attack('e',u,{side:'p',c:null});render();await sl(750);return}
+  const inr=units('p').filter(x=>dist(p,G.b.indexOf(x))<=u.rch);
+  if(u.ready&&inr.length){const t=L?inr.sort((a,b)=>a.hp-b.hp)[0]:pick(inr);attack('e',u,{side:'p',c:t});render();await sl(750);return}
   if(u.mv<=0)return;
   const cells=[...Array(9).keys()].filter(q=>!G.b[q]&&dist(p,q)<=u.mv);if(!cells.length)return;
-  const en=units('p'),sc=q=>(en.length?Math.min(...en.map(x=>dist(q,G.b.indexOf(x)))):0)+(L>=2||!en.length?(2-row(q))*.6:0);
+  const en=units('p'),sc=q=>(en.length?Math.max(1,Math.min(...en.map(x=>dist(q,G.b.indexOf(x))))-u.rch+1):0)+(L>=2||!en.length?Math.max(0,2-row(q)-u.rch+1)*.6:0);
   const best=L?cells.reduce((m,q)=>sc(q)<sc(m)?q:m):pick(cells);
   if(L&&sc(best)>=sc(p))return;
   G.b[best]=u;G.b[p]=null;u.mv-=dist(p,best);render();await sl(550)}}
@@ -153,24 +183,24 @@ async function endTurn(){if(G.over||G.busy||G.turn!='p')return;G.sel=null;G.turn
  for(const u of units('e')){if(G.over)break;await aiUnit(u,L)}
  if(!G.over){startTurn('p');G.turn='p'}G.busy=false;render()}
 function finish(){G.fin=1;if(G.over=='p'){const first=G.oi==S.prog,g=Math.floor(OP[G.oi][4]*(first?1.5:1));S.gold+=g;if(first){S.prog++;S.packs.std++}G.res=`Victory! +🪙${g}`+(first?' and a free Standard Pack!':'')}else{S.gold+=15;G.res='Defeated. +🪙15 for the effort.'}sv()}
-function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" ${attr||''}><span class="cost">${c.cost}</span><b>${c.name}</b><em>${k?`${CL[c.cls][0]} · ${c.al}${KW[c.kw]?'<br>'+KW[c.kw]:''}`:c.txt}</em>${k?`<span class="st"><u>⚔${c.atk}</u><u>♥${c.hp}</u></span><small>AC ${c.ac} · THAC0 ${c.thac0}<br>Init ${c.init} · Save ${c.save}</small>`:`<small>${c.t=='i'?'Item':'Spell'}</small>`}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
+function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" ${attr||''}><span class="cost">${c.cost}</span><b>${c.name}</b><em>${k?`${CL[c.cls][0]} · ${c.al}${KW[c.kw]?'<br>'+KW[c.kw]:''}${c.rch>1?'<br>Reach '+c.rch:''}`:c.txt}</em>${k?`<span class="st"><u>⚔${c.atk}</u><u>♥${c.hp}</u></span><small>AC ${c.ac} · Save ${c.save}<br>THAC0 ${c.thac0}<br>Initiative ${c.init}</small>`:`<small>${c.sub}</small>`}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
 function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:null,un=sel&&sel.m=='unit'?sel.c:null,up=un?G.b.indexOf(un):-1,pl=sel&&sel.m=='place';
- const hl=(side,c)=>sp&&ok(sp.tg,'p',{side,c})?'tgt':'';
- const eh=`<button class="hero ${hl('e',null)||(un&&un.ready&&row(up)==0?'tgt':'')}" data-a="ehero">${G.opp.n}<span>❤ ${E.hp} · ✦ ${E.mp}/${E.max} · hand ${E.hand.length} · deck ${E.deck.length}</span></button>`;
+ const hl=(side,c)=>sp&&ok(sp.tg,'p',{side,c},sp)?'tgt':'';
+ const eh=`<button class="hero ${hl('e',null)||(un&&un.ready&&row(up)<un.rch?'tgt':'')}" data-a="ehero">${G.opp.n}<span>❤ ${E.hp} · ✦ ${E.mp}/${E.max} · hand ${E.hand.length} · deck ${E.deck.length}</span></button>`;
  const bd=G.b.map((u,i)=>{if(!u){const m=(un&&dist(up,i)<=un.mv)||(pl&&row(i)==2);return `<button class="tile ${m?'mv':''}" data-a="cell" data-i="${i}">${row(i)==0?'· foe ·':row(i)==2?'· you ·':''}</button>`}
-  const cl=(u.o=='p'&&G.turn=='p'&&(u.mv>0||u.ready)?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep?'dim ':'')+(hl(u.o,u)||(un&&u.o=='e'&&un.ready&&dist(up,i)==1?'tgt':''));
-  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}"><b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.sleep?' 💤':''}</span><span>AC${u.ac} T${u.thac0} I${u.mv}/${u.init}</span></button>`}).join('');
- const pr=G.over?'':G.turn=='e'?'Foe’s turn…':G.msg||(pl?'Tap an empty tile on your back row.':sp?`Choose a target for ${sp.name}.`:un?'Tap a yellow tile to move, red to attack.':'Play a card, or tap a glowing creature.');
+  const cl=(u.o=='p'&&G.turn=='p'&&(u.mv>0||u.ready)?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep?'dim ':'')+(hl(u.o,u)||(un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch?'tgt':''));
+  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}"><b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.rch>1?' R'+u.rch:''}${u.sleep?' 💤':''}</span><span>AC${u.ac} T${u.thac0} Init ${u.mv}/${u.init}</span></button>`}).join('');
+ const pr=G.over?'':G.turn=='e'?'Foe’s turn…':G.msg||(pl?'Tap an empty tile on your back row.':sp?`Choose a target for ${sp.name}.`:un?'Tap a yellow tile to move (initiative), or a red target within reach to attack.':'Play a card, or tap a glowing creature.');
  const hd=P.hand.map((c,i)=>card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(c.cost>P.mp?'dim':''))).join('');
  return `${eh}<div class="board">${bd}</div><div class="mid"><div class="pr">${pr}</div>${G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('')}${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}</div><div class="bar"><button class="hero ${hl('p',null)}" data-a="phero">You<span>❤ ${P.hp} · ✦ ${P.mp}/${P.max} · deck ${P.deck.length}</span></button><button class="btn pri" data-a="end">End turn</button><button class="btn" data-a="quit">Quit</button></div><div class="hand">${hd}</div>`
  +(G.over?`<div id="ov"><div>${G.res}</div><button class="btn pri" data-a="quit">Continue</button></div>`:'')}
 function menuHTML(){const T=[['duel','Duel'],['deck','Deck'],['cards','Cards'],['store','Store'],['packs','Packs']];
- let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
- if(V.v=='duel'){h+=`<small>${V.msg||'Beat each foe in order. Reach their back row to strike the hero. Rewards are bigger on a first win.'}</small>`+OP.map((o,i)=>`<div class="op ${i>S.prog?'dim':''}"><div><b>${o[0]}</b><br><small>${'★'.repeat(i+1)} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · Cleared':''}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':'Fight'}</button></div>`).join('')}
+ let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div><small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
+ if(V.v=='duel'){h+=`<small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 3×3 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+OP.map((o,i)=>`<div class="op ${i>S.prog?'dim':''}"><div><b>${o[0]}</b><br><small>Foe ${i+1} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':'Fight'}</button></div>`).join('')}
  else if(V.v=='deck'){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length;
-  h+=`<div class="op"><b>Deck ${n}/30 <small>(20+ to play, max 3 copies)</small></b><span><button class="btn" data-a="auto">Auto</button> <button class="btn" data-a="clear">Clear</button></span></div>`+ALL.map((c,i)=>[c,i]).filter(x=>own(x[0].name)).sort((a,b)=>a[0].cost-b[0].cost).map(([c,i])=>`<div class="rw"><i class="pip" style="background:${RC[c.rar]}"></i><b>${c.name} <small>${c.cost}✦ ${c.t=='c'?CL[c.cls][0]:c.t=='i'?'Item':'Spell'}</small></b><small>own ${own(c.name)}</small><button class="btn" data-a="dm" data-i="${i}">−</button>${dc(c.name)}<button class="btn" data-a="dp" data-i="${i}">+</button></div>`).join('')}
- else if(V.v=='cards'){const o=ALL.filter(c=>own(c.name)).length;h+=`<small>Collection: ${o}/${ALL.length} cards found</small><div class="grid">${ALL.map(c=>own(c.name)?card(c,'','',own(c.name)):`<div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div>`).join('')}</div>`}
- else if(V.v=='store'){h+=[['std','Standard Pack','5 cards, at least 1 Uncommon',100],['pre','Premium Pack','5 cards, at least 1 Rare, better odds',250]].map(p=>`<div class="op"><div><b>${p[1]}</b><br><small>${p[2]}</small></div><button class="btn pri" data-a="buy" data-k="${p[0]}" ${S.gold<p[3]?'disabled':''}>🪙 ${p[3]}</button></div>`).join('')+`<small>You own ${S.packs.std} Standard and ${S.packs.pre} Premium unopened. Open them in the Packs tab.</small>`}
+  h+=`<div class="op"><b>Deck ${n}/30 <small>(20+ to play, max 3 copies)</small></b><span><button class="btn" data-a="auto">Auto</button> <button class="btn" data-a="clear">Clear</button></span></div>`+ALL.map((c,i)=>[c,i]).filter(x=>own(x[0].name)).sort((a,b)=>a[0].cost-b[0].cost).map(([c,i])=>`<div class="rw"><i class="pip" style="background:${RC[c.rar]}"></i><b>${c.name} <small>${c.cost}✦ ${c.t=='c'?CL[c.cls][0]:c.sub}</small></b><small>own ${own(c.name)}</small><button class="btn" data-a="dm" data-i="${i}">−</button>${dc(c.name)}<button class="btn" data-a="dp" data-i="${i}">+</button></div>`).join('')}
+ else if(V.v=='cards'){const o=ALL.filter(c=>own(c.name)).length;h+=`<small>${SET.name} collection: ${o}/${ALL.length} cards found</small><div class="grid">${ALL.map(c=>own(c.name)?card(c,'','',own(c.name)):`<div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div>`).join('')}</div>`}
+ else if(V.v=='store'){h+=[['std',`${SET.name} Standard Pack`,'5 cards, at least 1 Uncommon',100],['pre',`${SET.name} Premium Pack`,'5 cards, at least 1 Rare, better odds',250]].map(p=>`<div class="op"><div><b>${p[1]}</b><br><small>${p[2]}</small></div><button class="btn pri" data-a="buy" data-k="${p[0]}" ${S.gold<p[3]?'disabled':''}>🪙 ${p[3]}</button></div>`).join('')+`<small>You own ${S.packs.std} Standard and ${S.packs.pre} Premium unopened. Open them in the Packs tab.</small>`}
  else{h+=[['std','Standard'],['pre','Premium']].map(p=>`<div class="op"><b>${p[1]} Packs: ${S.packs[p[0]]}</b><button class="btn pri" data-a="open" data-k="${p[0]}" ${S.packs[p[0]]?'':'disabled'}>Open</button></div>`).join('')+(V.rev.length?`<h3>You found:</h3><div class="grid">${V.rev.map(c=>card(c,'','',own(c.name))).join('')}</div>`:'<small>Win duels or visit the Store to get packs.</small>')}
  return h}
 function render(){if(G&&G.over&&!G.fin)finish();$app.innerHTML=G?gameHTML():menuHTML()}
