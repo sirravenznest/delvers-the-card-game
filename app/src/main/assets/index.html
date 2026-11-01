@@ -3,38 +3,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Delvers: The Card Game</title>
 <style>
-:root{--bg:#f4efe6;--fg:#241c14;--pan:#e6dccb;--ln:#b9a98d;--acc:#8a2b1c;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16120e;--fg:#efe6d6;--pan:#241d16;--ln:#4a3d2c;--acc:#e0884a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#16120e;--fg:#efe6d6;--pan:#241d16;--ln:#4a3d2c;--acc:#e0884a;color-scheme:dark}
+:root{--bg:#16120e;--fg:#f1e8d6;--pan:#2b2218;--ln:#6a5638;--acc:#e0884a;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px Georgia,'Times New Roman',serif;-webkit-tap-highlight-color:transparent}
 #app{height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:8px;max-width:520px;margin:0 auto}
 button{font:inherit;color:var(--fg)}
-.hero,.btn,.nav button{border:2px solid var(--ln);border-radius:10px;background:var(--pan)}
+.hero,.btn,.nav button{border:2px solid var(--ln);border-radius:10px;background:#2b2218f2}
 .hero{display:flex;justify-content:space-between;align-items:center;gap:6px;width:100%;padding:7px 10px;font-weight:bold}
 .hero span{font-weight:normal;font-size:12px}
 .btn{padding:8px 12px}.btn:disabled{opacity:.4}
 .pri{background:var(--acc);color:#fff;border-color:var(--acc)}
-.nav{display:flex;gap:4px;align-items:center}.nav button{flex:1;padding:7px 2px;font-size:13px}.nav .on{background:var(--acc);color:#fff;border-color:var(--acc)}.nav span{font-weight:bold;white-space:nowrap;padding-left:4px}
+.nav{display:flex;gap:4px;align-items:center}.nav button{flex:1;padding:7px 1px;font-size:12px}.nav .on{background:var(--acc);color:#fff;border-color:var(--acc)}.nav span{font-weight:bold;white-space:nowrap;padding-left:4px}
 .board{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.tile{height:68px;padding:3px;border:2px solid var(--ln);border-radius:8px;background:var(--pan);display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10px;line-height:1.2;overflow:hidden}
-.tile b{font-size:11px}.tile.u{border-color:var(--k);border-width:3px}.tile.p{background:#3b8a4a26}.tile.e{background:#b3402a26}
-.tile.mv{border:2px dashed #e0b030;background:#e0b03022}
-.card{position:relative;display:flex;flex-direction:column;gap:1px;width:100%;height:132px;padding:4px 3px 3px;border:2px solid var(--k);border-top-width:6px;border-radius:8px;background:var(--pan);text-align:center;overflow:hidden}
-.card b{font-size:10.5px;line-height:1.1;margin:1px 8px 0 10px}
-.card em{font-size:8.5px;line-height:1.15;flex:1;opacity:.85}
-.card small{font-size:8.5px;opacity:.8;line-height:1.2}
-.card s{position:absolute;right:2px;bottom:1px;font-size:10px;font-weight:bold;text-decoration:none;color:var(--acc)}
+.tile{position:relative;height:96px;padding:2px;border:2px solid var(--ln);border-radius:8px;background:#2b2218cc;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;font-size:11px;line-height:1.2;overflow:hidden;transition:opacity .2s,transform .15s}
+.tile b{font-size:11.5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tile.u{border-color:var(--k);border-width:3px}.tile.p{background:#2f6b3acc}.tile.e{background:#7a2a1fcc}
+.tile .tart{width:57px;height:34px;border-radius:5px;display:block;flex:0 0 auto}
+.tile.mv{border:2px dashed #ffd23f;background:#ffd23f33;justify-content:center;color:#ffd23f;font-weight:bold;animation:p2 1.2s infinite}@keyframes p2{50%{background:#ffd23f1a}}
+.tile .hit{position:absolute;right:2px;top:2px;background:#d03a3a;color:#fff;border-radius:6px;padding:0 4px;font-size:11px;font-weight:bold}
+.tile.done{opacity:.55;filter:saturate(.5)}
+.card{position:relative;display:flex;flex-direction:column;gap:1px;width:100%;height:172px;padding:4px 3px 3px;border:2px solid var(--k);border-top-width:6px;border-radius:8px;background:var(--pan);text-align:center;overflow:hidden;transition:opacity .2s,transform .15s}
+.card b{font-size:11px;line-height:1.1;margin:1px 8px 0 14px;min-height:24px;display:flex;align-items:center;justify-content:center}
+.card .art{width:100%;height:50px;border-radius:5px;display:block}
+.card em{font-size:9.5px;line-height:1.15;flex:1;opacity:.9}
+.card small{font-size:9.5px;opacity:.9;line-height:1.2}
+.card s{position:absolute;right:2px;bottom:1px;font-size:11px;font-weight:bold;text-decoration:none;color:var(--acc)}
 .rar{position:absolute;right:2px;top:-5px;width:8px;height:8px;border-radius:50%}
-.cost{position:absolute;top:-1px;left:-1px;min-width:17px;height:17px;border-radius:0 0 8px 0;background:var(--k);color:#fff;font-size:11px;font-weight:bold;line-height:17px}
-.st{display:flex;justify-content:space-around;font-weight:bold;font-size:12px}.st u{text-decoration:none}
-.hand{display:flex;gap:5px;overflow-x:auto;padding:2px 0 4px;flex:0 0 auto}.hand .card{flex:0 0 82px;width:82px}
-.dim{opacity:.45}.ready{box-shadow:0 0 0 2px #e0b030}.sel{transform:translateY(-5px);box-shadow:0 0 0 3px var(--acc)}
-.tgt{box-shadow:0 0 0 3px #d03a3a;animation:p 1s infinite}@keyframes p{50%{box-shadow:0 0 0 5px #d03a3a55}}
-.mid{font-size:12px;line-height:1.3;padding:4px 8px;border:1px dashed var(--ln);border-radius:8px}.mid .pr{font-weight:bold;color:var(--acc)}.mid div{opacity:.8}
+.cost{position:absolute;top:-1px;left:-1px;min-width:19px;height:19px;border-radius:0 0 8px 0;background:var(--k);color:#fff;font-size:12px;font-weight:bold;line-height:19px;z-index:1}
+.st{display:flex;justify-content:space-around;font-weight:bold;font-size:13px}.st u{text-decoration:none}
+.hand{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 4px;flex:0 0 auto}.hand .card{flex:0 0 94px;width:94px}
+.dim{opacity:.4;filter:grayscale(.8)}.ready{box-shadow:0 0 0 3px #5fe07a,0 0 10px #5fe07a}.sel{transform:translateY(-6px);box-shadow:0 0 0 3px #fff,0 0 14px var(--acc)}
+.can{box-shadow:0 0 0 2px #5fe07a,0 0 10px #5fe07a99;transform:translateY(-3px)}
+.cost.no{background:#c0392b}
+.tgt{box-shadow:0 0 0 3px #ff5a4a;animation:p 1s infinite}@keyframes p{50%{box-shadow:0 0 0 6px #ff5a4a55}}
+.turn{text-align:center;font-weight:bold;letter-spacing:1px;padding:6px;border-radius:10px;font-size:15px;border:2px solid}
+.turn.you{background:#1f6b32;border-color:#5fe07a;color:#eaffee;animation:glow 1.6s infinite}@keyframes glow{50%{box-shadow:0 0 12px #5fe07a}}
+.turn.foe{background:#6b1f1f;border-color:#ff7a6a;color:#ffe6e2}
+.turn.over{opacity:.8}
+.foeturn .hand,.foeturn .board{opacity:.6;pointer-events:none}
+.pips{letter-spacing:1px;color:#6ab7ff}
+.btn.nudge{animation:glow2 1.2s infinite}@keyframes glow2{50%{box-shadow:0 0 14px var(--acc)}}
+.btn.wait{opacity:.35}
+.op.boss{border-color:#e0b030}.rules{font-size:12px;line-height:1.35;background:#000a;border:1px solid var(--ln);border-radius:8px;padding:6px 8px}.rules summary{font-weight:bold;cursor:pointer}
+#app>small,#app>h3{background:#000a;border-radius:8px;padding:4px 8px;text-shadow:0 1px 2px #000}
+body.menu{background:var(--bg) var(--bgm) center bottom/cover no-repeat fixed}
+body.battle{background:var(--bg) var(--bgb) center/cover no-repeat fixed}
+.mid{font-size:13px;line-height:1.35;padding:5px 8px;border:1px dashed var(--ln);border-radius:8px;background:#000a}.mid .pr{font-weight:bold;color:var(--acc)}.mid div{opacity:.8}
 .bar{display:flex;gap:6px}.bar .hero{flex:1}
-.op,.rw{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--ln);border-radius:10px;background:var(--pan)}
+.op,.rw{background:#2b2218e6;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--ln);border-radius:10px}
 .rw{padding:5px 8px;font-size:12px}.rw b{flex:1}.rw .btn{padding:1px 9px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
 .pip{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
@@ -80,11 +96,35 @@ const IT=[
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
 // name,hero health,AI level,max rarity,reward,bonus mana,favoured creature types
 const OP=[
-['Grik the Cutpurse',14,0,0,40,0,['T','R']],['Mara, Bandit Captain',18,1,1,60,0,['T','F','R']],['Gnarlfang, Goblin Chieftain',20,1,1,75,0,['T','F','B']],
-['Vorn, Lich’s Apprentice',22,1,2,90,0,['W','U']],['Brother Malachar',24,1,2,110,0,['C','U']],['Dugash the Orc Warlord',26,2,2,130,1,['F','G','B']],
-['Hrothgar Stonefist',28,2,2,150,1,['G','B']],['Sylra, Drow Matron',30,2,3,180,1,['T','W','B']],['Zerrik the Elementalist',32,2,3,210,1,['E','W','K']],
-['Lord Vexmoor, Death Knight',34,3,3,250,2,['U','F']],['Ignarra the Wyrm Queen',36,3,3,280,2,['D','F','W']],['Tharaxis the Ancient',40,3,3,350,2,['D','G','E']]
+['Grik the Cutpurse',14,0,0,40,0,['T','R'],'Rustfang Cutpurse','Act I · The Underhalls','The first rung of the Underhalls is a goblin warren under the ruined Gatemarket. Grik has skimmed the pouch of every Delver who ever came down, and he swears the Embershards are his by right of tax.','Grik’s purse holds a scorched map scrap stamped with a deserter’s sigil. The way down continues along the Ashen Road.','“Pay the toll, Delver. There is always a toll.”'],
+['Mara, Bandit Captain',18,1,1,60,0,['T','F','R'],'Captain of the Ashen Road','Act I · The Underhalls','Mara Voss was a Dawnguard captain until the Sunforge dimmed and her company was left to starve. She now holds the Ashen Road with deserters and cutthroats. “The Throne starves us and calls it duty,” she says.','Mara lowers her blade. “Tell the Throne its captain is not dead. Only unpaid.” She marks the Gutter-Horde’s drums on your map.','“Loyalty is a luxury, friend. I sold mine for bread.”'],
+['Gnarlfang, Goblin Chieftain',20,1,1,75,0,['T','F','B'],'Chieftain of the Gutter-Horde','Act I · The Underhalls','Gnarlfang united the goblin tribes with the Roar, a war-frenzy that spreads through the drums. His wolves and ogres hold the last stairway out of the warrens. Behind him the air tastes of old smoke.','The drums fall silent. In Gnarlfang’s trophy pile you find a cold, whispering shard stamped with the Pale Court’s mark.','“ROAR! The Delver breaks like all the others!”'],
+['Vorn, Lich’s Apprentice',22,1,2,90,0,['W','U'],'Apprentice of the Pale Lich','Act II · The Hollow Court','Past the warrens lies the Hollow Court, where the Dusk Gate bleeds shadow into stone. Vorn, apprentice to the Pale Lich Mortisan, needs Embershards for his master’s phylactery. He is a coward wearing borrowed power.','Vorn’s borrowed power unravels. “Master will not forgive this,” he whimpers as his bone-servants crumble.','“Master promised me eternity. You will make a fine servant.”'],
+['Brother Malachar',24,1,2,110,0,['C','U'],'Ashen Confessor','Act II · The Hollow Court','Brother Malachar once burned heretics for the Ember Faith. The Hollow took him, and now he preaches that the Dusk is mercy. His pilgrims shamble in a procession of ash and candle-smoke.','Malachar kneels in the ash. “The light … was only ever a fire. Let it be a good one.” His censer rolls to your feet, still warm.','“Be still, child. The Dusk forgives everything.”'],
+['Dugash the Orc Warlord',26,2,2,130,1,['F','G','B'],'Warlord of the Skarhorde','Act III · The Deep Roads','The orc clans of the Skarhorde were honourable once. Then they drank a blood-pact from the demon-lords of the Hollow. Dugash now marches the whole Horde toward Hallowspire, and only the Deep Roads stand between them and the Throne.','Dugash drops to one knee. “You fight with honour. The pact took mine.” He breaks his axe and lets you pass, though the Horde marches on.','“Blood and iron! Your skull will hold my wine!”'],
+['Hrothgar Stonefist',28,2,2,150,1,['G','B'],'Last of the Cairn-Kings','Act III · The Deep Roads','The stone giants swore an oath to the First Dwarves to guard the Deep Anvil where the Sunforge was cast. Hrothgar has kept it for ten thousand years and takes every Delver for a thief.','Hrothgar sets down his hammer. “The oath is kept, small one. Go.” He opens the gate to the Lowdeep.','“No thief shall touch the Anvil. I have counted every one.”'],
+['Sylra, Drow Matron',30,2,3,180,1,['T','W','B'],'Matron of the Spiderthrone','Act III · The Deep Roads','In the Lowdeep, Matron Sylra spins webs of Hollow-silk and sells secrets to every side. She sold the Dusk Gate’s location to the Horde. She will sell yours too.','Sylra shrugs as her webs burn. “Business is business, Delver. Take this. It is a gift, not a bribe.” It is the key to the Conclave’s foundry.','“Everyone is for sale, little Delver. Even you.”'],
+['Zerrik the Elementalist',32,2,3,210,1,['E','W','K'],'Magos of the Cogwright Conclave','Act IV · The Sunforge','The Cogwright Conclave fuses magic and machine. Magos Zerrik binds elementals into brass war-engines and argues that the failing Sunforge should be replaced by his own. “The Machine does not dim,” he says.','Zerrik’s engines grind to a halt. “Inefficient,” he mutters, “but … illuminating.” His schematics lead to the Throne road.','“Your arguments are noted and discarded. Engage the engines.”'],
+['Lord Vexmoor, Death Knight',34,3,3,250,2,['U','F'],'Death Knight, Marshal Fallen','Act IV · The Sunforge','Marshal Vexmoor held the Dusk Gate for three hundred years. When it cracked, he swore himself to the Hollow to save his men. He now leads them as undead, still saluting the dead Throne.','Vexmoor’s helm clatters across the stones. “At last,” he whispers. His honour guard salutes and falls to dust.','“I held the line for the Throne. I will hold it against you.”'],
+['Ignarra the Wyrm Queen',36,3,3,280,2,['D','F','W'],'Wyrm Queen of the Cinder Brood','Act IV · The Sunforge','Ignarra believes the Sunforge’s light is stolen dragonfire and that she is its rightful owner. She nests in the Ember Vault and her brood circles overhead like a storm.','The Wyrm Queen’s fire gutters. “Take the light, then. See what it costs.” Behind her, the Sunforge’s heart beats weakly.','“Kneel, little ember. I will warm myself on your ashes.”'],
+['Tharaxis the Ancient',40,3,3,350,2,['D','G','E'],'The Ancient, Last Dusk-Drake','Act V · The Long Dusk','Tharaxis is older than the Throne and has gnawed at the Sunforge since the First Age. He is the Dusk made flesh. The Delvers’ Guild has one last writ: cut down the Ancient and rekindle the light.','The Ancient falls and the Sunforge flares, spilling light into every hall of Vaelmark. The Long Dusk is not ended, but today the light holds. Well done, Delver. Your legend begins.','“I was old when the Sunforge was young. You are a spark.”']
 ];
+const SK=[['Gatemarket Rats','A swarm of starving vermin and the goblins who ride them.'],['Rustfang Sentries','Goblin pickets with rusted pikes and a taste for loose coin.'],
+['Ashen Road Pickets','Deserters in patched Dawnguard tabards watch the road.'],['Deserter Patrol','Hard-eyed veterans who remember what the Throne once promised.'],
+['Gutter-Horde Raiders','Howling goblin raiders drunk on the Roar.'],['Wolfrider Pack','Snarling wolves and the goblins who bind them.'],
+['Hollow Court Ghouls','Starving dead drift out of the shadow-fog.'],['Bone-Servants','Mortisan’s skeletal drudges, armed with stolen Delver gear.'],
+['Burning Pilgrims','Zealots who set themselves alight to honour a dead faith.'],['Candle-Wraiths','Spirits of the confessor’s victims, wound in wax and ash.'],
+['Skarhorde Scouts','Orc scouts pressing toward Hallowspire.'],['Bloodbound Raiders','Orcs who drank the demon-pact and feel no pain.'],
+['Deep Road Cave-Beasts','Things that have never seen the Sunforge’s light.'],['Cairn Sentinels','Animate stone watchmen on the oath-road.'],
+['Spiderthrone Weavers','Drow silk-mages spinning Hollow-thread.'],['Lowdeep Hunters','Drow trackers and their giant spiders.'],
+['Cogwright Servitors','Half-man, half-engine drones carry out their programs.'],['Brass Engines','Clanking war-machines bound with elementals.'],
+['Fallen Dawnguard','Armoured dead still holding their shield-wall.'],['Hollow Legionaries','Veterans of the Gate, sworn to the shadow.'],
+['Cinder Drakelings','Young wyrms spitting fire across the Ember Vault.'],['Ember Cultists','Fanatics who worship the dragon’s flame.'],
+['Dusk-Touched Horrors','Creatures warped by the Ancient’s shadow.'],['Wyrmkin Guard','The Ancient’s last loyal brood.']];
+const CAMP=[];OP.forEach((o,i)=>{const pv=i?OP[i-1][1]:10;for(let k=0;k<2;k++){const sk=SK[i*2+k];
+ CAMP.push([sk[0],Math.round(pv+(o[1]-pv)*(k+1)/3),k?o[2]:Math.max(0,o[2]-1),k?o[3]:Math.max(0,o[3]-1),Math.round(o[4]*(k?.4:.3)),o[5],o[6],'Skirmish',o[8],`${sk[1]} They stand between you and ${o[0]}.`,`The way toward ${o[0]} lies open.`,'“Turn back, Delver.” Your wounds send you retreating to the surface.',0])}
+ CAMP.push([...o,1])});
+
 const ST={'Squire':3,'Town Guard':3,'Orc Raider':2,'Pikeman':2,'Apprentice':2,'Skeleton':2,'Acolyte':2,'Cutpurse':2,'Goblin Skulker':2,'Woodsman':2,'Hunter':2,'Dire Wolf':2,'Giant Rat':2,'Zombie':1,'Dwarf Fighter':1,'Ogre':1,'Magic Missile':2,'Cure Light Wounds':2,'Bless':1,'Burning Hands':1,'Dagger':2,'Spear':1,'Shield':2,'Leather Armor':1,'Potion of Healing':1};
 let S=null,G=null,V={v:'duel',rev:[],msg:'',saveMsg:''};
 function loadSave(){
@@ -102,8 +142,8 @@ function loadSave(){
   return{
    gold:Number.isFinite(Number(data.gold))?Math.max(0,Math.floor(Number(data.gold))):150,
    col,deck,
-   prog:Number.isFinite(Number(data.prog))?Math.max(0,Math.min(OP.length,Math.floor(Number(data.prog)))):0,
-   packs:{std:Math.max(0,Math.floor(Number(data.packs&&data.packs.std)||0)),pre:Math.max(0,Math.floor(Number(data.packs&&data.packs.pre)||0))}
+   prog:Number.isFinite(Number(data.prog))?Math.max(0,Math.min(CAMP.length,Math.floor(Number(data.prog))*(data.ver==2?1:3))):0,ver:2,
+   packs:{std:Math.max(0,Math.floor(Number(data.packs&&data.packs.std)||0))+Math.max(0,Math.floor(Number(data.packs&&data.packs.pre)||0))}
   };
  }catch(e){V.saveMsg='Saved progress could not be loaded. A new game was started.';return null}
 }
@@ -114,13 +154,13 @@ function auto(){const d=[],add=(c,lim)=>{for(let i=0;i<Math.min(3,own(c.name))&&
  srt=[...ALL].sort((a,b)=>(a.cost>5)-(b.cost>5)||b.rar-a.rar||a.cost-b.cost);
  srt.filter(c=>c.t=='c').forEach(c=>add(c,18));srt.filter(c=>c.t!='c').forEach(c=>add(c,30));srt.forEach(c=>add(c,30));return d}
 S=loadSave();
-if(!S){S={gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,packs:{std:0,pre:0}};S.deck=auto();sv(true)}
+if(!S){S={gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,packs:{std:0}};S.deck=auto();sv(true)}
 const d20=()=>1+Math.floor(Math.random()*20),sl=ms=>new Promise(r=>setTimeout(r,ms)),opp=s=>s=='p'?'e':'p';
 const row=i=>Math.floor(i/3),dist=(a,b)=>Math.abs(row(a)-row(b))+Math.abs(a%3-b%3);
 const mk=d=>d.t=='c'?{...d,mhp:d.hp,mv:0,ready:false,sleep:0}:{...d};
 const units=s=>G.b.filter(u=>u&&u.o==s);
 const log=m=>{G.log.unshift(m);G.log=G.log.slice(0,3)};
-function newGame(oi){const o=OP[oi],mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
+function newGame(oi){const o=CAMP[oi],mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
  G={oi,opp:{n:o[0],lvl:o[2]},b:Array(9).fill(null),p:mkp(20),e:mkp(o[1]),turn:'p',busy:false,over:null,sel:null,msg:'',log:['Battle begins!']};
  G.p.deck=sh(S.deck.map(n=>mk(BN[n])));
  const pool=ALL.filter(c=>c.rar<=o[3]),all=pool.filter(c=>c.t=='c'),fav=all.filter(c=>o[6].includes(c.cls)),cs=fav.length?fav:all;
@@ -182,39 +222,70 @@ async function endTurn(){if(G.over||G.busy||G.turn!='p')return;G.sel=null;G.turn
   if(c.t=='c')play('e',c,null,t);else play('e',c,t===true?null:t);render();await sl(750)}
  for(const u of units('e')){if(G.over)break;await aiUnit(u,L)}
  if(!G.over){startTurn('p');G.turn='p'}G.busy=false;render()}
-function finish(){G.fin=1;if(G.over=='p'){const first=G.oi==S.prog,g=Math.floor(OP[G.oi][4]*(first?1.5:1));S.gold+=g;if(first){S.prog++;S.packs.std++}G.res=`Victory! +🪙${g}`+(first?' and a free Standard Pack!':'')}else{S.gold+=15;G.res='Defeated. +🪙15 for the effort.'}sv()}
-function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" ${attr||''}><span class="cost">${c.cost}</span><b>${c.name}</b><em>${k?`${CL[c.cls][0]} · ${c.al}${KW[c.kw]?'<br>'+KW[c.kw]:''}${c.rch>1?'<br>Reach '+c.rch:''}`:c.txt}</em>${k?`<span class="st"><u>⚔${c.atk}</u><u>♥${c.hp}</u></span><small>AC ${c.ac} · Save ${c.save}<br>THAC0 ${c.thac0}<br>Initiative ${c.init}</small>`:`<small>${c.sub}</small>`}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
-function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:null,un=sel&&sel.m=='unit'?sel.c:null,up=un?G.b.indexOf(un):-1,pl=sel&&sel.m=='place';
+function finish(){G.fin=1;if(G.over=='p'){const first=G.oi==S.prog,o=CAMP[G.oi],g=Math.floor(o[4]*(first?1.5:1));S.gold+=g;if(first){S.prog++;if(o[12])S.packs.std++}G.res=`Victory! +🪙${g}`+(first&&o[12]?' and a free Standard Pack!':'')+`<br><small>${o[10]}</small>`}else{S.gold+=15;G.res='Defeated. +🪙15 for the effort.<br><small>'+CAMP[G.oi][11]+'</small>'}sv()}
+const GL={F:'⚔️',W:'🧙',C:'✨',T:'🗡️',R:'🏹',B:'🐺',U:'💀',G:'🪨',D:'🐉',E:'🔥',K:'⚙️',P:'🗡️',A:'🛡️',I:'💍'};
+const GO=[[/Rat/,'🐀'],[/Spider/,'🕷️'],[/Bat/,'🦇'],[/Snake|Serpent|Wyrm|Basilisk/,'🐍'],[/Bear|Owlbear/,'🐻'],[/Boar/,'🐗'],[/Eagle|Hawk|Griffon|Roc/,'🦅'],[/Golem|Gargoyle/,'🗿'],[/Skeleton|Zombie|Wight|Lich|Wraith|Ghoul|Vampire|Death/,'💀'],[/Ghost|Spectre|Shade/,'👻'],[/Ogre|Troll|Giant|Titan/,'👹'],[/Goblin|Kobold|Orc/,'👺'],[/Dragon|Drake|Wyvern/,'🐉'],[/Wolf|Hound|Jackal/,'🐺'],[/Elemental|Salamander/,'🔥'],[/Archer|Bow|Ranger/,'🏹'],[/Mage|Wizard|Apprentice|Sorcerer/,'🧙'],[/Priest|Cleric|Acolyte|Monk/,'🙏'],[/Knight|Squire|Paladin|Guard/,'🛡️'],[/Rogue|Thief|Assassin|Skulker|Cutpurse/,'🗡️'],[/Potion/,'🧪'],[/Wand|Rod|Staff/,'🪄'],[/Ring/,'💍'],[/Boots/,'👢'],[/Cloak/,'🧥'],[/Shield/,'🛡️'],[/Armor|Mail|Plate|Shirt/,'🛡️'],[/Amulet/,'📿'],[/Gauntlet|Bracer/,'🧤'],[/Orb/,'🔮'],[/Hammer|Club/,'🔨'],[/Axe|Halberd/,'🪓'],[/Spear/,'🔱'],[/Sword|Blade|Dagger|Rapier|Tongue/,'🗡️'],[/Missile|Lightning|Bolt/,'⚡'],[/Fire|Flame|Burning|Meteor/,'🔥'],[/Cold|Frost/,'❄️'],[/Cure|Heal|Regenerat/,'💚'],[/Sleep|Hold/,'💤'],[/Bless/,'🙏'],[/Smite/,'☀️']];
+const hsh=t=>{let h=7;for(const ch of t)h=(h*31+ch.charCodeAt(0))>>>0;return h};
+const AC_={};
+function art(c,cls){const k=c.name+(cls||'');if(AC_[k])return AC_[k];const h=hsh(c.name),col=CL[c.cls][1],g=(GO.find(x=>x[0].test(c.name))||[0,GL[c.cls]])[1],x1=10+h%30,x2=40+(h>>3)%30,sx=20+(h>>5)%40,sy=8+(h>>7)%10,id='g'+h;
+ const star=[0,1,2,3,4].map(i=>`<circle cx="${(h>>(i+2))%80}" cy="${(h>>(i+5))%22}" r=".7" fill="#fff" opacity=".7"/>`).join('');
+ return AC_[k]=`<svg class="${cls||'art'}" viewBox="0 0 80 48" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0a18"/><stop offset=".65" stop-color="${col}"/><stop offset="1" stop-color="#241810"/></linearGradient></defs><rect width="80" height="48" fill="url(#${id})"/>${star}<circle cx="${sx}" cy="${sy}" r="5" fill="#fff6d0" opacity=".55"/><path d="M0 48V34Q${x1} 22 ${x1+14} 32T${x2} 30T80 33V48Z" fill="#0008"/><path d="M0 48V40Q20 33 40 40T80 38V48Z" fill="#000b"/><text x="40" y="33" font-size="22" text-anchor="middle" style="filter:drop-shadow(0 1px 2px #000)">${g}</text></svg>`}
+const bgS=t=>'url("data:image/svg+xml,'+encodeURIComponent(t)+'")';
+const ST_='<g fill="#fff">'+Array.from({length:40},(_,i)=>`<circle cx="${(i*97)%400}" cy="${(i*53)%260}" r="${i%5?1:1.6}" opacity=".7"/>`).join('')+'</g>';
+const BGM=bgS(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0a1c"/><stop offset=".6" stop-color="#3a1f3f"/><stop offset="1" stop-color="#8a4a2a"/></linearGradient></defs><rect width="400" height="800" fill="url(#s)"/>${ST_}<circle cx="310" cy="120" r="34" fill="#fff3c4" opacity=".85"/><path d="M0 800V600L60 520 120 600 190 480 260 590 330 500 400 610V800Z" fill="#1a1026"/><g fill="#0a0612"><path d="M120 800V560h20v-30h14v30h22v-40h16v40h20v-30h14v30h24V800Z"/><path d="M158 520l9-26 9 26zM198 520l9-26 9 26zM236 560l9-30 9 30z"/><rect x="40" y="640" width="60" height="160"/><path d="M34 640l36-40 36 40z"/></g><g fill="#ffd36a"><rect x="172" y="610" width="8" height="14"/><rect x="214" y="650" width="8" height="14"/><rect x="62" y="680" width="8" height="12"/></g><path d="M0 800V720Q100 690 200 730T400 710V800Z" fill="#05030a"/></svg>`);
+const BGB=bgS(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1410"/><stop offset="1" stop-color="#0c0906"/></linearGradient><radialGradient id="f"><stop offset="0" stop-color="#ff9a3a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient></defs><rect width="400" height="800" fill="url(#d)"/><g stroke="#2a2018" stroke-width="2" fill="none">${Array.from({length:16},(_,i)=>`<path d="M0 ${i*50}H400"/>`).join('')}${Array.from({length:40},(_,i)=>`<path d="M${(i%8)*55+(Math.floor(i/8)%2)*27} ${Math.floor(i/8)*100}v50"/>`).join('')}</g><circle cx="20" cy="260" r="110" fill="url(#f)"/><circle cx="380" cy="260" r="110" fill="url(#f)"/><g fill="#ffb347"><path d="M20 240q-8 14 0 22 8-8 0-22zM380 240q-8 14 0 22 8-8 0-22z"/></g><g fill="#0007"><path d="M0 0h400v80Q200 150 0 80Z"/><path d="M0 800h400v-90Q200 640 0 710Z"/></g></svg>`);
+document.documentElement.style.setProperty('--bgm',BGM);document.documentElement.style.setProperty('--bgb',BGB);
+function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" ${attr||''}><span class="cost ${/\bno\b/.test(cls||'')?'no':''}">${c.cost}</span><b>${c.name}</b>${art(c)}<em>${k?`${CL[c.cls][0]} · ${c.al}${KW[c.kw]?'<br>'+KW[c.kw]:''}${c.rch>1?'<br>Reach '+c.rch:''}`:c.txt}</em>${k?`<span class="st"><u>⚔${c.atk}</u><u>♥${c.hp}</u></span><small>AC ${c.ac} · THAC0 ${c.thac0}<br>Init ${c.init} · Save ${c.save}</small>`:`<small>${c.sub}</small>`}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
+const need=(a,ac)=>Math.min(20,Math.max(2,a.thac0-ac));
+function canPlay(c){const P=G.p;if(c.cost>P.mp)return false;if(c.t=='c')return[6,7,8].some(i=>!G.b[i]);if(c.tg=='none')return true;
+ return[{side:'p',c:null},{side:'e',c:null},...G.b.filter(Boolean).map(u=>({side:u.o,c:u}))].some(t=>ok(c.tg,'p',t,c))}
+function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:null,un=sel&&sel.m=='unit'?sel.c:null,up=un?G.b.indexOf(un):-1,pl=sel&&sel.m=='place',mine=G.turn=='p'&&!G.over;
  const hl=(side,c)=>sp&&ok(sp.tg,'p',{side,c},sp)?'tgt':'';
- const eh=`<button class="hero ${hl('e',null)||(un&&un.ready&&row(up)<un.rch?'tgt':'')}" data-a="ehero">${G.opp.n}<span>❤ ${E.hp} · ✦ ${E.mp}/${E.max} · hand ${E.hand.length} · deck ${E.deck.length}</span></button>`;
- const bd=G.b.map((u,i)=>{if(!u){const m=(un&&dist(up,i)<=un.mv)||(pl&&row(i)==2);return `<button class="tile ${m?'mv':''}" data-a="cell" data-i="${i}">${row(i)==0?'· foe ·':row(i)==2?'· you ·':''}</button>`}
-  const cl=(u.o=='p'&&G.turn=='p'&&(u.mv>0||u.ready)?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep?'dim ':'')+(hl(u.o,u)||(un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch?'tgt':''));
-  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}"><b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.rch>1?' R'+u.rch:''}${u.sleep?' 💤':''}</span><span>AC${u.ac} T${u.thac0} Init ${u.mv}/${u.init}</span></button>`}).join('');
- const pr=G.over?'':G.turn=='e'?'Foe’s turn…':G.msg||(pl?'Tap an empty tile on your back row.':sp?`Choose a target for ${sp.name}.`:un?'Tap a yellow tile to move (initiative), or a red target within reach to attack.':'Play a card, or tap a glowing creature.');
- const hd=P.hand.map((c,i)=>card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(c.cost>P.mp?'dim':''))).join('');
- return `${eh}<div class="board">${bd}</div><div class="mid"><div class="pr">${pr}</div>${G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('')}${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}</div><div class="bar"><button class="hero ${hl('p',null)}" data-a="phero">You<span>❤ ${P.hp} · ✦ ${P.mp}/${P.max} · deck ${P.deck.length}</span></button><button class="btn pri" data-a="end">End turn</button><button class="btn" data-a="quit">Quit</button></div><div class="hand">${hd}</div>`
+ const pips=(m,x)=>`<span class="pips" aria-label="mana ${m} of ${x}">${'●'.repeat(m)}${'○'.repeat(Math.max(0,x-m))}</span>`;
+ const hh=un&&un.ready&&row(up)<un.rch;
+ const eh=`<button class="hero ${hl('e',null)||(hh?'tgt':'')}" data-a="ehero">${G.opp.n}<span>${hh?`<b style="color:#ff8a7a">🎯 ${need(un,10)}+ to hit</b> · `:''}❤ ${E.hp} · ✦ ${E.mp}/${E.max} · hand ${E.hand.length} · deck ${E.deck.length}</span></button>`;
+ const bd=G.b.map((u,i)=>{if(!u){const m=(un&&dist(up,i)<=un.mv)||(pl&&row(i)==2);return `<button class="tile ${m?'mv':''}" data-a="cell" data-i="${i}">${m?(pl?'▼ place here':'move →'):row(i)==0?'· foe ·':row(i)==2?'· you ·':''}</button>`}
+  const inr=un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch,tg=hl(u.o,u)||(inr?'tgt':'');
+  const cl=(u.o=='p'&&mine&&(u.mv>0||u.ready)&&!sel?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep||(u.o=='p'&&mine&&!u.ready&&u.mv<=0)?'done ':'')+tg;
+  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}">${inr?`<i class="hit">🎯${need(un,u.ac)}+</i>`:''}${art(u,'tart')}<b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.rch>1?' R'+u.rch:''}${u.sleep?' 💤':''}</span><span>AC${u.ac} T${u.thac0} Init ${u.mv}/${u.init}</span></button>`}).join('');
+ const pr=G.over?'':G.turn=='e'?'Foe is acting… please wait.':G.msg||(pl?'Tap a glowing tile on your back row (bottom).':sp?`Choose a target for ${sp.name}.`:un?`Tap a yellow tile to move (${un.mv} initiative left)${un.ready?', or a red target to attack':''}.`:'Tap a glowing green card to play it, or a green-outlined creature to move or attack.');
+ const hd=P.hand.map((c,i)=>{const ok_=mine&&canPlay(c);return card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(ok_?(sel?'':'can '):'dim ')+(c.cost>P.mp?'no':''))}).join('');
+ const idle=mine&&!G.busy&&!P.hand.some(canPlay)&&!units('p').some(u=>u.ready);
+ const tb=G.over?'<div class="turn over">Battle over</div>':mine?'<div class="turn you">⚔ YOUR TURN</div>':'<div class="turn foe">⏳ FOE’S TURN</div>';
+ return `<div class="${mine?'':'foeturn'}" style="display:contents">${tb}${eh}<div class="board">${bd}</div><div class="mid"><div class="pr">${pr}</div>${G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('')}${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}<div style="opacity:.7">To hit: roll d20 ≥ THAC0 − target AC (🎯 shows the number needed).</div></div><div class="bar"><button class="hero ${hl('p',null)}" data-a="phero">You<span>❤ ${P.hp} · ✦ ${pips(P.mp,P.max)} ${P.mp}/${P.max} · deck ${P.deck.length}</span></button><button class="btn pri ${idle?'nudge':''} ${mine?'':'wait'}" data-a="end" ${mine?'':'disabled'}>End turn</button><button class="btn" data-a="quit">Quit</button></div><div class="hand">${hd}</div></div>`
  +(G.over?`<div id="ov"><div>${G.res}</div><button class="btn pri" data-a="quit">Continue</button></div>`:'')}
-function menuHTML(){const T=[['duel','Duel'],['deck','Deck'],['cards','Cards'],['store','Store'],['packs','Packs']];
+const WORLD=[['The Ember Throne','For ten thousand years the God-King Aurelian the Undying has sat the Ember Throne in the cathedral-fortress of Hallowspire. He is sustained by the Sunforge, a vast engine of light built by the First Dwarves. Its radiance holds back the Hollow.'],
+['The Long Dusk','The Sunforge is failing. At the edge of its light the Dusk Gate has cracked, and the Hollow, a plane of hunger and shadow, seeps into Vaelmark. The dead walk, the Skarhorde marches, dragons wake. In the grim dark of the Long Dusk, there is only war.'],
+['The Delvers','The Delvers’ Guild licenses mercenaries, heretics and fools to descend into the Underhalls, the ruined cities, tombs and vaults beneath Vaelmark, and recover Embershards to feed the Sunforge. A Delver fights with steel, spells and the old rule of the d20: THAC0.'],
+['The Powers','The Dawnguard (the Throne’s armoured knights), the Skarhorde (orc clans bound by blood-pact), the Cogwright Conclave (magic fused with machine), the Cinder Brood (dragons), the Pale Court (the undead), the Spiderthrone (drow), the Cairn-Kings (giants) and the Rustfang goblins all want the Sunforge: to keep it, to feed on it, or to put it out.']];
+function loreHTML(){return WORLD.map(w=>`<div class="op" style="display:block"><b>${w[0]}</b><br><small>${w[1]}</small></div>`).join('')+'<h3>Dossiers</h3>'+OP.map((o,i)=>{const k=i*3+2,seen=S.prog>=k;return `<div class="op ${seen?'':'dim'}" style="display:block"><b>${seen?'👑 '+o[0]:'??? (Boss '+(i+1)+')'}</b><br><small>${seen?o[7]+' · '+o[8]+'<br>'+o[9]+'<br><i>Defeated:</i> '+o[10]:'Reach this boss to learn their story.'}</small></div>`}).join('')}
+function briefHTML(){const o=CAMP[V.brief];return `<div class="op" style="display:block"><small>${o[8]}</small><h3 style="margin:2px 0">${o[12]?'👑 ':''}${o[0]}</h3><small><b>${o[7]}</b> · ❤ ${o[1]} · 🪙 ${o[4]}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small><p style="line-height:1.4">${o[9]}</p></div><div class="bar"><button class="btn pri" style="flex:1" data-a="begin">Begin duel</button><button class="btn" data-a="back">Back</button></div>`}
+function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['deck','Deck'],['cards','Cards'],['store','Store'],['packs','Packs'],['lore','Lore']];
  let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div><small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
- if(V.v=='duel'){h+=`<small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 3×3 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+OP.map((o,i)=>`<div class="op ${i>S.prog?'dim':''}"><div><b>${o[0]}</b><br><small>Foe ${i+1} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':'Fight'}</button></div>`).join('')}
+ if(V.v=='duel'){h+=`<details class="rules"><summary>How to play &amp; THAC0</summary><b>THAC0</b> (2nd-edition D&amp;D) is the d20 roll needed to hit Armour Class 0. To hit, roll d20 ≥ attacker's THAC0 − target's AC. Lower AC is tougher, lower THAC0 hits more often. A natural 20 always hits for double damage; a natural 1 always misses. Heroes have AC 10.<br><b>Turn:</b> spend ✦ mana on cards, move creatures with initiative, then attack (green outline = can act). Faded cards can't be played right now.</details><small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 3×3 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+CAMP.map((o,i)=>(i==0||CAMP[i-1][8]!=o[8]?`<h3>${o[8]}</h3>`:'')+`<div class="op ${i>S.prog?'dim':''} ${o[12]?'boss':''}"><div><b>${o[12]?'👑 ':''}${o[0]}</b><br><small>${o[7]} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · ✔ Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':i<S.prog?'Replay':'Fight'}</button></div>`).join('')}
+ else if(V.v=='lore')h+=loreHTML();
  else if(V.v=='deck'){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length;
   h+=`<div class="op"><b>Deck ${n}/30 <small>(20+ to play, max 3 copies)</small></b><span><button class="btn" data-a="auto">Auto</button> <button class="btn" data-a="clear">Clear</button></span></div>`+ALL.map((c,i)=>[c,i]).filter(x=>own(x[0].name)).sort((a,b)=>a[0].cost-b[0].cost).map(([c,i])=>`<div class="rw"><i class="pip" style="background:${RC[c.rar]}"></i><b>${c.name} <small>${c.cost}✦ ${c.t=='c'?CL[c.cls][0]:c.sub}</small></b><small>own ${own(c.name)}</small><button class="btn" data-a="dm" data-i="${i}">−</button>${dc(c.name)}<button class="btn" data-a="dp" data-i="${i}">+</button></div>`).join('')}
  else if(V.v=='cards'){const o=ALL.filter(c=>own(c.name)).length;h+=`<small>${SET.name} collection: ${o}/${ALL.length} cards found</small><div class="grid">${ALL.map(c=>own(c.name)?card(c,'','',own(c.name)):`<div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div>`).join('')}</div>`}
- else if(V.v=='store'){h+=[['std',`${SET.name} Standard Pack`,'5 cards, at least 1 Uncommon',100],['pre',`${SET.name} Premium Pack`,'5 cards, at least 1 Rare, better odds',250]].map(p=>`<div class="op"><div><b>${p[1]}</b><br><small>${p[2]}</small></div><button class="btn pri" data-a="buy" data-k="${p[0]}" ${S.gold<p[3]?'disabled':''}>🪙 ${p[3]}</button></div>`).join('')+`<small>You own ${S.packs.std} Standard and ${S.packs.pre} Premium unopened. Open them in the Packs tab.</small>`}
- else{h+=[['std','Standard'],['pre','Premium']].map(p=>`<div class="op"><b>${p[1]} Packs: ${S.packs[p[0]]}</b><button class="btn pri" data-a="open" data-k="${p[0]}" ${S.packs[p[0]]?'':'disabled'}>Open</button></div>`).join('')+(V.rev.length?`<h3>You found:</h3><div class="grid">${V.rev.map(c=>card(c,'','',own(c.name))).join('')}</div>`:'<small>Win duels or visit the Store to get packs.</small>')}
+ else if(V.v=='store'){const PR=100,mx=Math.max(1,Math.floor(S.gold/PR)),q=Math.min(Math.max(1,V.qty||1),mx);V.qty=q;
+  h+=`<div class="op" style="display:block"><b>${SET.name} Pack</b><br><small>5 cards, at least 1 Uncommon. 🪙 ${PR} each.</small><div class="bar" style="margin-top:8px;align-items:center"><button class="btn" data-a="qm" ${q<=1?'disabled':''}>−</button><b style="min-width:2.5em;text-align:center;font-size:18px">${q}</b><button class="btn" data-a="qp" ${q>=mx||S.gold<PR*(q+1)?'disabled':''}>+</button><button class="btn" data-a="qmax" ${S.gold<PR?'disabled':''}>Max</button><button class="btn pri" style="flex:1" data-a="buy" ${S.gold<PR*q?'disabled':''}>Buy ${q} · 🪙 ${PR*q}</button></div></div><small>You own ${S.packs.std} unopened. Open them in the Packs tab.</small>`}
+ else{h+=`<div class="op"><b>Packs: ${S.packs.std}</b><span><button class="btn pri" data-a="open" ${S.packs.std?'':'disabled'}>Open 1</button> <button class="btn" data-a="openall" ${S.packs.std>1?'':'disabled'}>Open all</button></span></div>`+(V.rev.length?`<h3>You found ${V.rev.length} cards:</h3><div class="grid">${V.rev.map(c=>card(c,'','',own(c.name))).join('')}</div>`:'<small>Win boss battles or visit the Store to get packs.</small>')}
  return h}
-function render(){if(G&&G.over&&!G.fin)finish();$app.innerHTML=G?gameHTML():menuHTML()}
-function packRoll(pre){const w=pre?[40,35,20,5]:[70,22,7,1],o=[];for(let i=0;i<5;i++){let r=Math.random()*100,k=0;for(;k<3;k++){if(r<w[k])break;r-=w[k]}if(i==4)k=Math.max(k,pre?2:1);o.push(pick(ALL.filter(c=>c.rar==k)))}return o}
+function render(){if(G&&G.over&&!G.fin)finish();document.body.className=G?'battle':'menu';$app.innerHTML=G?gameHTML():menuHTML()}
+function packRoll(){const w=[70,22,7,1],o=[];for(let i=0;i<5;i++){let r=Math.random()*100,k=0;for(;k<3;k++){if(r<w[k])break;r-=w[k]}if(i==4)k=Math.max(k,1);o.push(pick(ALL.filter(c=>c.rar==k)))}return o}
 const $app=document.getElementById('app');
 $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,i=+b.dataset.i,k=b.dataset.k;
  if(G){if(a=='end')endTurn();else if(a=='quit'){if(!G.busy||G.over){G=null;render()}}else handle(a,i);return}
  if(a=='nav'){V.v=b.dataset.v;V.msg=''}
- else if(a=='fight'){if(S.deck.length<20)V.msg='Your deck needs at least 20 cards. Visit the Deck tab.';else{newGame(i);return}}
+ else if(a=='fight'){if(S.deck.length<20)V.msg='Your deck needs at least 20 cards. Visit the Deck tab.';else V.brief=i}
+ else if(a=='begin'){const b=V.brief;V.brief=null;newGame(b);return}
+ else if(a=='back')V.brief=null;
  else if(a=='auto')S.deck=auto();else if(a=='clear')S.deck=[];
  else if(a=='dp'){const n=ALL[i].name;if(S.deck.length<30&&S.deck.filter(x=>x==n).length<Math.min(3,own(n)))S.deck.push(n)}
  else if(a=='dm'){const j=S.deck.indexOf(ALL[i].name);if(j>=0)S.deck.splice(j,1)}
- else if(a=='buy'){const p=k=='std'?100:250;if(S.gold>=p){S.gold-=p;S.packs[k]++}}
- else if(a=='open'&&S.packs[k]){S.packs[k]--;V.rev=packRoll(k=='pre');V.rev.forEach(c=>S.col[c.name]=own(c.name)+1)}
+ else if(a=='qm')V.qty=Math.max(1,(V.qty||1)-1);else if(a=='qp')V.qty=(V.qty||1)+1;else if(a=='qmax')V.qty=Math.max(1,Math.floor(S.gold/100));
+ else if(a=='buy'){const n=Math.min(V.qty||1,Math.floor(S.gold/100));if(n>0){S.gold-=100*n;S.packs.std+=n;V.qty=1}}
+ else if((a=='open'||a=='openall')&&S.packs.std){const n=a=='open'?1:S.packs.std;S.packs.std-=n;V.rev=[];for(let j=0;j<n;j++)packRoll().forEach(c=>{V.rev.push(c);S.col[c.name]=own(c.name)+1})}
  sv();render()});
 render();
 </script></body></html>
