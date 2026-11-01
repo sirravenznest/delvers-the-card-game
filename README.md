@@ -1,6 +1,6 @@
 # Delvers: The Card Game (Android)
 
-Android WebView wrapper around the single-file HTML card game in `app/src/main/assets/index.html`.
+Delvers: The Card Game is an Android WebView app wrapping the single-file HTML game in `app/src/main/assets/index.html`.
 Progress is saved in the WebView's `localStorage` (key `delvers1`).
 
 ## Build the APK
