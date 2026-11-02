@@ -1,0 +1,41 @@
+{
+  "name": "delvers-the-card-game",
+  "productName": "Delvers",
+  "version": "1.7.0",
+  "description": "Delvers: The Card Game - Windows desktop build",
+  "main": "main.js",
+  "author": "sirravenznest",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "prepare-game": "node prepare.js",
+    "start": "node prepare.js && electron .",
+    "dist": "node prepare.js && electron-builder --win portable --x64 --publish never"
+  },
+  "build": {
+    "appId": "com.sirravenznest.delvers",
+    "productName": "Delvers",
+    "files": [
+      "main.js",
+      "game/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Delvers-${version}-windows-portable.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}
