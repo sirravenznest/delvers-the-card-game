@@ -160,5 +160,27 @@ async function step(clients, ms = 1000) { clk.t += ms; for (const c of clients) 
     assert.strictEqual((await rq('uA', 'PUT', `ratings/uB`, { r: 0 })).status, 401);
     console.log('PASS access rules');
   }
+  // 8. Turn limit: idle player is auto-ended, and forfeits after 3 idle turns in a row
+  {
+    const db = makeDb(), r = lcg(51);
+    const a = { T: mkClient(db, 'uA', 'A') }, b = { T: mkClient(db, 'uB', 'B') };
+    await a.T.join(deckFor(r)); await b.T.join(deckFor(r));
+    for (let i = 0; i < 6 && (a.T.st != 'match' || b.T.st != 'match'); i++) await step([a, b]);
+    assert.strictEqual(a.T.tl, 75000);
+    const first = a.T.G.turn == a.T.seat ? a : b, second = first === a ? b : a;
+    assert(first.T.timeLeft() > 70000, 'clock starts near the full limit');
+    await step([first, second], 60000);
+    assert.strictEqual(first.T.G.turn, first.T.seat, 'still within the limit');
+    await step([first, second], 16000);
+    assert.notStrictEqual(first.T.G.turn, first.T.seat, 'turn auto-ended at the limit');
+    await step([first, second], 1000);
+    assert.strictEqual(P.hash(a.T.G), P.hash(b.T.G));
+    for (let i = 0; i < 12 && (a.T.st == 'match' && b.T.st == 'match'); i++) await step([a, b], 76000);
+    await step([a, b]); await step([a, b]);
+    assert.strictEqual(a.T.st, 'over'); assert.strictEqual(b.T.st, 'over');
+    assert.strictEqual(a.T.over, b.T.over);
+    assert.strictEqual(first.T.over, second.T.seat, 'the idle player who reached 3 idle turns first loses');
+    console.log('PASS turn limit: auto end-turn and idle forfeit');
+  }
   console.log('ALL NET TESTS PASSED');
 })().catch(e => { console.error('FAIL', e); process.exit(1); });

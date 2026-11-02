@@ -19,13 +19,13 @@ function create(o){
  S.ensureProfile=async()=>{
   const me=uid(),name=cleanName(o.auth().name);
   const p=await rq('GET','profiles/'+me);
-  if(p&&p.c){S.code=p.c;S.name=name;await rq('PATCH','profiles/'+me,{n:name,t:SV});return S.code}
+  if(p&&p.c){S.code=p.c;S.name=name;await rq('PATCH','profiles/'+me,{n:name,t:SV});await S.heartbeat();return S.code}
   for(let i=0;i<8;i++){
    const c=newCode();
    try{await rq('PUT','codes/'+c,me)}catch(e){if(e.status==401||e.status==403)continue;throw e}
    await rq('PUT','profiles/'+me,{n:name,c,t:SV});S.code=c;S.name=name;return c}
   throw new Error('Could not create a friend code. Try again.')};
- S.heartbeat=()=>rq('PATCH','profiles/'+uid(),{t:SV});
+ S.heartbeat=async()=>{await rq('PATCH','profiles/'+uid(),{t:SV});const q=await rq('GET','profiles/'+uid());if(q&&q.t)S.off=q.t-Date.now()};
 
  S.addByCode=async raw=>{
   const code=cleanCode(raw),me=uid();
@@ -56,7 +56,7 @@ function create(o){
   const info=await Promise.all(ids.map(async fid=>{
    const [back,p]=await Promise.all([rq('GET',`social/${fid}/friends/${me}`).catch(()=>null),rq('GET','profiles/'+fid).catch(()=>null)]);
    return{uid:fid,name:(p&&p.n)||fr[fid].n||'Delver',mutual:!!back,seen:p&&p.t||0}}));
-  const t=srvNow||Date.now();
+  const t=srvNow||Date.now()+(S.off||0);
   S.friends=info.filter(f=>f.mutual).map(f=>({...f,online:t-f.seen<ONLINE_MS})).sort((a,b)=>b.online-a.online||a.name.localeCompare(b.name));
   S.outgoing=info.filter(f=>!f.mutual);
   S.incoming=Object.keys(inn).filter(k=>!fr[k]).map(k=>({uid:k,name:cleanName(inn[k]&&inn[k].n)}));

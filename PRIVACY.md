@@ -34,3 +34,6 @@ Changes will be posted in this file in the repository, with an updated date.
 
 ## Contact
 Open an issue at https://github.com/sirravenznest/delvers-the-card-game/issues.
+
+## Online play data
+If you use ranked or friends, we store in Firebase Realtime Database: your display name, a friend code, your friend list and requests, your rating and win/loss record, and match action logs. Remove friends in-app; contact the maintainer to delete your data.

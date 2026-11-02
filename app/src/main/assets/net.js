@@ -3,7 +3,7 @@
 (function(root){
 const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const SV={'.sv':'timestamp'};
-const TURN_MS=75000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000;
+const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000;
 
 function create(o){
  const T={st:'idle',err:'',mid:null,seat:null,G:null,meta:null,over:null,why:'',rec:null,opp:null,lastT:0,idle:0,joinedAt:0,
@@ -44,7 +44,7 @@ function create(o){
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   try{await rq('PUT',`queue/${best.k}/m`,mid)}catch(e){return false}
   const seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,
+  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,
    names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},r:{[me]:mine.r,[best.k]:best.e.r},
    deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d};
   await rq('PUT',`matches/${mid}/meta`,meta);
@@ -68,6 +68,7 @@ function create(o){
   try{await rq('DELETE','queue/'+me)}catch(e){}
   // The loss is booked up front so that quitting a ranked match costs rating; a win restores it.
   T.ranked=!!meta.rk;T.from=null;
+  T.tl=meta.rk?TURN_MS:Math.min(300000,Math.max(30000,(meta.tl|0)*1000||FRIENDLY_MS));
   if(meta.rk){
    const from={mid,r:T.rec.r,w:T.rec.w,l:T.rec.l};
    T.from=from;
@@ -134,11 +135,11 @@ function create(o){
   if(res&&res.w==T.seat&&res.why=='resign'){finish(T.seat,'win');return}
   const idle=srv()-T.lastT;
   if(G.turn==T.seat){
-   if(idle>TURN_MS){
+   if(idle>T.tl){
     T.idle++;
     if(T.idle>=3){T.resign();return}
     const r=mine({a:'end'});if(r.ok){afterApply();flush();changed()}}}
-  else if(idle>TURN_MS+GRACE_MS)finish(T.seat,'timeout')}
+  else if(idle>T.tl+GRACE_MS)finish(T.seat,'timeout')}
 
  T.tick=async()=>{
   if(T.busy)return;T.busy=true;
@@ -171,16 +172,16 @@ function create(o){
   const inv=await rq('GET',`invites/${uid()}/${from}`);
   if(!inv||!P.validDeck(inv.d))throw new Error('That invite is no longer available.');
   const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
+  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
    deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck};
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   await rq('PUT',`matches/${mid}/meta`,meta);
   await rq('PUT',`invites/${me}/${from}/m`,mid);
   T.deck=deck;await begin(mid)};
 
- T.timeLeft=()=>T.st=='match'?Math.max(0,TURN_MS-(srv()-T.lastT)):0;
+ T.timeLeft=()=>T.st=='match'?Math.max(0,(T.tl||TURN_MS)-(srv()-T.lastT)):0;
  return T}
 
-const api={create,TURN_MS,GRACE_MS};
+const api={create,TURN_MS,FRIENDLY_MS,GRACE_MS};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversNet=api;
 })(typeof self!=='undefined'?self:globalThis);

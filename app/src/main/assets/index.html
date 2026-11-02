@@ -66,7 +66,7 @@ body.battle{background:var(--bg) var(--bgb) center/cover no-repeat fixed}
 small{opacity:.8}h3{margin:6px 0 0}
 </style></head>
 <body><div id="app"></div>
-<script src="cards.js"></script><script src="engine.js"></script>
+<script src="cards.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="net.js"></script><script src="social.js"></script>
 <script>
 const SET={name:'First Adventures',size:90};
 const SAVE_KEY='delvers2';
@@ -133,7 +133,7 @@ let lastSig='';const sig=()=>JSON.stringify({...S,ts:0});
 const sv=keepLoadWarning=>{try{const sg=sig(),ch=sg!==lastSig;if(ch){S.ts=Date.now();lastSig=sg}localStorage.setItem(SAVE_KEY,JSON.stringify(S));if(ch)cloudQueue();if(!keepLoadWarning)V.saveMsg='';return true}catch(e){V.saveMsg='Progress could not be saved. Check device storage and try again.';return false}};
 // ===== Cloud save: Google sign-in (native Android) -> Firebase Auth + Firestore over REST =====
 // Fill these three public identifiers from your Firebase project (see CLOUD_SETUP.md). Empty = cloud save off.
-const CLOUD={apiKey:'',projectId:'',webClientId:''};
+const CLOUD={apiKey:'',projectId:'',webClientId:'',dbUrl:''};
 const cloudOn=()=>!!(CLOUD.apiKey&&CLOUD.projectId&&CLOUD.webClientId),AUTH_KEY='delvers_auth';
 let AU=null;try{AU=JSON.parse(localStorage.getItem(AUTH_KEY)||'null')}catch(e){}
 V.cloud={st:'idle',msg:'',conf:null,ready:false,at:0};
@@ -268,7 +268,7 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
  const hd=P.hand.map((c,i)=>{const ok_=mine&&canPlay(c);return card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(ok_?(sel?'':'can '):'dim ')+(c.cost>P.mp?'no':''))}).join('');
  const idle=mine&&!G.busy&&!P.hand.some(canPlay)&&!units('p').some(u=>u.ready);
  const tb=G.over?'<div class="turn over">Battle over</div>':mine?'<div class="turn you">⚔ YOUR TURN</div>':'<div class="turn foe">⏳ FOE’S TURN</div>';
- return `<div class="${mine?'':'foeturn'}" style="display:contents">${tb}${eh}<div class="board">${bd}</div><div class="mid"><div class="pr">${pr}</div>${G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('')}${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}<div style="opacity:.7">To hit: roll d20 ≥ Aim − target Guard (🎯 shows the number needed).</div></div><div class="bar"><button class="hero ${hl('p',null)}" data-a="phero">You<span>❤ ${P.hp} · ✦ ${pips(P.mp,P.max)} ${P.mp}/${P.max} · deck ${P.deck.length}</span></button><button class="btn pri ${idle?'nudge':''} ${mine?'':'wait'}" data-a="end" ${mine?'':'disabled'}>End turn</button><button class="btn" data-a="quit">Quit</button></div><div class="hand">${hd}</div></div>`
+ return `<div class="${mine?'':'foeturn'}" style="display:contents">${tb}${eh}<div class="board">${bd}</div><div class="mid"><div class="pr">${pr}</div>${G.pvp&&!G.over?`<button class="btn" data-a="resign" style="margin:4px 0">${V.pv&&V.pv.rc?'Tap again to resign':'🏳 Resign'}</button>`:''}${G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('')}${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}<div style="opacity:.7">To hit: roll d20 ≥ Aim − target Guard (🎯 shows the number needed).</div></div><div class="bar"><button class="hero ${hl('p',null)}" data-a="phero">You<span>❤ ${P.hp} · ✦ ${pips(P.mp,P.max)} ${P.mp}/${P.max} · deck ${P.deck.length}</span></button><button class="btn pri ${idle?'nudge':''} ${mine?'':'wait'}" data-a="end" ${mine?'':'disabled'}>End turn</button><button class="btn" data-a="quit">Quit</button></div><div class="hand">${hd}</div></div>`
  +(G.over?`<div id="ov"><div>${G.res}</div><button class="btn pri" data-a="quit">Continue</button></div>`:'')}
 const GUIDE=[
 ['The goal',`<p>Each duel is a fight between you and a foe. Every hero has Health. <b>Reduce the enemy hero to 0 Health to win.</b> If your own hero reaches 0 you are defeated, but you still earn a little gold and can try again.</p><p>Your hero starts with 20 Health. Foes have more as the campaign goes on.</p>`],
@@ -314,9 +314,11 @@ function cardsHTML(){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length,f
  <div class="grid">${list.map(c=>{const k=own(c.name),d=dc(c.name),mx=Math.min(3,k),i=ALL.indexOf(c),fl=d>=mx||n>=30;
   if(!k)return `<div class="cc"><div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div></div>`;
   return `<div class="cc ${d?'in':''}">${card(c,`data-a="dp" data-i="${i}"`,fl?'full':'')}<div class="stp"><button data-a="dm" data-i="${i}" ${d?'':'disabled'} aria-label="Remove ${c.name}">−</button><span><b>${d}</b>/${mx}<small> own ${k}</small></span><button data-a="dp" data-i="${i}" ${fl?'disabled':''} aria-label="Add ${c.name}">+</button></div>${xtra(c)?`<button class="sell" data-a="sell" data-i="${i}">Sell 1 extra · 🪙${SELL[c.rar]} <small>(${xtra(c)} spare)</small></button>`:''}</div>`}).join('')||'<small>No cards match this filter.</small>'}</div></div>${side}</div>`}
-function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['cards','Cards & Deck'],['store','Store'],['packs','Packs'],['lore','Lore'],['guide','Guide']];
- let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div><small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
+function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['cards','Cards & Deck'],['store','Store'],['packs','Packs'],['ranked','Ranked'],['friends','Friends'],['lore','Lore'],['guide','Guide']];
+ let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
  if(V.v=='duel'){h+=cloudHTML()+`<div class="op" style="display:block"><b>New to Delvers?</b> <button class="btn" data-a="nav" data-v="guide" style="float:right;padding:2px 10px">Open the Guide</button><br><small>Learn turns, Mana, the grid, Initiative, Reach, abilities and Aim.</small></div><small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 4×5 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+CAMP.map((o,i)=>(i==0||CAMP[i-1][8]!=o[8]?`<h3>${o[8]}</h3>`:'')+`<div class="op ${i>S.prog?'dim':''} ${o[12]?'boss':''}"><div><b>${o[12]?'👑 ':''}${o[0]}</b><br><small>${o[7]} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · ✔ Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':i<S.prog?'Replay':'Fight'}</button></div>`).join('')}
+ else if(V.v=='ranked')h+=rankedHTML();
+ else if(V.v=='friends')h+=friendsHTML();
  else if(V.v=='lore')h+=loreHTML();
  else if(V.v=='guide')h+=guideHTML();
  else if(V.v=='cards')h+=cardsHTML();
@@ -324,12 +326,97 @@ function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel']
   h+=`<div class="op" style="display:block"><b>${SET.name} Pack</b><br><small>5 cards, at least 1 Uncommon. 🪙 ${PR} each.</small><div class="bar" style="margin-top:8px;align-items:center"><button class="btn" data-a="qm" ${q<=1?'disabled':''}>−</button><b style="min-width:2.5em;text-align:center;font-size:18px">${q}</b><button class="btn" data-a="qp" ${q>=mx||S.gold<PR*(q+1)?'disabled':''}>+</button><button class="btn" data-a="qmax" ${S.gold<PR?'disabled':''}>Max</button><button class="btn pri" style="flex:1" data-a="buy" ${S.gold<PR*q?'disabled':''}>Buy ${q} · 🪙 ${PR*q}</button></div></div><small>You own ${S.packs.std} unopened. Open them in the Packs tab.</small>`}
  else{h+=`<div class="op"><b>Packs: ${S.packs.std}</b><span><button class="btn pri" data-a="open" ${S.packs.std?'':'disabled'}>Open 1</button> <button class="btn" data-a="openall" ${S.packs.std>1?'':'disabled'}>Open all</button></span></div>`+(V.rev.length?`<h3>You found ${V.rev.length} cards:</h3><div class="grid">${V.rev.map(c=>card(c,'','',own(c.name))).join('')}</div>`:'<small>Win boss battles or visit the Store to get packs.</small>')}
  return h}
+// ---- Online play: ranked matches, friends and private games (Realtime Database REST, no game server) ----
+const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const netOn=()=>!!(cloudOn()&&CLOUD.dbUrl&&AU);
+let NET=null,SOC=null,pvBusy=false;const PT={prof:0,soc:0,lb:0};
+function netInit(){if(NET||!netOn())return;const o={db:CLOUD.dbUrl.replace(/\/$/,''),fetch:(u,x)=>fetch(u,x),auth:()=>({uid:AU.uid,tok:AU.idToken,name:AU.name||(AU.email||'').split('@')[0]||'Delver'})};
+ NET=DelversNet.create({...o,onChange:()=>pvSync()});SOC=DelversSocial.create(o)}
+const WHY={win:'You won the duel.',loss:'You were defeated.',cheat:'Your opponent made an illegal move, so you win.',timeout:'Your opponent left or ran out of time, so you win.'};
+function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv;
+ const mi=i=>mir?(ROWS-1-row(i))*COLS+i%COLS:i;
+ const fl=l=>!mir?l:l.startsWith('You summon ')?'Foe summons '+l.slice(11):l.startsWith('You use ')?'Foe uses '+l.slice(8):l.startsWith('Foe summons ')?'You summon '+l.slice(12):l.startsWith('Foe uses ')?'You use '+l.slice(9):l;
+ const b=Array(NT).fill(null);g.b.forEach((u,i)=>{if(u)b[mi(i)]=mir?{...u,o:u.o=='p'?'e':'p'}:u});
+ const v={pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
+ const sec=Math.ceil(T.timeLeft()/1000),mine=g.turn==s;
+ v.opp={n:T.opp.name+(g.over?'':` · ⏱ ${sec}s${sec<=15?' ⚠':''} ${mine?'(you)':''}`),lvl:0};
+ const sel=pv.sel;if(sel)v.sel=sel.m=='unit'?{m:'unit',c:b[sel.i]}:{m:sel.m,c:g[s].hand[sel.h]};
+ if(g.over){const won=g.over==s,f=T.from;let d='';if(f){d=' Rating '+(P_elo(f.r,T.opp.r,won?1:0)-f.r>=0?'+':'')+(P_elo(f.r,T.opp.r,won?1:0)-f.r)+'.'}
+  v.res=(won?'Victory! ':'Defeated. ')+(WHY[T.why]&&won?WHY[T.why].replace('You won the duel.',''):'')+(T.ranked?d:' Friendly game: no rating change.')+(T.err?'<br><small>'+esc(T.err)+'</small>':'')}
+ return v}
+const P_elo=(a,b,r)=>DelversPvp.elo(a,b,r)[0];
+function pvSync(){const T=NET;if(!T)return;
+ if(T.G&&(T.st=='match'||T.st=='over')){if(!V.pv||V.pv.mid!=T.mid)V.pv={mid:T.mid,sel:null,msg:'',rc:false};G=pvView();DelversEngine.use(G);render()}
+ else if(V.pv){V.pv=null;if(G&&G.pvp)G=null;render()}
+ else if(!G&&!document.activeElement.matches('input'))render()}
+function pvClick(a,i){const T=NET,v=G,pv=V.pv,s=T.seat,o=s=='p'?'e':'p',ci=x=>s=='e'?(ROWS-1-row(x))*COLS+x%COLS:x;pv.msg='';
+ if(a=='quit'){if(v.over){T.st='idle';T.G=null;V.pv=null;G=null;V.sm='';PT.lb=0;PT.soc=0;render()}return}
+ if(a=='resign'){if(v.over)return;if(!pv.rc){pv.rc=true;pv.msg='Tap Resign again to confirm.'}else{pv.rc=false;T.act({a:'resign'});return}pvSync();return}
+ pv.rc=false;if(v.over||v.turn!='p'){pvSync();return}
+ let sel=pv.sel;const say=r=>{if(!r.ok)pv.msg=r.err},tg=(side,x)=>({side:side=='p'?s:o,i:x==null?null:ci(x)});
+ const trySpell=(side,x)=>{if(sel&&sel.m=='spell'){const c=v.p.hand[sel.h],t={side,c:x==null?null:v.b[x]};
+   if(ok(c.tg,'p',t,c)){say(T.act({a:'cast',h:sel.h,t:tg(side,x)}));sel=null;return 1}
+   if(t.c&&side=='p'&&c.slot&&t.c['s'+c.slot]){pv.msg='That creature already carries a '+c.sub.toLowerCase()+'.';return 1}}};
+ if(a=='end'){say(T.act({a:'end'}));sel=null}
+ else if(a=='hand'){const c=v.p.hand[i];if(sel&&sel.m!='unit'&&sel.h==i)sel=null;else if(c.cost>v.p.mp)pv.msg='Not enough mana.';else if(c.t=='c')sel={m:'place',h:i};else if(c.tg=='none'){say(T.act({a:'cast',h:i}));sel=null}else sel={m:'spell',h:i}}
+ else if(a=='cell'){const u=v.b[i];
+  if(sel&&sel.m=='place'){if(!u&&row(i)==ROWS-1){say(T.act({a:'summon',h:sel.h,pos:ci(i)}));sel=null}else pv.msg='Place on your back row (bottom).'}
+  else if(u&&trySpell(u.o,i)){}
+  else if(u&&u.o=='p'){if(u.mv>0||u.ready)sel=sel&&sel.m=='unit'&&sel.i==i?null:{m:'unit',i};else pv.msg='Already acted.'}
+  else if(sel&&sel.m=='unit'){const m=v.b[sel.i],p=sel.i;
+   if(!u){if(dist(p,i)<=m.mv){const r=T.act({a:'move',from:ci(p),to:ci(i)});say(r);if(r.ok)sel={m:'unit',i}}else pv.msg='Too far: initiative '+m.mv+' left.'}
+   else if(m.ready&&dist(p,i)<=m.rch){say(T.act({a:'attack',from:ci(p),t:tg('e',i)}));sel=null}else pv.msg=m.ready?'Out of reach (reach '+m.rch+'). Move closer.':'Already attacked.'}}
+ else if(a=='ehero'){if(!trySpell('e',null)&&sel&&sel.m=='unit'){const m=v.b[sel.i];if(m.ready&&row(sel.i)<m.rch){say(T.act({a:'attack',from:ci(sel.i),t:tg('e',null)}));sel=null}else pv.msg=m.ready?'Get within reach of their side first.':'Already attacked.'}}
+ else if(a=='phero')trySpell('p',null);
+ pv.sel=sel;pvSync()}
+async function pvLoop(){if(pvBusy||!netOn())return;pvBusy=true;
+ try{netInit();await idTok();const t=Date.now();
+  if(NET.st!='idle')await NET.tick();
+  if(t-PT.prof>60000){PT.prof=t;await SOC.ensureProfile()}
+  if(t-PT.soc>(V.v=='friends'?4000:15000)){PT.soc=t;await SOC.refresh()}
+  if(V.v=='ranked'&&t-PT.lb>20000){PT.lb=t;V.lb=await NET.leaderboard();await NET.getRating()}
+  V.on=''}catch(e){V.on=e.status==401||e.status==403?'The online service refused the request. Check that the database rules are installed.':'Online service unreachable.'}
+ finally{pvBusy=false}
+ if(!G&&(V.v=='ranked'||V.v=='friends')&&!document.activeElement.matches('input'))render()}
+const SETUP='<div class="op" style="display:block"><small>Online play needs a Google sign-in and the Firebase database set up in this build. See CLOUD_SETUP.md.</small></div>';
+function online(){if(!cloudOn()||!CLOUD.dbUrl)return'<div class="op" style="display:block"><b>Online play</b><br><small>Not set up in this build yet.</small></div>';
+ if(!AU)return'<div class="op" style="display:block"><b>Sign in required</b><br><small>Sign in with Google on the Duel tab to play ranked matches and add friends.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="nav" data-v="duel">Go to Duel tab</button></div></div>';return''}
+function rankedHTML(){const w=online();if(w)return w;netInit();const T=NET,r=T.rec||{r:1000,w:0,l:0},okD=DelversPvp.validRanked(S.deck),n=S.deck.length;
+ let h=`<div class="op" style="display:block"><b>🏆 Ranked</b> · Rating <b>${r.r}</b> · ${r.w}W ${r.l}L<br><small>Duels are live against another player. ${T.TL||75}s per turn. You lose rating if you leave a match.</small></div>`;
+ h+=`<div class="op" style="display:block"><b>Ranked deck</b> <small>${n}/30 cards</small><br><small>${okD?'✔ Your current deck is legal.':'✖ Ranked decks need exactly 30 cards: up to 3 copies of a card (2 for Rares, 1 for Legendaries). Fix it in Cards &amp; Deck.'}</small></div>`;
+ if(T.st=='queue')h+=`<div class="op" style="display:block"><b>Searching for an opponent…</b> <small>${Math.max(0,Math.round(((T.joinedAt?(Date.now()+(T.off||0)-T.joinedAt):0))/1000))}s</small><div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="rleave">Cancel</button></div></div>`;
+ else h+=`<div class="bar"><button class="btn pri" style="flex:1" data-a="rfind" ${okD?'':'disabled'}>Find a ranked match</button></div>`;
+ if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
+ h+=`<h3>Leaderboard</h3>`+((V.lb||[]).length?(V.lb||[]).map((x,i)=>`<div class="op"><span>${i+1}. ${esc(x.n)}${AU&&x.uid==AU.uid?' (you)':''}</span><b>${x.r}</b></div>`).join(''):'<small>No ranked players yet. Be the first!</small>');
+ return h}
+function friendsHTML(){const w=online();if(w)return w;netInit();const O=SOC,T=NET;let h='';
+ if(O.invites.length)h+=O.invites.map(x=>`<div class="mid" role="alert"><b>📨 ${esc(x.name)} invited you to a game</b><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="iacc" data-k="${esc(x.from)}">Accept</button><button class="btn" style="flex:1" data-a="idec" data-k="${esc(x.from)}">Decline</button></div></div>`).join('');
+ if(T.st=='invite')h+=`<div class="op" style="display:block"><b>Waiting for ${esc(T.inviteTo.name)}…</b> <small>They have 2 minutes to accept.</small><div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="icancel">Cancel invite</button></div></div>`;
+ h+=`<div class="op" style="display:block"><b>👥 Your friend code</b><br><span style="font-size:22px;letter-spacing:3px"><b>${esc(O.code||'…')}</b></span> <button class="btn" data-a="ccopy" style="padding:2px 10px">Copy</button><br><small>Share it so friends can add you.</small></div>`;
+ h+=`<div class="op" style="display:block"><b>Add a friend</b><div class="bar" style="margin-top:6px"><input id="fc" maxlength="6" placeholder="Friend code" autocomplete="off" style="flex:1;text-transform:uppercase;padding:8px;border-radius:8px;border:2px solid var(--ln);background:#1b140d;color:inherit"><button class="btn pri" data-a="fadd">Add</button></div></div>`;
+ if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
+ if(O.incoming.length)h+=`<h3>Friend requests</h3>`+O.incoming.map(x=>`<div class="op"><span>${esc(x.name)}</span><span><button class="btn pri" data-a="facc" data-k="${esc(x.uid)}">Accept</button> <button class="btn" data-a="fdec" data-k="${esc(x.uid)}">Decline</button></span></div>`).join('');
+ h+=`<h3>Friends (${O.friends.length})</h3>`+(O.friends.length?O.friends.map(f=>`<div class="op"><span>${f.online?'🟢':'⚪'} ${esc(f.name)}</span><span><button class="btn pri" data-a="finv" data-k="${esc(f.uid)}" ${T.st=='invite'||T.st=='queue'?'disabled':''}>Invite</button> <button class="btn" data-a="frem" data-k="${esc(f.uid)}" aria-label="Remove ${esc(f.name)}">✕</button></span></div>`).join(''):'<small>No friends yet. Share your code or enter a friend’s code above.</small>');
+ if(O.outgoing.length)h+=`<h3>Sent requests</h3>`+O.outgoing.map(x=>`<div class="op"><span>${esc(x.name)}</span><small>waiting for them to accept</small></div>`).join('');
+ h+=`<small style="display:block;margin-top:8px">Private games are friendly: ${DelversNet.FRIENDLY_MS/1000}s per turn, decks of 20–30 cards, and no rating change.</small>`;
+ return h+(V.on?`<small role="alert" style="display:block;color:#ff9a7a">${esc(V.on)}</small>`:'')}
+const onlineAction=(p,ok)=>{V.sm='';Promise.resolve().then(p).then(ok||(()=>{}),e=>{V.sm=e.message||'Something went wrong.'}).then(()=>{PT.soc=0;if(!G)render()})};
 function render(){if(G&&G.over&&!G.fin)finish();document.body.className=G?'battle':'menu';$app.innerHTML=G?gameHTML():menuHTML()}
 function packRoll(){const w=[70,22,7,1],o=[];for(let i=0;i<5;i++){let r=Math.random()*100,k=0;for(;k<3;k++){if(r<w[k])break;r-=w[k]}if(i==4)k=Math.max(k,1);o.push(pick(ALL.filter(c=>c.rar==k)))}return o}
 const $app=document.getElementById('app');
 $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,i=+b.dataset.i,k=b.dataset.k;
+ if(G&&G.pvp){pvClick(a,i);return}
  if(G){if(a=='end')endTurn();else if(a=='quit'){if(!G.busy||G.over){G=null;render()}}else handle(a,i);return}
- if(a=='nav'){V.v=b.dataset.v;V.msg='';V.cs=false;V.sold=''}
+ if(a=='nav'){V.v=b.dataset.v;V.msg='';V.cs=false;V.sold='';V.sm='';PT.lb=0;PT.soc=0}
+ else if(a=='rfind'){onlineAction(()=>NET.join(S.deck))}
+ else if(a=='rleave'){onlineAction(()=>NET.leave())}
+ else if(a=='fadd'){const v=(document.getElementById('fc').value||'');onlineAction(()=>SOC.addByCode(v),r=>{V.sm='Request sent to '+r.name+'.'})}
+ else if(a=='facc'){onlineAction(()=>SOC.accept(k))}else if(a=='fdec'){onlineAction(()=>SOC.decline(k))}
+ else if(a=='frem'){onlineAction(()=>SOC.remove(k))}
+ else if(a=='finv'){const f=SOC.friends.find(x=>x.uid==k);if(f)onlineAction(()=>NET.invite(k,f.name,S.deck))}
+ else if(a=='icancel'){onlineAction(()=>NET.cancelInvite())}
+ else if(a=='iacc'){onlineAction(()=>NET.acceptInvite(k,S.deck))}else if(a=='idec'){onlineAction(()=>NET.declineInvite(k))}
+ else if(a=='ccopy'){try{navigator.clipboard.writeText(SOC.code);V.sm='Code copied.'}catch(e){V.sm='Your code is '+SOC.code}}
  else if(a=='fight'){if(S.deck.length<20)V.msg='Your deck needs at least 20 cards. Open the Cards & Deck tab.';else V.brief=i}
  else if(a=='begin'){const b=V.brief;V.brief=null;newGame(b);return}
  else if(a=='back')V.brief=null;
@@ -351,5 +438,7 @@ $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)ret
  else if((a=='open'||a=='openall')&&S.packs.std){const n=a=='open'?1:S.packs.std;S.packs.std-=n;V.rev=[];for(let j=0;j<n;j++)packRoll().forEach(c=>{V.rev.push(c);S.col[c.name]=own(c.name)+1})}
  sv();render()});
 render();lastSig=sig();
-if(AU&&cloudOn())cloudSync();window.addEventListener('online',()=>{if(AU&&!G)cloudSync()});
+if(AU&&cloudOn())cloudSync();
+setInterval(pvLoop,1000);
+window.addEventListener('online',()=>{if(AU&&!G)cloudSync()});
 </script></body></html>

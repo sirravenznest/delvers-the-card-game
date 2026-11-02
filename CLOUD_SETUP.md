@@ -19,3 +19,11 @@
    - `projectId`: Project settings → General.
    - `webClientId`: Authentication → Google provider → Web SDK configuration → Web client ID (or Google Cloud → Credentials → "Web client (auto created by Google Service)").
 6. Put them in the `CLOUD` constant in `app/src/main/assets/index.html` and merge. CI builds the APK. These are public identifiers, not secrets.
+
+## Online play (ranked, friends, private games)
+
+1. In the Firebase console enable **Realtime Database** (free Spark plan, no billing).
+2. Open its **Rules** tab and paste the contents of `database.rules.json`, then publish.
+3. Put the database URL (e.g. `https://YOUR-PROJECT-default-rtdb.firebaseio.com`) into `CLOUD.dbUrl` in `index.html`.
+
+Turn limits: 75 s per turn in ranked, 120 s in friendly games. An idle turn ends automatically; three idle turns in a row forfeit the match.
