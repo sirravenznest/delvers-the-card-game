@@ -177,7 +177,7 @@ window.onNativeGoogle=async(tok,err)=>{if(err||!tok){cSet('err',err||'Sign-in ca
  try{const j=await jf('https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key='+CLOUD.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postBody:'id_token='+tok+'&providerId=google.com',requestUri:'http://localhost',returnIdpCredential:true,returnSecureToken:true})});
   AU={uid:j.localId,email:j.email||'',name:j.displayName||'',idToken:j.idToken,refresh:j.refreshToken,exp:Date.now()+(+j.expiresIn)*1000,base:0};saveAuth();V.cloud.ready=false;await cloudSync()}
  catch(e){cSet('err','Sign-in failed: '+e.message)}};
-function gSignOut(){AU=null;saveAuth();V.cloud={st:'idle',msg:'',conf:null,ready:false,at:0};if(window.DelversNative&&window.DelversNative.signOut)window.DelversNative.signOut();render()}
+function gSignOut(){AU=null;V.unTried=0;V.uedit=false;saveAuth();V.cloud={st:'idle',msg:'',conf:null,ready:false,at:0};if(window.DelversNative&&window.DelversNative.signOut)window.DelversNative.signOut();render()}
 function cloudHTML(){const c=V.cloud;
  if(!cloudOn()&&!AU)return `<div class="op" style="display:block"><b>☁ Cloud save</b><br><small>Google sign-in is not set up in this build yet. Progress is saved on this device.</small></div>`;
  if(!AU)return `<div class="op" style="display:block"><b>☁ Cloud save</b><br><small>Sign in with Google to keep your collection, decks and progress safe and play on other devices.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="gsign" ${c.st=='signing'?'disabled':''}>Sign in with Google</button></div>${c.msg?`<small role="alert" style="display:block;margin-top:4px">${c.msg}</small>`:''}</div>`;
@@ -330,8 +330,11 @@ function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel']
 // ---- Online play: ranked matches, friends and private games (Realtime Database REST, no game server) ----
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const netOn=()=>!!(cloudOn()&&CLOUD.dbUrl&&AU);
+const UKEY=()=>'delvers_user_'+(AU?AU.uid:''),UN=()=>{try{return AU&&localStorage.getItem(UKEY())||''}catch(e){return''}},UOK=n=>/^[A-Za-z0-9_ ]{3,16}$/.test(n)&&n==n.trim();
+function nameHTML(){const cur=UN();return `<div class="op" style="display:block"><b>${cur?'Change username':'Choose a username'}</b><br><small>This is the name other players see, not your Google name. 3–16 letters, numbers, spaces or underscores. Friends find you by your friend code, so names need not be unique.</small><div class="bar" style="margin-top:6px"><input id="un" maxlength="16" value="${esc(cur)}" placeholder="Username" autocomplete="off" aria-label="Username" style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--ln);background:#1b140d;color:inherit"><button class="btn pri" data-a="usave">Save</button>${cur?'<button class="btn" data-a="ucancel">Cancel</button>':''}</div>${V.sm?`<small role="alert" style="display:block;margin-top:4px;color:#ff9a7a">${esc(V.sm)}</small>`:''}</div>`}
+const needName=()=>AU&&(!UN()||V.uedit);
 let NET=null,SOC=null,pvBusy=false;const PT={prof:0,soc:0,lb:0};
-function netInit(){if(NET||!netOn())return;const o={db:CLOUD.dbUrl.replace(/\/$/,''),fetch:(u,x)=>fetch(u,x),auth:()=>({uid:AU.uid,tok:AU.idToken,name:AU.name||(AU.email||'').split('@')[0]||'Delver'})};
+function netInit(){if(NET||!netOn())return;const o={db:CLOUD.dbUrl.replace(/\/$/,''),fetch:(u,x)=>fetch(u,x),auth:()=>({uid:AU.uid,tok:AU.idToken,name:UN()||'Delver'})};
  NET=DelversNet.create({...o,onChange:()=>pvSync()});SOC=DelversSocial.create(o)}
 const WHY={win:'You won the duel.',loss:'You were defeated.',cheat:'Your opponent made an illegal move, so you win.',timeout:'Your opponent left or ran out of time, so you win.'};
 function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv;
@@ -373,6 +376,8 @@ function pvClick(a,i){const T=NET,v=G,pv=V.pv,s=T.seat,o=s=='p'?'e':'p',ci=x=>s=
 async function pvLoop(){if(pvBusy||!netOn())return;pvBusy=true;
  try{netInit();await idTok();const t=Date.now();
   if(NET.st!='idle')await NET.tick();
+  if(!UN()&&!V.unTried){V.unTried=1;try{const r=await fetch(CLOUD.dbUrl.replace(/\/$/,'')+'/profiles/'+AU.uid+'/n.json?auth='+AU.idToken),n=r.ok?await r.json():null;if(n&&UOK(n))localStorage.setItem(UKEY(),n)}catch(e){}}
+  if(!UN())return;
   if(t-PT.prof>60000){PT.prof=t;await SOC.ensureProfile()}
   if(t-PT.soc>(V.v=='friends'?4000:15000)){PT.soc=t;await SOC.refresh()}
   if(V.v=='ranked'&&t-PT.lb>20000){PT.lb=t;V.lb=await NET.leaderboard();await NET.getRating()}
@@ -381,7 +386,7 @@ async function pvLoop(){if(pvBusy||!netOn())return;pvBusy=true;
  if(!G&&(V.v=='ranked'||V.v=='friends')&&!document.activeElement.matches('input'))render()}
 const SETUP='<div class="op" style="display:block"><small>Online play needs a Google sign-in and the Firebase database set up in this build. See CLOUD_SETUP.md.</small></div>';
 function online(){if(!cloudOn()||!CLOUD.dbUrl)return'<div class="op" style="display:block"><b>Online play</b><br><small>Not set up in this build yet.</small></div>';
- if(!AU)return'<div class="op" style="display:block"><b>Sign in required</b><br><small>Sign in with Google on the Duel tab to play ranked matches and add friends.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="nav" data-v="duel">Go to Duel tab</button></div></div>';return''}
+ if(!AU)return'<div class="op" style="display:block"><b>Sign in required</b><br><small>Sign in with Google on the Duel tab to play ranked matches and add friends.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="nav" data-v="duel">Go to Duel tab</button></div></div>';if(needName())return nameHTML();return''}
 function rankedHTML(){const w=online();if(w)return w;netInit();const T=NET,r=T.rec||{r:1000,w:0,l:0},okD=DelversPvp.validRanked(S.deck),n=S.deck.length;
  let h=`<div class="op" style="display:block"><b>🏆 Ranked</b> · Rating <b>${r.r}</b> · ${r.w}W ${r.l}L<br><small>Live matches · 75s per turn · leaving costs rating.</small></div>`;
  h+=`<div class="op" style="display:block"><b>Ranked deck</b> <small>${n}/30 cards</small><br><small>${okD?'✔ Your current deck is legal.':'✖ Ranked decks need exactly 30 cards: up to 3 copies of a card (2 for Rares, 1 for Legendaries). Fix it in Cards &amp; Deck.'}</small></div>`;
@@ -390,7 +395,7 @@ function rankedHTML(){const w=online();if(w)return w;netInit();const T=NET,r=T.r
  if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
  h+=`<h3>Leaderboard</h3>`+((V.lb||[]).length?(V.lb||[]).map((x,i)=>`<div class="op"><span>${i+1}. ${esc(x.n)}${AU&&x.uid==AU.uid?' (you)':''}</span><b>${x.r}</b></div>`).join(''):'<small>No ranked players yet. Be the first!</small>');
  return h}
-function friendsHTML(){const w=online();if(w)return w;netInit();const O=SOC,T=NET;let h='';
+function friendsHTML(){const w=online();if(w)return w;netInit();const O=SOC,T=NET;let h=`<div class="op"><span>👤 <b>${esc(UN())}</b></span><button class="btn" data-a="uedit" style="padding:2px 10px">Change</button></div>`;
  if(O.invites.length)h+=O.invites.map(x=>`<div class="mid" role="alert"><b>📨 ${esc(x.name)} invited you to a game</b><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="iacc" data-k="${esc(x.from)}">Accept</button><button class="btn" style="flex:1" data-a="idec" data-k="${esc(x.from)}">Decline</button></div></div>`).join('');
  if(T.st=='invite')h+=`<div class="op" style="display:block"><b>Waiting for ${esc(T.inviteTo.name)}…</b> <small>They have 2 minutes to accept.</small><div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="icancel">Cancel invite</button></div></div>`;
  h+=`<div class="op" style="display:block"><b>👥 Your friend code</b><br><span style="font-size:22px;letter-spacing:3px"><b>${esc(O.code||'…')}</b></span> <button class="btn" data-a="ccopy" style="padding:2px 10px">Copy</button><br><small>Share it so friends can add you.</small></div>`;
@@ -409,6 +414,9 @@ $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)ret
  if(G&&G.pvp){pvClick(a,i);return}
  if(G){if(a=='end')endTurn();else if(a=='quit'){if(!G.busy||G.over){G=null;render()}}else handle(a,i);return}
  if(a=='nav'){V.v=b.dataset.v;V.msg='';V.cs=false;V.sold='';V.sm='';PT.lb=0;PT.soc=0}
+ else if(a=='usave'){const n=(document.getElementById('un').value||'').trim().replace(/\s+/g,' ');if(!UOK(n)){V.sm='Use 3–16 letters, numbers, spaces or underscores.'}else{try{localStorage.setItem(UKEY(),n)}catch(e){}V.uedit=false;V.sm='';PT.prof=0;PT.soc=0}}
+ else if(a=='uedit'){V.uedit=true;V.sm=''}
+ else if(a=='ucancel'){V.uedit=false;V.sm=''}
  else if(a=='rfind'){onlineAction(()=>NET.join(S.deck))}
  else if(a=='rleave'){onlineAction(()=>NET.leave())}
  else if(a=='fadd'){const v=(document.getElementById('fc').value||'');onlineAction(()=>SOC.addByCode(v),r=>{V.sm='Request sent to '+r.name+'.'})}
