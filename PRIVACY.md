@@ -5,7 +5,7 @@ _Last updated: 2026-11-02_
 Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirravenznest`. This policy explains what data the game handles.
 
 ## Playing without an account
-By default, all progress (collection, decks, gold, campaign progress) is stored **only on your device** (browser/WebView `localStorage`, or your Windows user profile). We do not receive it, and the game contains no ads, analytics, or trackers.
+By default, all progress (collection, decks, gold, campaign progress) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers.
 
 ## Signing in with Google (Android, optional)
 If you choose **Sign in with Google**, the game uses Google Sign-In and Google Firebase (Authentication and Cloud Firestore) to provide cloud save. When you sign in we process:

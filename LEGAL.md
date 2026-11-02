@@ -19,7 +19,6 @@ This work includes material taken from the System Reference Document 5.1 ("SRD 5
 
 ## Third-party components
 - Android: AndroidX, Google Credentials/Identity libraries (Apache-2.0).
-- Windows: Electron (MIT) and electron-builder (MIT).
 - Cloud save: Google Firebase (subject to Google's terms).
 
 ## Still needed before a wide release
