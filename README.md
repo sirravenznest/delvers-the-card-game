@@ -34,3 +34,6 @@ A desktop build wraps the same `index.html` in Electron (`windows/`). GitHub Act
 The Android app is a Gradle project built by GitHub Actions (`.github/workflows/android.yml`) and published to the [android-latest release](../../releases/tag/android-latest). It is signed with the committed debug key in `android-signing/`, so its SHA-1 stays stable for Firebase. The old `build-apk.sh` produces a basic APK without sign-in.
 
 Google sign-in uses Android Credential Manager, then Firebase Auth and Firestore over REST, to cross-save progress. It stays disabled until the `CLOUD` constant in `index.html` is filled in. See [CLOUD_SETUP.md](CLOUD_SETUP.md). Sign-in is Android-only for now (Google blocks OAuth in WebViews and Electron).
+
+## Legal & privacy
+See [PRIVACY.md](PRIVACY.md) and [LEGAL.md](LEGAL.md) (IP notes, SRD 5.1 attribution).
