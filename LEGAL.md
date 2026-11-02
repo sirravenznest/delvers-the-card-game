@@ -3,7 +3,7 @@
 _This is a developer's good-faith review, not legal advice. Consult an IP lawyer before commercial release._
 
 ## What is generally safe
-- **Game mechanics** (d20 rolls, THAC0-style hit maths, hit points, mana, keywords like haste/poison) are ideas and systems, not protected by copyright.
+- **Game mechanics** (d20 rolls, Aim-versus-Guard hit maths, hit points, mana, keywords like haste/poison) are ideas and systems, not protected by copyright.
 - **Code, card text, lore, and the world of Vaelmark** are original work by this project.
 - **Art** is emoji/SVG drawn in-game. Emoji glyphs come from the device's system font, so none is bundled.
 - **Generic fantasy creatures and spells** (goblin, skeleton, dragon, Fireball, Magic Missile, Lightning Bolt, Cure Light Wounds, Gelatinous Cube, Owlbear) appear in the Systems Reference Document 5.1, which Wizards of the Coast released under CC-BY-4.0. If you keep these names, include the attribution below.
