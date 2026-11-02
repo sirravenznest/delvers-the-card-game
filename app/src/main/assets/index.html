@@ -169,7 +169,7 @@ async function cloudSync(){if(!AU||!cloudOn()||G)return;
   if(lc&&!cc){V.cloud.ready=true;await cloudPut();cSet('ok')}
   else if(!lc&&cc||pristine())adopt(cs);
   else{V.cloud.conf={cs};V.cloud.ready=true;cSet('conf')}
- }catch(e){if(e.status==401||e.status==403||/TOKEN|CREDENTIAL|USER_/.test(e.message)&&e.status==400){cSet('err','Your sign-in expired. Please sign in again.');AU=null;saveAuth()}else cSet('err','Cloud sync failed: '+e.message)}}
+ }catch(e){if(e.status==401||/TOKEN|CREDENTIAL|USER_/.test(e.message)&&e.status==400){cSet('err','Your sign-in expired. Please sign in again.');AU=null;saveAuth()}else if(e.status==403)cSet('err','Cloud save was refused (permission denied). Check that Firestore is created and its rules are published. '+e.message);else cSet('err','Cloud sync failed: '+e.message)}}
 function gSignIn(){if(!cloudOn()){cSet('err','Cloud save is not set up in this build.');return}
  if(window.DelversNative&&window.DelversNative.signIn){cSet('signing','Opening Google sign-in…');window.DelversNative.signIn(CLOUD.webClientId)}
  else cSet('err','Google sign-in is available in the Android app. Your progress is still saved on this device.')}
