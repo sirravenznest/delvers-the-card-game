@@ -6,78 +6,8 @@ const P = require(path.join(A, 'pvp.js'));
 const N = require(path.join(A, 'net.js'));
 const assert = require('assert');
 
-let clock = 1_000_000;
-const now = () => clock;
-
-// Minimal Realtime Database REST fake. Emulates: sv timestamps, immutable log entries, write-once queue/$uid/m,
-// and members-only match access (the intent of database.rules.json).
-function makeDb() {
-  const root = {};
-  const get = (p) => p.split('/').filter(Boolean).reduce((n, k) => (n == null ? n : n[k]), root);
-  const stamp = (v) => {
-    if (v && typeof v == 'object') {
-      if (v['.sv'] == 'timestamp') return clock;
-      const o = Array.isArray(v) ? [] : {};
-      for (const k of Object.keys(v)) o[k] = stamp(v[k]);
-      return o;
-    }
-    return v;
-  };
-  const set = (p, v) => {
-    const ks = p.split('/').filter(Boolean);
-    let n = root;
-    for (let i = 0; i < ks.length - 1; i++) { if (n[ks[i]] == null || typeof n[ks[i]] != 'object') n[ks[i]] = {}; n = n[ks[i]]; }
-    const last = ks[ks.length - 1];
-    if (v === null) delete n[last]; else n[last] = v;
-  };
-  function allowed(uid, method, p) {
-    const ks = p.split('/').filter(Boolean);
-    if (ks[0] == 'queue' && ks[1] && method != 'GET') {
-      if (ks[2] == 'm') return get(p) == null;
-      return ks[1] == uid && ks.length <= 2;
-    }
-    if (ks[0] == 'matches' && ks[1]) {
-      const m = get(`matches/${ks[1]}/meta`);
-      if (ks[2] == 'meta' && method != 'GET') return m == null;
-      if (!m) return method == 'GET' || false;
-      const member = m.p == uid || m.e == uid;
-      if (!member) return false;
-      if (ks[2] == 'log' && method != 'GET') return get(p) == null;
-      if (ks[2] == 'res' && method != 'GET') return ks[3] == uid;
-      return true;
-    }
-    if (ks[0] == 'ratings' && ks[1] && method != 'GET') return ks[1] == uid;
-    return true;
-  }
-  const down = new Set();
-  const fetch = async (url, opt = {}) => {
-    const u = new URL(url);
-    const uid = u.searchParams.get('auth');
-    const R = (b, st = 200) => ({ ok: st < 400, status: st, json: async () => b });
-    if (down.has(uid)) throw new Error('offline');
-    const p = decodeURIComponent(u.pathname).replace(/^\//, '').replace(/\.json$/, '');
-    const m = opt.method || 'GET';
-    if (!allowed(uid, m, p)) return R({ error: 'Permission denied' }, 401);
-    if (m == 'GET') {
-      let v = get(p);
-      const ob = u.searchParams.get('orderBy');
-      if (v && ob == '"$key"') {
-        const s = Number(JSON.parse(u.searchParams.get('startAt')));
-        v = Object.fromEntries(Object.entries(v).filter(([k]) => Number(k) >= s));
-      } else if (v && ob == '"r"') {
-        const lim = Number(u.searchParams.get('limitToLast') || 1e9);
-        v = Object.fromEntries(Object.entries(v).sort((a, b) => a[1].r - b[1].r).slice(-lim));
-      }
-      return R(v === undefined ? null : v);
-    }
-    const body = opt.body === undefined ? undefined : stamp(JSON.parse(opt.body));
-    if (m == 'PUT') { set(p, body); return R(body); }
-    if (m == 'PATCH') { for (const k of Object.keys(body)) set(p + '/' + k, body[k]); return R(body); }
-    if (m == 'DELETE') { set(p, null); return R(null); }
-    return R(null, 400);
-  };
-  return { root, fetch, get, down };
-}
+const { makeDb, clk } = require('./fakedb');
+const now = clk.now;
 
 function lcg(s) { return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 function deckFor(r) {
@@ -119,7 +49,7 @@ function bot(c, r) { // plays a few random legal actions then ends the turn
   }
   if (c.T.st == 'match' && G.turn == s) c.T.act({ a: 'end' });
 }
-async function step(clients, ms = 1000) { clock += ms; for (const c of clients) await c.T.tick(); }
+async function step(clients, ms = 1000) { clk.t += ms; for (const c of clients) await c.T.tick(); }
 
 (async () => {
   // 1. Full ranked match between two bots, matched through the queue
@@ -175,7 +105,7 @@ async function step(clients, ms = 1000) { clock += ms; for (const c of clients) 
     for (let i = 0; i < 6 && (a.T.st != 'match' || b.T.st != 'match'); i++) await step([a, b]);
     const cheater = a.T.G.turn == a.T.seat ? a : b, victim = cheater === a ? b : a;
     const k = cheater.T.G.n;
-    db.root.matches[cheater.T.mid].log = { [k]: { u: cheater.T.meta[cheater.T.seat], a: { a: 'cast', h: 0, t: { side: 'e', i: null } }, t: clock } };
+    db.root.matches[cheater.T.mid].log = { [k]: { u: cheater.T.meta[cheater.T.seat], a: { a: 'cast', h: 0, t: { side: 'e', i: null } }, t: clk.t } };
     // a cast of a creature card or of a card not in hand must be rejected by the victim
     db.root.matches[cheater.T.mid].log[k].a = { a: 'summon', h: 99, pos: 0 };
     await step([victim]);

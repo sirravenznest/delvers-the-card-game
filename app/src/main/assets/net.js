@@ -44,7 +44,7 @@ function create(o){
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   try{await rq('PUT',`queue/${best.k}/m`,mid)}catch(e){return false}
   const seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,
+  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,
    names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},r:{[me]:mine.r,[best.k]:best.e.r},
    deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d};
   await rq('PUT',`matches/${mid}/meta`,meta);
@@ -57,17 +57,21 @@ function create(o){
   T.meta=meta;T.mid=mid;T.seat=meta.p==me?'p':'e';
   const oid=T.seat=='p'?meta.e:meta.p;
   T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',r:(meta.r&&meta.r[oid])||1000};
-  T.myR=(meta.r&&meta.r[me])||T.rec.r;
-  if(!P.validRanked(meta.deckP)||!P.validRanked(meta.deckE)){T.st='over';T.err='The match was invalid.';changed();return true}
+  if(meta.rk&&!T.rec)await T.getRating();
+  T.myR=(meta.r&&meta.r[me])||(T.rec&&T.rec.r)||1000;
+  const okDeck=meta.rk?P.validRanked:P.validDeck;
+  if(!okDeck(meta.deckP)||!okDeck(meta.deckE)){T.st='over';T.err='The match was invalid.';changed();return true}
   const mine=T.seat=='p'?meta.deckP:meta.deckE;
   if(JSON.stringify(mine)!=JSON.stringify(T.deck)){T.st='over';T.err='The match was invalid.';changed();return true}
   T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE);
   T.lastT=srv();T.idle=0;T.outbox=[];T.finished=false;T.over=null;
   try{await rq('DELETE','queue/'+me)}catch(e){}
   // The loss is booked up front so that quitting a ranked match costs rating; a win restores it.
-  const from={mid,r:T.rec.r,w:T.rec.w,l:T.rec.l};
-  T.from=from;
-  await rq('PUT','ratings/'+me,{n:o.auth().name||'Delver',r:P.elo(T.rec.r,T.opp.r,0)[0],w:T.rec.w,l:T.rec.l+1,from});
+  T.ranked=!!meta.rk;T.from=null;
+  if(meta.rk){
+   const from={mid,r:T.rec.r,w:T.rec.w,l:T.rec.l};
+   T.from=from;
+   await rq('PUT','ratings/'+me,{n:o.auth().name||'Delver',r:P.elo(T.rec.r,T.opp.r,0)[0],w:T.rec.w,l:T.rec.l+1,from})}
   T.st='match';changed();return true}
 
  async function flush(){
@@ -104,9 +108,10 @@ function create(o){
    await flush();
    await rq('PUT',`matches/${T.mid}/res/${me}`,{w:winner,why});
    const f=T.from;
-   if(winner==T.seat)await rq('PUT','ratings/'+me,{n:o.auth().name||'Delver',r:P.elo(f.r,T.opp.r,1)[0],w:f.w+1,l:f.l});
-   else await rq('PATCH','ratings/'+me,{from:null});
-   T.rec=null;await T.getRating()
+   if(f){
+    if(winner==T.seat)await rq('PUT','ratings/'+me,{n:o.auth().name||'Delver',r:P.elo(f.r,T.opp.r,1)[0],w:f.w+1,l:f.l});
+    else await rq('PATCH','ratings/'+me,{from:null});
+    T.rec=null;await T.getRating()}
   }catch(e){T.err='Result could not be saved: '+e.message}
   changed()}
 
@@ -145,10 +150,34 @@ function create(o){
     if(mine&&mine.m){await begin(mine.m);return}
     if(mine&&await pair(q)){await begin(T.mid)}
     else if(!mine){T.st='idle'}
+   }else if(T.st=='invite'){
+    const inv=await rq('GET',`invites/${T.inviteTo.uid}/${uid()}`);
+    if(inv&&inv.m){const mid=inv.m;try{await rq('DELETE',`invites/${T.inviteTo.uid}/${uid()}`)}catch(e){}await begin(mid)}
+    else if(!inv||now()-T.inviteAt>120000){T.st='idle';T.err=inv?'The invite expired.':'The invite was declined.';try{await rq('DELETE',`invites/${T.inviteTo.uid}/${uid()}`)}catch(e){}}
    }else if(T.st=='match')await matchTick();
    T.err=T.err&&T.err.startsWith('Connection')?'':T.err
   }catch(e){T.err='Connection problem, retrying...'}
   finally{T.busy=false;changed()}};
+ // ---- Private (friendly, unranked) games between friends ----
+ T.invite=async(fid,fname,deck)=>{
+  if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
+  const a=o.auth();
+  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',d:deck,t:SV});
+  T.deck=deck;T.inviteTo={uid:fid,name:fname||'Friend'};T.inviteAt=now();T.st='invite';T.err='';T.finished=false;T.over=null;changed()};
+ T.cancelInvite=async()=>{if(T.st!='invite')return;T.st='idle';const f=T.inviteTo;T.inviteTo=null;try{await rq('DELETE',`invites/${f.uid}/${uid()}`)}catch(e){}changed()};
+ T.declineInvite=async from=>{await rq('DELETE',`invites/${uid()}/${from}`)};
+ T.acceptInvite=async(from,deck)=>{
+  if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
+  const inv=await rq('GET',`invites/${uid()}/${from}`);
+  if(!inv||!P.validDeck(inv.d))throw new Error('That invite is no longer available.');
+  const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
+  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
+   deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck};
+  const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+  await rq('PUT',`matches/${mid}/meta`,meta);
+  await rq('PUT',`invites/${me}/${from}/m`,mid);
+  T.deck=deck;await begin(mid)};
+
  T.timeLeft=()=>T.st=='match'?Math.max(0,TURN_MS-(srv()-T.lastT)):0;
  return T}
 

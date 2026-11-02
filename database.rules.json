@@ -33,9 +33,51 @@
     },
     "ratings": {
       ".read": "auth != null",
-      ".indexOn": ["r"],
+      ".indexOn": [
+        "r"
+      ],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "codes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.val() === auth.uid"
+      }
+    },
+    "social": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "friends": {
+          "$fid": {
+            ".read": "auth != null && (auth.uid === $uid || auth.uid === $fid)",
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "in": {
+          "$from": {
+            ".write": "auth != null && (auth.uid === $from || auth.uid === $uid)"
+          }
+        }
+      }
+    },
+    "invites": {
+      "$to": {
+        ".read": "auth != null && auth.uid === $to",
+        "$from": {
+          ".read": "auth != null && auth.uid === $from",
+          ".write": "auth != null && ((auth.uid === $from && root.child('social').child($to).child('friends').child($from).exists() && root.child('social').child($from).child('friends').child($to).exists()) || (auth.uid === $to && !newData.exists()))",
+          "m": {
+            ".write": "auth != null && auth.uid === $to && !data.exists()"
+          }
+        }
       }
     }
   }
