@@ -315,7 +315,7 @@ function cardsHTML(){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length,f
  <div class="grid">${list.map(c=>{const k=own(c.name),d=dc(c.name),mx=Math.min(3,k),i=ALL.indexOf(c),fl=d>=mx||n>=30;
   if(!k)return `<div class="cc"><div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div></div>`;
   return `<div class="cc ${d?'in':''}">${card(c,`data-a="dp" data-i="${i}"`,fl?'full':'')}<div class="stp"><button data-a="dm" data-i="${i}" ${d?'':'disabled'} aria-label="Remove ${c.name}">−</button><span><b>${d}</b>/${mx}<small> own ${k}</small></span><button data-a="dp" data-i="${i}" ${fl?'disabled':''} aria-label="Add ${c.name}">+</button></div>${xtra(c)?`<button class="sell" data-a="sell" data-i="${i}">Sell 1 extra · 🪙${SELL[c.rar]} <small>(${xtra(c)} spare)</small></button>`:''}</div>`}).join('')||'<small>No cards match this filter.</small>'}</div></div>${side}</div>`}
-function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['cards','Cards & Deck'],['store','Store'],['packs','Packs'],['ranked','Ranked'],['friends','Friends'],['lore','Lore'],['guide','Guide']];
+function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['cards','Cards & Deck'],['store','Store'],['packs','Packs'],['ranked','Ranked'],['friends','Social'],['lore','Lore'],['guide','Guide']];
  let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
  if(V.v=='duel'){h+=cloudHTML()+`<div class="op" style="display:block"><b>New to Delvers?</b> <button class="btn" data-a="nav" data-v="guide" style="float:right;padding:2px 10px">Open the Guide</button><br><small>Learn turns, Mana, the grid, Initiative, Reach, abilities and Aim.</small></div><small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 4×5 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+CAMP.map((o,i)=>(i==0||CAMP[i-1][8]!=o[8]?`<h3>${o[8]}</h3>`:'')+`<div class="op ${i>S.prog?'dim':''} ${o[12]?'boss':''}"><div><b>${o[12]?'👑 ':''}${o[0]}</b><br><small>${o[7]} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · ✔ Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':i<S.prog?'Replay':'Fight'}</button></div>`).join('')}
  else if(V.v=='ranked')h+=rankedHTML();
@@ -374,16 +374,16 @@ function pvClick(a,i){const T=NET,v=G,pv=V.pv,s=T.seat,o=s=='p'?'e':'p',ci=x=>s=
  else if(a=='phero')trySpell('p',null);
  pv.sel=sel;pvSync()}
 async function pvLoop(){if(pvBusy||!netOn())return;pvBusy=true;
- try{netInit();await idTok();const t=Date.now();
+ try{netInit();await idTok();const t=Date.now();const ic0=SOC?SOC.invites.length:0;
   if(NET.st!='idle')await NET.tick();
   if(!UN()&&!V.unTried){V.unTried=1;try{const r=await fetch(CLOUD.dbUrl.replace(/\/$/,'')+'/profiles/'+AU.uid+'/n.json?auth='+AU.idToken),n=r.ok?await r.json():null;if(n&&UOK(n))localStorage.setItem(UKEY(),n)}catch(e){}}
   if(!UN())return;
   if(t-PT.prof>60000){PT.prof=t;await SOC.ensureProfile()}
-  if(t-PT.soc>(V.v=='friends'?4000:15000)){PT.soc=t;await SOC.refresh()}
+  if(t-PT.soc>(V.v=='friends'?3000:5000)){PT.soc=t;await SOC.refresh()}
   if(V.v=='ranked'&&t-PT.lb>20000){PT.lb=t;V.lb=await NET.leaderboard();await NET.getRating()}
-  V.on=''}catch(e){V.on=e.status==401||e.status==403?'The online service refused the request. Check that the database rules are installed.':'Online service unreachable.'}
+  V.on='';if(SOC&&SOC.invites.length!=ic0)V.inv=1}catch(e){V.on=e.status==401||e.status==403?'The online service refused the request. Check that the database rules are installed.':'Online service unreachable.'}
  finally{pvBusy=false}
- if(!G&&(V.v=='ranked'||V.v=='friends')&&!document.activeElement.matches('input'))render()}
+ if(!G&&(V.v=='ranked'||V.v=='friends'||V.inv)&&!document.activeElement.matches('input')){V.inv=0;render()}}
 const SETUP='<div class="op" style="display:block"><small>Online play needs a Google sign-in and the Firebase database set up in this build. See CLOUD_SETUP.md.</small></div>';
 function online(){if(!cloudOn()||!CLOUD.dbUrl)return'<div class="op" style="display:block"><b>Online play</b><br><small>Not set up in this build yet.</small></div>';
  if(!AU)return'<div class="op" style="display:block"><b>Sign in required</b><br><small>Sign in with Google on the Duel tab to play ranked matches and add friends.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="nav" data-v="duel">Go to Duel tab</button></div></div>';if(needName())return nameHTML();return''}
