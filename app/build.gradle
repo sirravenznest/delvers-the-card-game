@@ -10,7 +10,7 @@ android {
         applicationId "com.sirravenznest.delvers"
         minSdk 23
         targetSdk 28
-        versionCode 7
-        versionName "1.6"
+        versionCode 8
+        versionName "1.7"
     }
 }
