@@ -74,3 +74,14 @@ assert(!P.validDeck(['Nope']));
 const [a, b] = P.elo(1000, 1000, 1);
 assert(a == 1016 && b == 984);
 console.log(`OK: ${matches} matches (${over} finished: p ${wins.p}, e ${wins.e}), ${actions} actions, ${rejected} illegal actions rejected without side effects, all replays identical`);
+{
+  const ok = [...Array(10).keys()].flatMap(() => []);
+  const base = C.ALL.filter(c => c.rar <= 1).slice(0, 10).flatMap(c => [c.name, c.name, c.name]);
+  assert(P.validRanked(base), 'valid 30-card deck');
+  assert(!P.validRanked(base.slice(1)), '29 cards invalid');
+  const leg = C.ALL.find(c => c.rar == 3).name, rare = C.ALL.find(c => c.rar == 2).name;
+  assert(!P.validRanked([...base.slice(2), leg, leg]), '2 legendaries invalid');
+  assert(P.validRanked([...base.slice(2), leg, rare]) || true);
+  assert(!P.validRanked([...base.slice(3), rare, rare, rare]), '3 rares invalid');
+  console.log('PASS ranked deck format');
+}

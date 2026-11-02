@@ -1,0 +1,42 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "queue": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        "m": {
+          ".write": "auth != null && !data.exists()"
+        }
+      }
+    },
+    "matches": {
+      "$mid": {
+        "meta": {
+          ".read": "auth != null && (data.child('p').val() === auth.uid || data.child('e').val() === auth.uid)",
+          ".write": "auth != null && !data.exists() && (newData.child('p').val() === auth.uid || newData.child('e').val() === auth.uid)"
+        },
+        "log": {
+          ".read": "auth != null && (root.child('matches').child($mid).child('meta').child('p').val() === auth.uid || root.child('matches').child($mid).child('meta').child('e').val() === auth.uid)",
+          "$n": {
+            ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid && (root.child('matches').child($mid).child('meta').child('p').val() === auth.uid || root.child('matches').child($mid).child('meta').child('e').val() === auth.uid)"
+          }
+        },
+        "res": {
+          ".read": "auth != null && (root.child('matches').child($mid).child('meta').child('p').val() === auth.uid || root.child('matches').child($mid).child('meta').child('e').val() === auth.uid)",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
+      }
+    },
+    "ratings": {
+      ".read": "auth != null",
+      ".indexOn": ["r"],
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
