@@ -133,7 +133,7 @@ let lastSig='';const sig=()=>JSON.stringify({...S,ts:0});
 const sv=keepLoadWarning=>{try{const sg=sig(),ch=sg!==lastSig;if(ch){S.ts=Date.now();lastSig=sg}localStorage.setItem(SAVE_KEY,JSON.stringify(S));if(ch)cloudQueue();if(!keepLoadWarning)V.saveMsg='';return true}catch(e){V.saveMsg='Progress could not be saved. Check device storage and try again.';return false}};
 // ===== Cloud save: Google sign-in (native Android) -> Firebase Auth + Firestore over REST =====
 // Fill these three public identifiers from your Firebase project (see CLOUD_SETUP.md). Empty = cloud save off.
-const CLOUD={apiKey:'AIzaSyAG1SVkMdRVLsqTHTiLfL8TT80GKGgmsEU',projectId:'delvers-3f05b',webClientId:'',dbUrl:'https://delvers-3f05b-default-rtdb.firebaseio.com'};
+const CLOUD={apiKey:'AIzaSyAG1SVkMdRVLsqTHTiLfL8TT80GKGgmsEU',projectId:'delvers-3f05b',webClientId:'394076237098-i6b01fpbjcq30946ahkf1dapp6r11bhs.apps.googleusercontent.com',dbUrl:'https://delvers-3f05b-default-rtdb.firebaseio.com'};
 const cloudOn=()=>!!(CLOUD.apiKey&&CLOUD.projectId&&CLOUD.webClientId),AUTH_KEY='delvers_auth';
 let AU=null;try{AU=JSON.parse(localStorage.getItem(AUTH_KEY)||'null')}catch(e){}
 V.cloud={st:'idle',msg:'',conf:null,ready:false,at:0};
