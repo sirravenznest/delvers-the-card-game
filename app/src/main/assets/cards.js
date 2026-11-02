@@ -1,0 +1,39 @@
+(function(root){
+const COLS=4,ROWS=5,NT=COLS*ROWS,BACK=[...Array(COLS).keys()].map(i=>(ROWS-1)*COLS+i),FOEB=[...Array(COLS).keys()];
+const KW={heal:'Heals hero 1/turn',regen:'Regenerates 2',keen:'Keen aim: hits 1 easier',haste:'Haste: acts when summoned',dbl:'Two attacks per turn',poison:'Poison: save or +2 dmg',para:'Paralysis: save or lose turn',drain:'Drain: foe loses 1 attack',back:'Backstab: double vs unhurt',mr:'Magic resistance: 50%'};
+const imm=c=>c.cls=='U'||c.cls=='K';
+const CL={F:['Fighter','#b3402a'],W:['Wizard','#3a62b8'],C:['Cleric','#b8921f'],T:['Thief','#7a4aa8'],R:['Ranger','#3b8a4a'],B:['Beast','#7a6648'],U:['Undead','#5a5a7a'],G:['Giant','#8a5a2b'],D:['Dragon','#b02a4a'],E:['Elemental','#2a8aa0'],K:['Construct','#6b6b6b'],P:['Weapon','#9a4a2a'],A:['Armour','#4a6a9a'],I:['Magic Item','#2f8f8f']};
+const RN=['Common','Uncommon','Rare','Legendary'],RC=['#8a8a8a','#3b8a4a','#3a62b8','#c98a1a'];
+// name,class,cost,attack,health,Aim,Guard,initiative (movement),save,rarity,alignment,keyword,reach (default 1)
+const CR=[
+['Squire','F',1,1,2,20,8,1,16,0,'LG'],['Town Guard','F',2,2,3,19,6,1,15,0,'LN'],['Orc Raider','F',2,3,1,18,6,2,16,0,'CE','haste'],['Pikeman','F',2,2,2,19,7,1,15,0,'LN','',2],['Dwarf Fighter','F',4,3,5,16,3,1,10,1,'LG','dbl'],['Paladin','F',5,4,5,15,2,1,11,2,'LG','heal'],
+['Apprentice','W',1,1,1,20,9,1,13,0,'NG'],['Illusionist','W',3,2,3,19,8,2,11,1,'N'],['Evoker','W',4,3,2,18,8,1,10,1,'N','',2],['Archmage','W',6,4,5,13,4,1,7,2,'NG','mr',2],
+['Acolyte','C',2,1,3,19,7,1,12,0,'LG','heal'],['Priest','C',4,2,5,18,5,1,10,1,'NG','heal'],['War Cleric','C',3,3,3,17,4,1,11,1,'LN'],['High Priestess','C',6,3,6,16,4,1,8,2,'LG','heal'],
+['Cutpurse','T',1,1,1,20,7,3,14,0,'CN'],['Goblin Skulker','T',1,1,2,19,6,2,15,0,'NE'],['Cat Burglar','T',2,2,1,18,6,3,13,1,'CN','back'],['Assassin','T',4,4,2,15,5,3,12,2,'LE','back'],
+['Woodsman','R',2,2,2,18,7,2,14,0,'NG'],['Hunter','R',2,2,2,19,7,2,14,0,'N','',2],['Elven Ranger','R',3,2,3,14,5,2,13,1,'CG','keen',2],['Beastmaster','R',5,3,4,15,5,2,11,2,'CG','',2],
+['Giant Rat','B',1,1,1,20,7,2,15,0,'N'],['Dire Wolf','B',3,3,3,17,6,3,15,0,'N','haste'],['Giant Spider','B',4,3,3,16,4,2,12,1,'CE','poison'],['Owlbear','B',5,4,6,16,5,2,13,1,'N'],['Griffon','B',5,4,4,15,4,3,11,2,'N'],
+['Skeleton','U',3,2,4,18,7,1,14,0,'NE'],['Zombie','U',2,2,3,19,8,1,16,0,'NE'],['Ghoul','U',4,3,4,17,6,2,13,1,'CE','para'],['Wight','U',5,4,5,15,5,2,10,2,'LE','drain'],['Lich','U',7,5,6,13,0,1,6,3,'LE','regen',2],
+['Ogre','G',5,5,5,17,5,1,14,1,'CE'],['Hill Giant','G',6,5,6,16,4,1,12,2,'CE','',2],['Troll','G',6,5,6,15,4,1,12,2,'CE','regen'],['Cyclops','G',7,6,7,14,3,1,10,2,'CN','',2],
+['Pseudodragon','D',2,1,2,19,5,3,12,1,'NG','mr'],['Wyvern','D',4,3,4,16,4,3,11,2,'N','poison',2],['Red Dragon','D',8,7,8,11,-1,3,6,3,'CE','mr',2],
+['Fire Elemental','E',4,4,3,16,5,2,12,1,'N'],['Air Elemental','E',4,3,3,16,3,3,12,1,'N','',2],['Earth Elemental','E',5,4,6,16,2,1,11,2,'N'],
+['Gargoyle','K',3,2,3,17,4,2,13,1,'CE'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N','mr']
+].map(a=>({t:'c',name:a[0],cls:a[1],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
+// name,class,cost,rarity,target,kind,amount,text
+const SP=[
+['Magic Missile','W',1,0,'any','dmg',3,'3 dmg, no attack roll. Save halves.'],['Burning Hands','W',2,0,'any','dmg',4,'4 dmg. Save halves.'],['Lightning Bolt','W',3,1,'any','dmg',5,'5 dmg. Save halves.'],
+['Fireball','W',4,2,'none','aoe',3,'3 dmg to all enemy creatures. Save halves.'],['Cone of Cold','W',5,2,'none','aoe',4,'4 dmg to all enemy creatures. Save halves.'],['Meteor Swarm','W',7,3,'none','aoe',6,'6 dmg to all enemy creatures. Save halves.'],
+['Sleep','W',2,1,'enemyC','sleep',1,'Foe skips its next turn. Save negates.'],['Hold Person','W',3,2,'enemyC','sleep',2,'Foe skips its next 2 turns. Save negates.'],
+['Cure Light Wounds','C',1,0,'ally','heal',4,'Heal 4.'],['Cure Serious Wounds','C',3,1,'ally','heal',8,'Heal 8.'],['Bless','C',2,0,'allyC','bless',1,'+1 attack, +1 health.'],['Smite','C',3,1,'enemyC','dmg',4,'4 dmg to a creature. Save halves.'],
+['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.'],['Potion of Heroism','I',2,1,'allyC','bless',2,'+2 attack, +2 health.'],['Potion of Speed','I',2,1,'allyC','haste',0,'The creature refreshes: it may move and attack again this turn.'],['Wand of Lightning','I',4,2,'any','dmg',6,'6 dmg. Save halves.']
+].map(a=>({t:'s',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:a[4],kind:a[5],n:a[6],txt:a[7],sub:a[1]=='I'?'Magic Item':'Spell'}));
+const GT=d=>[d.atk&&`+${d.atk} attack`,d.thac0&&(d.thac0<0?`+${-d.thac0} to hit`:`${-d.thac0} to hit`),d.ac&&`Guard ${d.ac}`,d.hp&&`+${d.hp} health`,d.init&&`+${d.init} initiative`,d.rch&&`+${d.rch} reach`,d.save&&`Save ${d.save}`,d.kw&&KW[d.kw]].filter(Boolean).join(', ');
+// name,class (P weapon, A armour, I magic),cost,rarity,effects. A creature carries one weapon and one armour.
+const IT=[
+['Dagger','P',1,0,{atk:1}],['Club','P',1,0,{atk:2,thac0:1}],['Spear','P',2,0,{atk:1,rch:1}],['Rapier','P',2,1,{atk:1,thac0:-1,init:1}],['Long Sword','P',2,1,{atk:2,thac0:-1}],['Halberd','P',3,1,{atk:2,rch:1}],['Longbow','P',3,1,{atk:1,thac0:-2,rch:1}],['War Hammer','P',3,2,{atk:3}],['Flame Tongue','P',4,2,{atk:3,thac0:-2}],['Vorpal Blade','P',5,3,{atk:4,thac0:-3}],
+['Leather Armor','A',1,0,{ac:-1,hp:1}],['Shield','A',1,0,{ac:-2}],['Chain Mail','A',2,1,{ac:-3}],['Tower Shield','A',2,1,{ac:-2,hp:2}],['Scale Mail','A',3,1,{ac:-4}],['Mithril Shirt','A',3,2,{ac:-3,init:1}],['Plate Armor','A',4,2,{ac:-5,hp:2}],['Dragonscale Mail','A',5,3,{ac:-6,hp:3,save:-2}],
+['Boots of Speed','I',2,1,{init:1,kw:'haste'}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
+].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
+const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
+const api={COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,RN,RC,CR,SP,IT,GT,ALL,BN};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversCards=api;
+})(typeof self!=='undefined'?self:globalThis);
