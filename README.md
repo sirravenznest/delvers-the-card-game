@@ -15,7 +15,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk` (debug-signed with a locally
 
 ## First Adventures (Set 1, 90 cards)
 Creatures, spells, weapons, armour and magic items. Play on a 4×5 grid, use abilities like haste, poison, paralysis and backstab, move with **initiative**, and use **reach** to hit foes from range. Reach the enemy's side to attack their hero. Twelve opponents to defeat.
-Download: `releases/Delvers-1.7.apk` (saves from v1.1 do not carry over).
+Download the latest APK from the [android-latest release](../../releases/tag/android-latest).
 
 ## World & campaign
 Set in **Vaelmark** during the Long Dusk: the Emberheart is failing and the Hollow is leaking in. 60 encounters (40 skirmishes and 20 named bosses) across nine acts, each with a story briefing; read the Lore tab. Packs are 🪙100 each, and you choose how many to buy.
