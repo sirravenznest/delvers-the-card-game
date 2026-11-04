@@ -35,6 +35,13 @@ const IT=[
 ['Boots of Speed','I',2,1,{init:1,kw:'haste'}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Eye of Keenness','I',2,1,{kw:'keen',atk:1}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Amulet of Warding','I',3,2,{kw:'mr',save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
 ].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
-const api={COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
+// Starter decks: 30 cards, Common and Uncommon only, at most 3 copies each. Choosing one after the tutorial adds these cards to your collection.
+const STARTERS=[
+{id:'iron',name:'Ironwall Vanguard',icon:'🛡️',tag:'Tough fighters and armour. Easy to learn.',cards:{'Squire':3,'Town Guard':3,'Pikeman':3,'Tusk Raider':2,'Bladedancer':2,'Dwarf Fighter':2,'Emberguard Knight':2,'Ogre':1,'Gargoyle':1,'Shield':2,'Leather Armor':1,'Long Sword':2,'Chain Mail':1,'Spear':1,'Tower Shield':1,'Potion of Healing':2,'Bless':1}},
+{id:'arcane',name:'Emberlight Mages',icon:'🔥',tag:'Spells that burn and heal behind sturdy casters.',cards:{'Apprentice':3,'Acolyte':2,'Illusionist':3,'Evoker':3,'Priest':2,'War Cleric':3,'Fire Elemental':2,'Pseudodragon':1,'Skeleton':3,'Magic Missile':3,'Burning Hands':2,'Lightning Bolt':1,'Air Elemental':1,'Smite':1}},
+{id:'shadow',name:'Shadow Hunt',icon:'🏹',tag:'Fast hasty strikers and beasts. Hits first.',cards:{'Goblin Skulker':2,'Cutpurse':1,'Giant Rat':1,'Cat Burglar':3,'Hunter':3,'Woodsman':3,'Dire Wolf':3,'Elven Ranger':3,'Druid':2,'Harpy':2,'Giant Spider':2,'Owlbear':1,'Poisoned Dagger':1,'Longbow':1,'Magic Missile':1,'Potion of Healing':1}}
+].map(d=>({...d,list:Object.entries(d.cards).flatMap(([n,k])=>Array(k).fill(n))}));
+const STARTER_PRICE=400;
+const api={STARTERS,STARTER_PRICE,COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversCards=api;
 })(typeof self!=='undefined'?self:globalThis);
