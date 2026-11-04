@@ -3,6 +3,8 @@
 (function(root){
 const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const SV={'.sv':'timestamp'};
+// Bump whenever card data or rules change: clients on different versions would replay the match differently.
+const PROTO=2,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000;
 
 function create(o){
@@ -25,7 +27,7 @@ function create(o){
   if(!P.validRanked(deck))throw new Error('Ranked decks need exactly 30 cards: max 3 copies, 2 of a Rare, 1 of a Legendary.');
   await T.getRating();
   const a=o.auth(),t0=now();
-  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',r:T.rec.r,d:deck,t:SV,j:SV});
+  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',r:T.rec.r,d:deck,pv:PROTO,t:SV,j:SV});
   const me=await rq('GET','queue/'+a.uid);
   T.off=me.t-t0;T.joinedAt=me.j;T.lastBeat=now();T.deck=deck;T.st='queue';T.err='';T.finished=false;T.over=null;changed()};
  T.leave=async()=>{if(T.st!='queue')return;T.st='idle';try{await rq('DELETE','queue/'+uid())}catch(e){}changed()};
@@ -36,7 +38,7 @@ function create(o){
  async function pair(q){
   const me=uid(),mine=q[me];if(!mine)return false;
   let best=null;
-  for(const k of Object.keys(q)){const e=q[k];if(k==me||!e||e.m||typeof e.r!='number'||!P.validRanked(e.d))continue;
+  for(const k of Object.keys(q)){const e=q[k];if(k==me||!e||e.m||e.pv!==PROTO||typeof e.r!='number'||!P.validRanked(e.d))continue;
    if(srv()-e.t>STALE_MS)continue;
    const diff=Math.abs(e.r-mine.r);if(diff>Math.max(window_(mine),window_(e)))continue;
    if(!best||diff<best.diff)best={k,e,diff}}
@@ -44,7 +46,7 @@ function create(o){
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   try{await rq('PUT',`queue/${best.k}/m`,mid)}catch(e){return false}
   const seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,
+  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,pv:PROTO,
    names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},r:{[me]:mine.r,[best.k]:best.e.r},
    deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d};
   await rq('PUT',`matches/${mid}/meta`,meta);
@@ -54,6 +56,7 @@ function create(o){
   const meta=await rq('GET',`matches/${mid}/meta`);if(!meta)return false;
   const me=uid();
   if(meta.p!=me&&meta.e!=me)return false;
+  if(meta.pv!==PROTO){T.mid=null;T.st='over';T.err=VERR;changed();return true}
   T.meta=meta;T.mid=mid;T.seat=meta.p==me?'p':'e';
   const oid=T.seat=='p'?meta.e:meta.p;
   T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',r:(meta.r&&meta.r[oid])||1000};
@@ -163,7 +166,7 @@ function create(o){
  T.invite=async(fid,fname,deck)=>{
   if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
   const a=o.auth();
-  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',d:deck,t:SV});
+  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',d:deck,pv:PROTO,t:SV});
   T.deck=deck;T.inviteTo={uid:fid,name:fname||'Friend'};T.inviteAt=now();T.st='invite';T.err='';T.finished=false;T.over=null;changed()};
  T.cancelInvite=async()=>{if(T.st!='invite')return;T.st='idle';const f=T.inviteTo;T.inviteTo=null;try{await rq('DELETE',`invites/${f.uid}/${uid()}`)}catch(e){}changed()};
  T.declineInvite=async from=>{await rq('DELETE',`invites/${uid()}/${from}`)};
@@ -171,8 +174,9 @@ function create(o){
   if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
   const inv=await rq('GET',`invites/${uid()}/${from}`);
   if(!inv||!P.validDeck(inv.d))throw new Error('That invite is no longer available.');
+  if(inv.pv!==PROTO)throw new Error(VERR);
   const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
+  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
    deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck};
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   await rq('PUT',`matches/${mid}/meta`,meta);
@@ -182,6 +186,6 @@ function create(o){
  T.timeLeft=()=>T.st=='match'?Math.max(0,(T.tl||TURN_MS)-(srv()-T.lastT)):0;
  return T}
 
-const api={create,TURN_MS,FRIENDLY_MS,GRACE_MS};
+const api={create,PROTO,TURN_MS,FRIENDLY_MS,GRACE_MS};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversNet=api;
 })(typeof self!=='undefined'?self:globalThis);
