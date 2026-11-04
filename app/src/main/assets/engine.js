@@ -12,7 +12,7 @@ const mk=d=>d.t=='c'?{...d,mhp:d.hp,mv:0,ready:false,sleep:0}:{...d};
 const units=s=>G.b.filter(u=>u&&u.o==s);
 const log=m=>{G.log.unshift(m);G.log=G.log.slice(0,3)};
 function draw(s){const X=G[s];if(!X.deck.length){X.hp-=2;log('Out of cards! 2 damage.');if(X.hp<=0)G.over=opp(s);return}const c=X.deck.pop();if(X.hand.length<7)X.hand.push(c)}
-function startTurn(s){const X=G[s];X.max=Math.min(10,X.max+1);X.mp=X.max;draw(s);units(s).forEach(c=>{if(has(c,'regen'))c.hp=Math.min(c.mhp,c.hp+2);if(has(c,'heal'))X.hp=Math.min(X.mx,X.hp+1);c.fresh=0;c.u2=0;if(c.sleep>0){c.sleep--;c.mv=0;c.ready=false}else{c.mv=c.init;c.ready=true}})}
+function startTurn(s){const X=G[s];X.max=Math.min(X.cap||10,X.max+1);X.mp=X.max;draw(s);units(s).forEach(c=>{if(has(c,'regen'))c.hp=Math.min(c.mhp,c.hp+2);if(has(c,'heal'))X.hp=Math.min(X.mx,X.hp+1);c.fresh=0;c.u2=0;if(c.sleep>0){c.sleep--;c.mv=0;c.ready=false}else{c.mv=c.init;c.ready=true}})}
 function dmg(s,c,n,cr){if(c){if(n>1&&has(c,'tough')&&G.hit)n--;ev({k:'dmg',i:ix(c),s,n,cr});c.hp-=n;if(c.hp<=0){ev({k:'die',i:ix(c),s});G.b[G.b.indexOf(c)]=null;log(c.name+' falls.')}}else{ev({k:'dmg',i:-1,s,n,cr});G[s].hp-=n;if(G[s].hp<=0)G.over=opp(s)}}
 function heal(s,c,n){ev({k:'heal',i:ix(c),s,n});if(c)c.hp=Math.min(c.mhp,c.hp+n);else G[s].hp=Math.min(G[s].mx,G[s].hp+n)}
 function saves(c){if(!c)return 0;const r=d20(),k=r>=c.save;if(k)log(`${c.name} saves (${r})!`);return k}
