@@ -33,6 +33,45 @@ button{font:inherit;color:var(--fg)}
 .st{display:flex;justify-content:space-around;font-weight:bold;font-size:13px}.st u{text-decoration:none}
 .hand{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 4px;flex:0 0 auto}.hand .card{flex:0 0 94px;width:94px}
 .flt{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.flt input,.flt select{flex:1 1 120px;min-width:0;padding:7px;border-radius:8px;border:1px solid #4a3a6a;background:#1a1428;color:inherit;font:inherit}.flt input{flex-basis:100%}
+
+.card,.tile{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.card{height:206px;padding:5px 4px 4px}
+.card b{font-size:12.5px;margin:1px 6px 0 16px;min-height:28px}
+.card .art{height:46px}
+.card em{font-size:11px;line-height:1.2;display:flex;flex-direction:column;gap:2px;justify-content:flex-start;text-align:left;padding:0 2px;overflow:hidden}
+.card em .cl{font-weight:bold;opacity:.95;text-align:center}
+.card em .kw{display:block;font-size:10.5px;line-height:1.2}.card em .kw i{font-style:normal;margin-right:3px}
+.card .st{font-size:15px}
+.card .sg{display:grid;grid-template-columns:1fr 1fr;gap:0 4px;font-size:11.5px;text-align:center}.card .sg u{text-decoration:none}
+.hand .card{flex:0 0 112px;width:112px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr))}.main .grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.tile{height:80px}.tile b{font-size:12px}.tile span{font-size:11.5px}.tile .ab{font-size:12px;line-height:1}
+#zm{position:fixed;inset:0;z-index:30;background:#000d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;overflow-y:auto}
+.zc{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;justify-content:center;max-width:520px}
+.card.zoom{width:200px;height:290px;flex:0 0 200px;pointer-events:none}.card.zoom b{font-size:16px;min-height:36px}.card.zoom .art{height:76px}.card.zoom em{font-size:13px}.card.zoom em .kw{font-size:13px}.card.zoom .st{font-size:19px}.card.zoom .sg{font-size:14px}
+.zr{flex:1 1 200px;font-size:15px;line-height:1.35;text-align:left}.zr h3{margin:0}.zr p{margin:8px 0}.zr .lg{font-size:13px;opacity:.85}
+.fl{position:fixed;z-index:20;pointer-events:none;font-weight:bold;font-size:22px;text-shadow:0 2px 4px #000;transform:translate(-50%,-50%);animation:flt .95s ease-out forwards}
+@keyframes flt{to{transform:translate(-50%,-170%);opacity:0}}
+.fl.d{color:#ff6a5a}.fl.h{color:#6aff8a}.fl.m{color:#ddd;font-size:16px}.fl.c{color:#ffd23f;font-size:28px}
+.fx-hit{animation:shk .35s,fls .35s}@keyframes shk{20%{transform:translateX(-5px)}60%{transform:translateX(5px)}}@keyframes fls{50%{background:#ff3a3add}}
+.fx-atk{animation:lng .3s;z-index:2}@keyframes lng{45%{transform:translate(calc(var(--dx)*1px),calc(var(--dy)*1px)) scale(1.08)}}
+.fx-in{animation:pop .4s}@keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12)}}
+.fx-die{animation:die .55s}@keyframes die{0%{background:#ff9a3a;transform:scale(1.1)}100%{transform:scale(1)}}
+.fx-heal{animation:hl .5s}@keyframes hl{50%{box-shadow:0 0 0 4px #6aff8a,0 0 18px #6aff8a}}
+.fx-spell{animation:spl .5s}@keyframes spl{50%{box-shadow:0 0 0 4px #9ad0ff,0 0 22px #9ad0ff;filter:brightness(1.6)}}
+@media (prefers-reduced-motion:reduce){.fx-hit,.fx-atk,.fx-in,.fx-die,.fx-heal,.fx-spell{animation:none}}
+.nav .mute{flex:0 0 38px;font-size:15px}
+.btn{min-height:40px}
+.sec{background:#2b2218ee;border:2px solid var(--ln);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.sec h4{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.sec .hint{font-size:12px;opacity:.8}
+.sec .row{display:flex;align-items:center;gap:8px}.sec .row>b,.sec .row>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sec.alert{border-color:#ffd23f;background:#3a3010ee;animation:glow 1.6s infinite}
+.code{font-size:28px;letter-spacing:5px;font-weight:bold;color:var(--acc);flex:1}
+.fr{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#0004;border-radius:10px}.fr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.dot{flex:0 0 11px;height:11px;border-radius:50%;background:#666}.dot.on{background:#5fe07a;box-shadow:0 0 7px #5fe07a}
+.badge{background:var(--acc);color:#fff;border-radius:10px;padding:0 8px;font-size:12px}
+.big{font-size:34px;font-weight:bold;line-height:1}.rk{width:26px;text-align:center;font-weight:bold}.fr.me{outline:2px solid var(--acc)}
 .dim{opacity:.4;filter:grayscale(.8)}.ready{box-shadow:0 0 0 3px #5fe07a,0 0 10px #5fe07a}.sel{transform:translateY(-6px);box-shadow:0 0 0 3px #fff,0 0 14px var(--acc)}
 .can{box-shadow:0 0 0 2px #5fe07a,0 0 10px #5fe07a99;transform:translateY(-3px)}
 .cost.no{background:#c0392b}
@@ -216,7 +255,7 @@ S=loadSave();
 if(!S){S={gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,builds:[],packs:{std:0}};S.deck=auto();sv(true)}
 const {d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,play}=DelversEngine,sl=ms=>new Promise(r=>setTimeout(r,ms));
 function newGame(oi){const o=CAMP[oi],mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
- G={oi,opp:{n:o[0],lvl:o[2]},b:Array(NT).fill(null),p:mkp(20),e:mkp(o[1]),turn:'p',busy:false,over:null,sel:null,msg:'',log:['Battle begins!']};
+ G={fx:true,oi,opp:{n:o[0],lvl:o[2]},b:Array(NT).fill(null),p:mkp(20),e:mkp(o[1]),turn:'p',busy:false,over:null,sel:null,msg:'',log:['Battle begins!']};
  DelversEngine.use(G);G.p.deck=sh(S.deck.map(n=>mk(BN[n])));
  const pool=ALL.filter(c=>c.rar<=o[3]&&c.kind!='haste'),all=pool.filter(c=>c.t=='c'),fav=all.filter(c=>o[6].includes(c.cls)),cs=fav.length?fav:all;
  for(let i=0;i<30;i++)G.e.deck.push(mk(Math.random()<.6?pick(cs):pick(pool)));
@@ -230,7 +269,7 @@ function handle(a,i){
   else if(u&&spell({side:u.o,c:u})){}
   else if(u&&u.o=='p'){if(u.mv>0||u.ready)G.sel=sel&&sel.c===u?null:{m:'unit',c:u};else G.msg='Already acted.'}
   else if(sel&&sel.m=='unit'){const a=sel.c,p=G.b.indexOf(a);
-   if(!u){if(dist(p,i)<=a.mv){G.b[i]=a;G.b[p]=null;a.mv-=dist(p,i)}else G.msg='Too far: initiative '+a.mv+' left.'}
+   if(!u){if(dist(p,i)<=a.mv){G.b[i]=a;G.b[p]=null;a.mv-=dist(p,i);(G.ev||(G.ev=[])).push({k:'mov',i,s:'p'})}else G.msg='Too far: initiative '+a.mv+' left.'}
    else if(a.ready&&dist(p,i)<=a.rch){attack('p',a,{side:'e',c:u});G.sel=null}else G.msg=a.ready?'Out of reach (reach '+a.rch+'). Move closer.':'Already attacked.'}}
  else if(a=='ehero'){if(!spell({side:'e',c:null})&&sel&&sel.m=='unit'){const u=sel.c;if(u.ready&&row(G.b.indexOf(u))<u.rch){attack('p',u,{side:'e',c:null});G.sel=null}else G.msg=u.ready?'Get within reach of their side first.':'Already attacked.'}}
  else if(a=='phero')spell({side:'p',c:null});
@@ -276,7 +315,11 @@ const ST_='<g fill="#fff">'+Array.from({length:40},(_,i)=>`<circle cx="${(i*97)%
 const BGM=bgS(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0a1c"/><stop offset=".6" stop-color="#3a1f3f"/><stop offset="1" stop-color="#8a4a2a"/></linearGradient></defs><rect width="400" height="800" fill="url(#s)"/>${ST_}<mask id="mm"><rect width="400" height="800" fill="#fff"/><circle cx="326" cy="108" r="31" fill="#000"/></mask><circle cx="310" cy="120" r="34" fill="#fff3c4" opacity=".85" mask="url(#mm)"/><path d="M0 800V600L60 520 120 600 190 480 260 590 330 500 400 610V800Z" fill="#1a1026"/><g fill="#0a0612"><path d="M120 800V560h20v-30h14v30h22v-40h16v40h20v-30h14v30h24V800Z"/><path d="M158 520l9-26 9 26zM198 520l9-26 9 26zM236 560l9-30 9 30z"/><rect x="40" y="640" width="60" height="160"/><path d="M34 640l36-40 36 40z"/></g><path d="M0 800V720Q100 690 200 730T400 710V800Z" fill="#05030a"/></svg>`);
 const BGB=bgS(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1410"/><stop offset="1" stop-color="#0c0906"/></linearGradient><radialGradient id="f"><stop offset="0" stop-color="#ff9a3a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient></defs><rect width="400" height="800" fill="url(#d)"/><g stroke="#2a2018" stroke-width="2" fill="none">${Array.from({length:16},(_,i)=>`<path d="M0 ${i*50}H400"/>`).join('')}${Array.from({length:40},(_,i)=>`<path d="M${(i%8)*55+(Math.floor(i/8)%2)*27} ${Math.floor(i/8)*100}v50"/>`).join('')}</g><circle cx="20" cy="260" r="110" fill="url(#f)"/><circle cx="380" cy="260" r="110" fill="url(#f)"/><g fill="#ffb347"><path d="M20 240q-8 14 0 22 8-8 0-22zM380 240q-8 14 0 22 8-8 0-22z"/></g><g fill="#0007"><path d="M0 0h400v80Q200 150 0 80Z"/><path d="M0 800h400v-90Q200 640 0 710Z"/></g></svg>`);
 document.documentElement.style.setProperty('--bgm',BGM);document.documentElement.style.setProperty('--bgb',BGB);
-function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" ${attr||''}><span class="cost ${/\bno\b/.test(cls||'')?'no':''}">${c.cost}</span><b>${c.name}</b>${art(c)}<em>${k?`${CL[c.cls][0]} · ${c.al}${KW[c.kw]?'<br>'+KW[c.kw]:''}${c.rch>1?'<br>Reach '+c.rch:''}`:c.txt}</em>${k?`<span class="st"><u>⚔${c.atk}</u><u>♥${c.hp}</u></span><small>Guard ${c.ac} · Aim ${c.thac0}<br>Init ${c.init} · Save ${c.save}</small>`:`<small>${c.sub}</small>`}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
+const KI={heal:'✚',regen:'♻️',keen:'🎯',haste:'⚡',dbl:'⚔️',poison:'☠️',para:'✋',drain:'⬇️',back:'🗡️',mr:'🔮',tough:'🛡️',thorns:'🌵',lifelink:'🩸'},KN={heal:'Heal',regen:'Regenerate',keen:'Keen',haste:'Haste',dbl:'Two attacks',poison:'Poison',para:'Paralysis',drain:'Drain',back:'Backstab',mr:'Magic resistance',tough:'Tough',thorns:'Thorns',lifelink:'Lifelink'},SI={dmg:'🔥',heal:'✚',aoe:'💥',sleep:'💤',bless:'✨',haste:'⚡',draw:'📖',mana:'💧',mheal:'✚',turn:'☀️'},SLI={P:'⚔️',A:'🛡️',I:'💍'};
+const kws=c=>[...new Set([c.kw,...(c.k2||'').split(' ')].filter(Boolean))];
+const icon=c=>c.t=='c'?GL[c.cls]:c.t=='i'?SLI[c.slot]:SI[c.kind]||'✦';
+function rules(c){return c.t=='c'?kws(c).map(k=>`<span class="kw"><i>${KI[k]}</i>${KW[k]}</span>`).join('')+(c.rch>1?`<span class="kw"><i>↔</i>Reach ${c.rch}</span>`:''):`<span class="kw"><i>${icon(c)}</i>${c.txt}</span>`}
+function card(c,attr,cls,n){const k=c.t=='c';return `<button class="card ${cls||''}" style="--k:${CL[c.cls][1]}" data-z="${c.name}" ${attr||''}><span class="cost ${/\bno\b/.test(cls||'')?'no':''}">${c.cost}</span><b>${c.name}</b>${art(c)}<em>${k?`<span class="cl">${icon(c)} ${CL[c.cls][0]}</span>`:`<span class="cl">${icon(c)} ${c.sub}</span>`}${rules(c)}</em>${k?`<span class="st"><u>⚔ ${c.atk}</u><u>♥ ${c.hp}</u></span><small class="sg"><u>🛡${c.ac}</u><u>🎯${c.thac0}</u><u>👟${c.init}</u><u>🎲${c.save}</u></small>`:''}<i class="rar" style="background:${RC[c.rar]}"></i>${n!=null?`<s>×${n}</s>`:''}</button>`}
 const need=(a,ac)=>Math.min(20,Math.max(2,a.thac0-ac-(DelversEngine.has(a,'keen')?1:0)));
 function canPlay(c){const P=G.p;if(c.cost>P.mp)return false;if(c.t=='c')return BACK.some(i=>!G.b[i]);if(c.tg=='none')return true;
  return[{side:'p',c:null},{side:'e',c:null},...G.b.filter(Boolean).map(u=>({side:u.o,c:u}))].some(t=>ok(c.tg,'p',t,c))}
@@ -288,7 +331,7 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
  const bd=G.b.map((u,i)=>{if(!u){const m=(un&&dist(up,i)<=un.mv)||(pl&&row(i)==ROWS-1);return `<button class="tile ${m?'mv':''}" data-a="cell" data-i="${i}">${m?(pl?'▼ place here':'move →'):row(i)==0?'· foe ·':row(i)==ROWS-1?'· you ·':''}</button>`}
   const inr=un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch,tg=hl(u.o,u)||(inr?'tgt':'');
   const cl=(u.o=='p'&&mine&&(u.mv>0||u.ready)&&!sel?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep||(u.o=='p'&&mine&&!u.ready&&u.mv<=0)?'done ':'')+tg;
-  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}">${inr?`<i class="hit">🎯${need(un,u.ac)}+</i>`:''}${art(u,'tart')}<b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.rch>1?' R'+u.rch:''}${u.sleep?' 💤':''}</span><span>G${u.ac} A${u.thac0} Init ${u.mv}/${u.init}</span></button>`}).join('');
+  return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]}" data-a="cell" data-i="${i}">${inr?`<i class="hit">🎯${need(un,u.ac)}+</i>`:''}${art(u,'tart')}<b>${u.name}</b><span>⚔${u.atk} ♥${u.hp}${u.rch>1?' ↔'+u.rch:''}${u.sleep?' 💤':''}</span><span>🛡${u.ac} 👟${u.mv}/${u.init}</span><span class="ab">${kws(u).map(k=>KI[k]).join('')}${u.sP?'⚔️':''}${u.sA?'🛡️':''}${u.sI?'💍':''}</span></button>`}).join('');
  const pr=G.over?'':G.turn=='e'?'Foe is acting… please wait.':G.msg||(pl?'Tap a glowing tile on your back row (bottom).':sp?`Choose a target for ${sp.name}.`:un?`Tap a yellow tile to move (${un.mv} initiative left)${un.ready?', or a red target to attack':''}.`:'Tap a glowing green card to play it, or a green-outlined creature to move or attack.');
  const hd=P.hand.map((c,i)=>{const ok_=mine&&canPlay(c);return card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(ok_?(sel?'':'can '):'dim ')+(c.cost>P.mp?'no':''))}).join('');
  const idle=mine&&!G.busy&&!P.hand.some(canPlay)&&!units('p').some(u=>u.ready);
@@ -298,6 +341,7 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
 const GUIDE=[
 ['The goal',`<p>Each duel is a fight between you and a foe. Every hero has Health. <b>Reduce the enemy hero to 0 Health to win.</b> If your own hero reaches 0 you are defeated, but you still earn a little gold and can try again.</p><p>Your hero starts with 20 Health. Foes have more as the campaign goes on.</p>`],
 ['A turn, step by step',`<ol><li><b>Start of turn:</b> your Mana refills (and its maximum rises by 1, up to 10), you draw a card, and your creatures wake up with full Initiative and the ability to attack.</li><li><b>Play cards</b> from your hand by spending Mana. Tap a card, then tap where it should go or what it should target.</li><li><b>Move and attack</b> with your creatures. Tap a creature with a green outline, then a yellow tile to move or a red target to attack.</li><li><b>End turn.</b> The foe takes its turn, then it is yours again.</li></ol><p>The big banner at the top always says whose turn it is. When it is not yours, your hand fades and taps do nothing.</p>`],
+['Reading a card',`<p>Hold any card or creature (or right-click on a computer) to read it in full.</p><ul><li><b>Number in the corner:</b> Mana cost.</li><li><b>⚔ Attack</b> and <b>♥ Health</b> sit in the middle.</li><li><b>🛡 Guard</b>: how hard it is to hit (lower is harder). <b>🎯 Aim</b>: how well it hits (lower is better).</li><li><b>👟 Initiative</b>: tiles it can move. <b>🎲 Save</b>: resisting spells (lower is better).</li><li>Abilities have symbols: ⚡ Haste, ⚔️ Two attacks, ☠️ Poison, ✋ Paralysis, ⬇️ Drain, 🗡️ Backstab, 🔮 Magic resistance, 🛡️ Tough, 🌵 Thorns, 🩸 Lifelink, ✚ Heal, ♻️ Regenerate, 🎯 Keen, ↔ Reach.</li><li>Class symbols: ⚔️ Fighter, 🧙 Wizard, ✨ Cleric, 🗡️ Thief, 🏹 Ranger, 🐺 Beast, 💀 Undead and so on. Gear shows ⚔️ weapon, 🛡️ armour, 💍 magic item.</li></ul>`],
 ['Mana (✦)',`<p>Cards cost Mana (the number in the corner). You begin the duel with 0 maximum Mana and gain 1 each turn, so turn 3 gives 3 Mana. It all refills every turn and unspent Mana is lost. A card with a red cost is too expensive right now.</p>`],
 ['The 4×5 grid',`<p>The battlefield is a grid 4 tiles wide and 5 tiles tall. The <b>top row is the foe's back row</b> and the <b>bottom row is yours</b>. The three rows between are no-man's-land. Your creatures always start on your bottom row.</p><p>Only one creature fits on a tile. Creatures never leave the grid on their own: they stay until they fall or the duel ends.</p>`],
 ['Summoning creatures',`<p>Play a creature card, then tap a glowing tile on your bottom row. A newly summoned creature is <b>tired</b>: it cannot move or attack until your next turn.</p>`],
@@ -341,12 +385,12 @@ function cardsHTML(){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length,f
  <div class="split"><div class="main">
  <div class="chips">${Object.keys(FL).map(k=>`<button class="chip ${f==k?'on':''}" data-a="flt" data-k="${k}">${FL[k]}</button>`).join('')}<button class="chip ${V.un?'on':''}" data-a="unl">${V.un?'Hide':'Show'} unowned</button></div>
  <div class="flt"><input id="fq" type="search" value="${esc(V.q||'')}" placeholder="Search name, type or ability" aria-label="Search cards" maxlength="30"><select data-f="so" aria-label="Sort by">${[['cost','Sort: Cost'],['name','Sort: Name'],['rar','Sort: Rarity'],['atk','Sort: Attack'],['own','Sort: Owned']].map(x=>`<option value="${x[0]}" ${so==x[0]?'selected':''}>${x[1]}</option>`).join('')}</select><select data-f="fr" aria-label="Rarity"><option value="">Any rarity</option>${RN.map((x,k)=>`<option value="${k}" ${fr==k?'selected':''}>${x}</option>`).join('')}</select><select data-f="fc" aria-label="Cost"><option value="">Any cost</option>${[['0','Cost 0–1'],['1','Cost 2–3'],['2','Cost 4–5'],['3','Cost 6+']].map(x=>`<option value="${x[0]}" ${fc==x[0]?'selected':''}>${x[1]}</option>`).join('')}</select><select data-f="fk" aria-label="Class"><option value="">Any class</option>${Object.keys(CL).map(k=>`<option value="${k}" ${fk==k?'selected':''}>${CL[k][0]}</option>`).join('')}</select>${nf?'<button class="btn" data-a="fclr">Clear filters</button>':''}</div>
- <small>${SET.name}: ${o}/${ALL.length} cards found · ${list.length} shown. Tap a card to add it to your deck.</small>${V.sold?`<div class="mid" role="status">${V.sold}</div>`:''}${selb}
+ <small>${SET.name}: ${o}/${ALL.length} cards found · ${list.length} shown. Tap a card to add it · hold to read it.</small>${V.sold?`<div class="mid" role="status">${V.sold}</div>`:''}${selb}
  <div class="grid">${list.map(c=>{const k=own(c.name),d=dc(c.name),mx=Math.min(3,k),i=ALL.indexOf(c),fl=d>=mx||n>=30;
   if(!k)return `<div class="cc"><div class="card dim" style="--k:#888"><b>???</b><em>${RN[c.rar]}</em></div></div>`;
   return `<div class="cc ${d?'in':''}">${card(c,`data-a="dp" data-i="${i}"`,fl?'full':'')}<div class="stp"><button data-a="dm" data-i="${i}" ${d?'':'disabled'} aria-label="Remove ${c.name}">−</button><span><b>${d}</b>/${mx}<small> own ${k}</small></span><button data-a="dp" data-i="${i}" ${fl?'disabled':''} aria-label="Add ${c.name}">+</button></div>${xtra(c)?`<button class="sell" data-a="sell" data-i="${i}">Sell 1 extra · 🪙${SELL[c.rar]} <small>(${xtra(c)} spare)</small></button>`:''}</div>`}).join('')||'<small>No cards match this filter.</small>'}</div></div>${side}</div>`}
 function menuHTML(){if(V.brief!=null)return briefHTML();const T=[['duel','Duel'],['cards','Cards & Deck'],['store','Store'],['packs','Packs'],['ranked','Ranked'],['friends','Social'],['lore','Lore'],['guide','Guide']];
- let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<span>🪙 ${S.gold}</span></div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
+ let h=`<div class="nav">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}</button>`).join('')}<button class="mute" data-a="snd" aria-label="Sound ${mute?'off':'on'}">${mute?'🔇':'🔊'}</button><span>🪙 ${S.gold}</span></div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
  if(V.v=='duel'){h+=cloudHTML()+`<div class="op" style="display:block"><b>New to Delvers?</b> <button class="btn" data-a="nav" data-v="guide" style="float:right;padding:2px 10px">Open the Guide</button><br><small>Learn turns, Mana, the grid, Initiative, Reach, abilities and Aim.</small></div><small>${V.msg||'Beat each foe in order. Summon creatures on your back row of the 4×5 grid, spend initiative to move them, and strike the enemy hero from their side of the grid. Reach lets a creature hit foes that many tiles away, and a foe only strikes back if you are within its reach. Each creature can carry one weapon and one armour.'}</small>`+CAMP.map((o,i)=>(i==0||CAMP[i-1][8]!=o[8]?`<h3>${o[8]}</h3>`:'')+`<div class="op ${i>S.prog?'dim':''} ${o[12]?'boss':''}"><div><b>${o[12]?'👑 ':''}${o[0]}</b><br><small>${o[7]} · ❤ ${o[1]} · 🪙 ${o[4]}${i<S.prog?' · ✔ Cleared':''}<br>Fields: ${o[6].map(c=>CL[c][0]).join(' / ')}</small></div><button class="btn ${i==S.prog?'pri':''}" data-a="fight" data-i="${i}" ${i>S.prog?'disabled':''}>${i>S.prog?'Locked':i<S.prog?'Replay':'Fight'}</button></div>`).join('')}
  else if(V.v=='ranked')h+=rankedHTML();
  else if(V.v=='friends')h+=friendsHTML();
@@ -371,7 +415,8 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
  const mi=i=>mir?(ROWS-1-row(i))*COLS+i%COLS:i;
  const fl=l=>!mir?l:l.startsWith('You summon ')?'Foe summons '+l.slice(11):l.startsWith('You use ')?'Foe uses '+l.slice(8):l.startsWith('Foe summons ')?'You summon '+l.slice(12):l.startsWith('Foe uses ')?'You use '+l.slice(9):l;
  const b=Array(NT).fill(null);g.b.forEach((u,i)=>{if(u)b[mi(i)]=mir?{...u,o:u.o=='p'?'e':'p'}:u});
- const v={pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
+ const evs=(g.ev||[]).map(x=>({...x,s:x.s==null?x.s:(x.s==s?'p':'e'),i:x.i>=0?mi(x.i):x.i,f:x.f>=0?mi(x.f):x.f}));g.ev=[];
+ const v={ev:evs,pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
  const sec=Math.ceil(T.timeLeft()/1000),mine=g.turn==s;
  v.opp={n:T.opp.name+(g.over?'':` · ⏱ ${sec}s${sec<=15?' ⚠':''} ${mine?'(you)':''}`),lvl:0};
  const sel=pv.sel;if(sel)v.sel=sel.m=='unit'?{m:'unit',c:b[sel.i]}:{m:sel.m,c:g[s].hand[sel.h]};
@@ -379,7 +424,7 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
   v.res=(won?'Victory! ':'Defeated. ')+(WHY[T.why]&&won?WHY[T.why].replace('You won the duel.',''):'')+(T.ranked?d:' Friendly game: no rating change.')+(T.err?'<br><small>'+esc(T.err)+'</small>':'')}
  return v}
 const P_elo=(a,b,r)=>DelversPvp.elo(a,b,r)[0];
-function pvSync(){const T=NET;if(!T)return;
+function pvSync(){const T=NET;if(!T)return;if(T.G)T.G.fx=true;
  if(T.G&&(T.st=='match'||T.st=='over')){if(!V.pv||V.pv.mid!=T.mid)V.pv={mid:T.mid,sel:null,msg:'',rc:false};G=pvView();DelversEngine.use(G);render()}
  else if(V.pv){V.pv=null;if(G&&G.pvp)G=null;render()}
  else if(!G&&!document.activeElement.matches('input'))render()}
@@ -418,31 +463,68 @@ const SETUP='<div class="op" style="display:block"><small>Online play needs a Go
 function online(){if(!cloudOn()||!CLOUD.dbUrl)return'<div class="op" style="display:block"><b>Online play</b><br><small>Not set up in this build yet.</small></div>';
  if(!AU)return'<div class="op" style="display:block"><b>Sign in required</b><br><small>Sign in with Google on the Duel tab to play ranked matches and add friends.</small><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="nav" data-v="duel">Go to Duel tab</button></div></div>';if(needName())return nameHTML();return''}
 function rankedHTML(){const w=online();if(w)return w;netInit();const T=NET,r=T.rec||{r:1000,w:0,l:0},okD=DelversPvp.validRanked(S.deck),n=S.deck.length;
- let h=`<div class="op" style="display:block"><b>🏆 Ranked</b> · Rating <b>${r.r}</b> · ${r.w}W ${r.l}L<br><small>Live matches · 75s per turn · leaving costs rating.</small></div>`;
- h+=`<div class="op" style="display:block"><b>Ranked deck</b> <small>${n}/30 cards</small><br><small>${okD?'✔ Your current deck is legal.':'✖ Ranked decks need exactly 30 cards: up to 3 copies of a card (2 for Rares, 1 for Legendaries). Fix it in Cards &amp; Deck.'}</small></div>`;
- if(T.st=='queue')h+=`<div class="op" style="display:block"><b>Searching for an opponent…</b> <small>${Math.max(0,Math.round(((T.joinedAt?(Date.now()+(T.off||0)-T.joinedAt):0))/1000))}s</small><div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="rleave">Cancel</button></div></div>`;
- else h+=`<div class="bar"><button class="btn pri" style="flex:1" data-a="rfind" ${okD?'':'disabled'}>Find a ranked match</button></div>`;
+ let h=`<div class="sec"><h4>🏆 Ranked</h4><div class="row"><span class="big">${r.r}</span><span class="hint">rating · ${r.w} wins · ${r.l} losses</span></div><span class="hint">Live matches, 75s per turn. Leaving a match costs rating.</span></div>`;
+ h+=`<div class="sec"><h4>Ranked deck <span class="badge">${n}/30</span></h4><span class="${okD?'good':'bad'}">${okD?'✔ Your deck is legal.':'✖ Needs exactly 30 cards: max 3 copies of a card, 2 of a Rare, 1 of a Legendary. Fix it in Cards &amp; Deck.'}</span>`;
+ if(T.st=='queue')h+=`<span><b>Searching for an opponent…</b> ${Math.max(0,Math.round(((T.joinedAt?(Date.now()+(T.off||0)-T.joinedAt):0))/1000))}s</span><button class="btn" data-a="rleave">Cancel</button>`;
+ else h+=`<button class="btn pri" data-a="rfind" ${okD?'':'disabled'}>Find a ranked match</button>`;
+ h+=`</div>`;
  if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
- h+=`<h3>Leaderboard</h3>`+((V.lb||[]).length?(V.lb||[]).map((x,i)=>`<div class="op"><span>${i+1}. ${esc(x.n)}${AU&&x.uid==AU.uid?' (you)':''}</span><b>${x.r}</b></div>`).join(''):'<small>No ranked players yet. Be the first!</small>');
+ h+=`<div class="sec"><h4>Leaderboard</h4>`+((V.lb||[]).length?(V.lb||[]).map((x,i)=>`<div class="fr ${AU&&x.uid==AU.uid?'me':''}"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="nm">${esc(x.n)}${AU&&x.uid==AU.uid?' (you)':''}</span><b>${x.r}</b></div>`).join(''):'<span class="hint">No ranked players yet. Be the first!</span>')+`</div>`;
  return h}
-function friendsHTML(){const w=online();if(w)return w;netInit();const O=SOC,T=NET;let h=`<div class="op"><span>👤 <b>${esc(UN())}</b></span><button class="btn" data-a="uedit" style="padding:2px 10px">Change</button></div>`;
- if(O.invites.length)h+=O.invites.map(x=>`<div class="mid" role="alert"><b>📨 ${esc(x.name)} invited you to a game</b><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="iacc" data-k="${esc(x.from)}">Accept</button><button class="btn" style="flex:1" data-a="idec" data-k="${esc(x.from)}">Decline</button></div></div>`).join('');
- if(T.st=='invite')h+=`<div class="op" style="display:block"><b>Waiting for ${esc(T.inviteTo.name)}…</b> <small>They have 2 minutes to accept.</small><div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="icancel">Cancel invite</button></div></div>`;
- h+=`<div class="op" style="display:block"><b>👥 Your friend code</b><br><span style="font-size:22px;letter-spacing:3px"><b>${esc(O.code||'…')}</b></span> <button class="btn" data-a="ccopy" style="padding:2px 10px">Copy</button><br><small>Share it so friends can add you.</small></div>`;
- h+=`<div class="op" style="display:block"><b>Add a friend</b><div class="bar" style="margin-top:6px"><input id="fc" maxlength="6" placeholder="Friend code" autocomplete="off" style="flex:1;text-transform:uppercase;padding:8px;border-radius:8px;border:2px solid var(--ln);background:#1b140d;color:inherit"><button class="btn pri" data-a="fadd">Add</button></div></div>`;
+function friendsHTML(){const w=online();if(w)return w;netInit();const O=SOC,T=NET,busy=T.st=='invite'||T.st=='queue';let h='';
+ if(O.invites.length)h+=O.invites.map(x=>`<div class="sec alert" role="alert"><h4>📨 ${esc(x.name)} invited you to a game</h4><div class="bar"><button class="btn pri" style="flex:1" data-a="iacc" data-k="${esc(x.from)}">Accept</button><button class="btn" style="flex:1" data-a="idec" data-k="${esc(x.from)}">Decline</button></div></div>`).join('');
+ if(T.st=='invite')h+=`<div class="sec"><h4>⏳ Waiting for ${esc(T.inviteTo.name)}…</h4><span class="hint">They have 2 minutes to accept.</span><button class="btn" data-a="icancel">Cancel invite</button></div>`;
+ h+=`<div class="sec"><h4>👤 ${esc(UN())}<button class="btn" data-a="uedit" style="min-height:30px;padding:2px 10px">Change name</button></h4><div class="row"><span class="code">${esc(O.code||'…')}</span><button class="btn" data-a="ccopy">Copy code</button></div><span class="hint">Share your code so friends can add you.</span></div>`;
+ h+=`<div class="sec"><h4>Friends <span class="badge">${O.friends.length}</span></h4>`+(O.friends.length?O.friends.map(f=>`<div class="fr"><i class="dot ${f.online?'on':''}" title="${f.online?'Online':'Offline'}"></i><span class="nm">${esc(f.name)}</span><button class="btn pri" data-a="finv" data-k="${esc(f.uid)}" ${busy?'disabled':''}>Invite</button><button class="btn" data-a="frem" data-k="${esc(f.uid)}" aria-label="Remove ${esc(f.name)}">✕</button></div>`).join(''):'<span class="hint">No friends yet. Add one with their code below.</span>')+`<span class="hint">Friendly matches: ${DelversNet.FRIENDLY_MS/1000}s turns, no rating change.</span></div>`;
+ h+=`<div class="sec"><h4>Add a friend</h4><div class="row"><input id="fc" maxlength="6" placeholder="Friend code" autocomplete="off" style="flex:1;min-width:0;text-transform:uppercase;padding:9px;border-radius:8px;border:2px solid var(--ln);background:#1b140d;color:inherit;font-size:16px"><button class="btn pri" data-a="fadd">Add</button></div></div>`;
  if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
- if(O.incoming.length)h+=`<h3>Friend requests</h3>`+O.incoming.map(x=>`<div class="op"><span>${esc(x.name)}</span><span><button class="btn pri" data-a="facc" data-k="${esc(x.uid)}">Accept</button> <button class="btn" data-a="fdec" data-k="${esc(x.uid)}">Decline</button></span></div>`).join('');
- h+=`<h3>Friends (${O.friends.length})</h3>`+(O.friends.length?O.friends.map(f=>`<div class="op"><span>${f.online?'🟢':'⚪'} ${esc(f.name)}</span><span><button class="btn pri" data-a="finv" data-k="${esc(f.uid)}" ${T.st=='invite'||T.st=='queue'?'disabled':''}>Invite</button> <button class="btn" data-a="frem" data-k="${esc(f.uid)}" aria-label="Remove ${esc(f.name)}">✕</button></span></div>`).join(''):'<small>No friends yet. Share your code or enter a friend’s code above.</small>');
- if(O.outgoing.length)h+=`<h3>Sent requests</h3>`+O.outgoing.map(x=>`<div class="op"><span>${esc(x.name)}</span><small>waiting for them to accept</small></div>`).join('');
- h+=`<small style="display:block;margin-top:8px">Friendly matches · ${DelversNet.FRIENDLY_MS/1000}s per turn · 20–30 card decks · no rating changes.</small>`;
+ if(O.incoming.length)h+=`<div class="sec"><h4>Friend requests <span class="badge">${O.incoming.length}</span></h4>`+O.incoming.map(x=>`<div class="fr"><span class="nm">${esc(x.name)}</span><button class="btn pri" data-a="facc" data-k="${esc(x.uid)}">Accept</button><button class="btn" data-a="fdec" data-k="${esc(x.uid)}">Decline</button></div>`).join('')+`</div>`;
+ if(O.outgoing.length)h+=`<div class="sec"><h4>Sent requests</h4>`+O.outgoing.map(x=>`<div class="fr"><span class="nm">${esc(x.name)}</span><span class="hint">waiting</span></div>`).join('')+`</div>`;
  return h+(V.on?`<small role="alert" style="display:block;color:#ff9a7a">${esc(V.on)}</small>`:'')}
 const onlineAction=(p,ok)=>{V.sm='';Promise.resolve().then(p).then(ok||(()=>{}),e=>{V.sm=e.message||'Something went wrong.'}).then(()=>{PT.soc=0;if(!G)render()})};
-function render(){if(G&&G.over&&!G.fin)finish();document.body.className=G?'battle':'menu';$app.innerHTML=G?gameHTML():menuHTML()}
+function render(){if(G&&G.over&&!G.fin)finish();document.body.className=G?'battle':'menu';$app.innerHTML=G?gameHTML():menuHTML();fxRun()}
 function packRoll(){const w=[70,22,7,1],o=[];for(let i=0;i<5;i++){let r=Math.random()*100,k=0;for(;k<3;k++){if(r<w[k])break;r-=w[k]}if(i==4)k=Math.max(k,1);o.push(pick(ALL.filter(c=>c.rar==k)))}return o}
 const $app=document.getElementById('app');
+// ===== Sound effects (synthesised, no audio files) and battle animations =====
+let AC=null,mute=false;try{mute=localStorage.getItem('delvers_mute')=='1'}catch(e){}
+function actx(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume();return AC}catch(e){return null}}
+function tone(f,d,ty,v,t0,f2){const a=mute?null:actx();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+(t0||0);o.type=ty||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v||.15,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+function noise(d,v,fc,t0){const a=mute?null:actx();if(!a)return;const n=Math.floor(a.sampleRate*d),b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=(Math.random()*2-1)*(1-i/n);const o=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime+(t0||0);o.buffer=b;f.type='lowpass';f.frequency.value=fc||1500;g.gain.value=v||.2;o.connect(f);f.connect(g);g.connect(a.destination);o.start(t)}
+const SFX={hit:()=>{noise(.12,.25,900);tone(140,.12,'square',.12,0,60)},crit:()=>{noise(.2,.35,1400);tone(220,.25,'sawtooth',.2,0,50);tone(660,.1,'square',.1,.05)},miss:()=>noise(.18,.12,3500),heal:()=>[523,659,784].forEach((f,i)=>tone(f,.18,'sine',.12,i*.08)),die:()=>tone(300,.4,'sawtooth',.15,0,60),sum:()=>{tone(330,.1,'triangle',.15);tone(495,.15,'triangle',.15,.08)},mov:()=>noise(.06,.08,700),spell:()=>{tone(400,.35,'sine',.15,0,1200);noise(.25,.1,2500)},gear:()=>{tone(700,.08,'square',.1);tone(1050,.12,'square',.1,.07)},turn:()=>{tone(660,.15,'sine',.15);tone(880,.2,'sine',.15,.12)},win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.18,i*.14)),lose:()=>[392,330,262,196].forEach((f,i)=>tone(f,.3,'sawtooth',.14,i*.18))};
+const snd=n=>{try{SFX[n]&&SFX[n]()}catch(e){}};
+let fxTurn=null,fxOver=false;
+const tileEl=i=>$app.querySelector(`.tile[data-i="${i}"]`),heroEl=s=>$app.querySelector(s=='e'?'[data-a="ehero"]':'[data-a="phero"]');
+function fl(el,txt,cl){if(!el)return;const r=el.getBoundingClientRect(),n=document.createElement('span');n.className='fl '+cl;n.textContent=txt;n.style.left=(r.left+r.width/2)+'px';n.style.top=(r.top+r.height/2)+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),950)}
+function cls(el,c,ms){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el&&el.classList.remove(c),ms||500)}
+function fxOne(x){const el=x.i>=0?tileEl(x.i):heroEl(x.s);
+ if(x.k=='atk'){const f=tileEl(x.f);if(f){const a=x.f,b=x.i>=0?x.i:null,dx=b==null?0:(b%COLS)-(a%COLS),dy=b==null?(x.s=='e'?-1:1):row(b)-row(a);f.style.setProperty('--dx',Math.sign(dx)*14);f.style.setProperty('--dy',Math.sign(dy)*14);cls(f,'fx-atk',300)}}
+ else if(x.k=='dmg'){cls(el,'fx-hit',350);fl(el,(x.cr?'💥 ':'')+'-'+x.n,x.cr?'c':'d');snd(x.cr?'crit':'hit')}
+ else if(x.k=='miss'){fl(el,'Miss','m');snd('miss')}
+ else if(x.k=='heal'){fl(el,'+'+x.n,'h');cls(el,'fx-heal',500);snd('heal')}
+ else if(x.k=='die'){cls(el,'fx-die',550);snd('die')}
+ else if(x.k=='sum'||x.k=='mov'){cls(el,'fx-in',400);snd(x.k)}
+ else if(x.k=='spell'){const t=x.i>=0?tileEl(x.i):x.all?$app.querySelector('.board'):heroEl(x.s);cls(t,'fx-spell',500);snd(x.kind=='gear'||x.kind=='bless'?'gear':'spell')}}
+function fxRun(){if(!G){fxTurn=null;fxOver=false;return}
+ if(G.turn=='p'&&!G.over&&fxTurn!='p')snd('turn');fxTurn=G.turn;
+ if(G.over&&!fxOver){fxOver=true;snd(G.over=='p'?'win':'lose')}else if(!G.over)fxOver=false;
+ const e=G.ev;if(!e||!e.length)return;G.ev=[];e.slice(0,16).forEach((x,n)=>setTimeout(()=>fxOne(x),n*230))}
+// ===== Card zoom: hold a card or creature (or right-click) to read it in full =====
+const LEG='<p class="lg"><b>⚔</b> Attack · <b>♥</b> Health · <b>🛡</b> Guard (lower is harder to hit) · <b>🎯</b> Aim (lower is better) · <b>👟</b> Initiative (tiles per turn) · <b>🎲</b> Save (lower is better)</p>';
+function zoomHTML(c,live){const l=c.t=='c'?kws(c).map(k=>`<p><b>${KI[k]} ${KN[k]}</b><br>${KW[k]}</p>`).join('')+(c.rch>1?`<p><b>↔ Reach ${c.rch}</b><br>Can strike foes up to ${c.rch} tiles away.</p>`:'')+(c.t=='c'&&!kws(c).length&&c.rch<2?'<p>No special abilities.</p>':'')+(live?`<p><b>Carrying</b><br>${[c.sP&&'⚔️ weapon',c.sA&&'🛡️ armour',c.sI&&'💍 magic item'].filter(Boolean).join(', ')||'No gear'}</p>`:'')+LEG:`<p><b>${icon(c)} ${c.sub}</b><br>${c.txt}</p>`+(c.t=='i'?'<p>Played on one of your creatures. It stays for the rest of the duel.</p>':'')+(c.t=='s'&&c.kind=='dmg'?'<p>Damage spells ignore Guard and never miss.</p>':'');
+ return `<div class="zc">${card(c,'','zoom')}<div class="zr"><h3>${c.name}</h3><small>${RN[c.rar]}${c.t=='c'?' · '+CL[c.cls][0]+' · '+c.al:''}</small>${l}</div></div><small>Tap anywhere to close</small>`}
+let zt=null,zAt=0;
+function zoomShow(el){let c=null,live=false;if(el.classList.contains('tile')){c=G&&G.b[+el.dataset.i];live=true}else c=BN[el.dataset.z];if(!c)return;zAt=Date.now();let z=document.getElementById('zm');if(!z){z=document.createElement('div');z.id='zm';z.addEventListener('click',()=>z.remove());document.body.appendChild(z)}z.innerHTML=zoomHTML(c,live)}
+const zT=e=>e.target.closest&&e.target.closest('[data-z],.tile.u');
+$app.addEventListener('pointerdown',e=>{actx();const z=zT(e);if(!z)return;z._p=[e.clientX,e.clientY];clearTimeout(zt);zt=setTimeout(()=>zoomShow(z),450)});
+$app.addEventListener('pointermove',e=>{const z=zT(e);if(z&&z._p&&Math.hypot(e.clientX-z._p[0],e.clientY-z._p[1])>10)clearTimeout(zt)});
+['pointerup','pointercancel','scroll'].forEach(n=>$app.addEventListener(n,()=>clearTimeout(zt),true));
+$app.addEventListener('contextmenu',e=>{const z=zT(e);if(z){e.preventDefault();zoomShow(z)}});
+
 $app.addEventListener('input',e=>{if(e.target.id=='fq'){V.q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('fq');if(n){n.focus();n.setSelectionRange(p,p)}}});
 $app.addEventListener('change',e=>{const f=e.target.dataset&&e.target.dataset.f;if(f){V[f]=e.target.value;render()}});
 $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,i=+b.dataset.i,k=b.dataset.k;
+ if(Date.now()-zAt<500)return;
+ if(a=='snd'){mute=!mute;try{localStorage.setItem('delvers_mute',mute?'1':'0')}catch(e){}render();return}
  if(G&&G.pvp){pvClick(a,i);return}
  if(G){if(a=='end')endTurn();else if(a=='quit'){if(!G.busy||G.over){G=null;render()}}else handle(a,i);return}
  if(a=='nav'){V.v=b.dataset.v;V.msg='';V.cs=false;V.sold='';V.sm='';PT.lb=0;PT.soc=0}
