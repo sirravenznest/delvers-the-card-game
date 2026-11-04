@@ -65,6 +65,7 @@ function makeDb(opts = { rules: require('../database.rules.json') }) {
     if (down.has(uid)) throw new Error('offline');
     const p = decodeURIComponent(u.pathname).replace(/^\//, '').replace(/\.json$/, '');
     const m = opt.method || 'GET';
+    if ((m == 'GET' || m == 'HEAD') && opt.body !== undefined) throw new TypeError("Request with GET/HEAD method cannot have body.");
     const raw = opt.body === undefined ? undefined : JSON.parse(opt.body);
     if (RS) {
       const sv = stamp(raw);

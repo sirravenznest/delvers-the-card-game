@@ -12,7 +12,7 @@ function create(o){
  const uid=()=>o.auth().uid;
  async function rq(m,path,body,q){
   const a=o.auth(),u=`${o.db}/${path}.json?auth=${encodeURIComponent(a.tok)}${q?'&'+q:''}`;
-  const r=await o.fetch(u,{method:m,body:body===undefined?undefined:JSON.stringify(body)});
+  const r=await o.fetch(u,{method:m,body:body===undefined||m=='GET'||m=='DELETE'?undefined:JSON.stringify(body)});
   if(!r.ok){const e=new Error('db '+r.status);e.status=r.status;throw e}
   return r.json()}
  const changed=()=>{if(o.onChange)o.onChange(T)};

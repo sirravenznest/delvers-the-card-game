@@ -9,7 +9,7 @@ function create(o){
  const uid=()=>o.auth().uid;
  async function rq(m,path,body,q){
   const a=o.auth(),u=`${o.db}/${path}.json?auth=${encodeURIComponent(a.tok)}${q?'&'+q:''}`;
-  const r=await o.fetch(u,{method:m,body:body===undefined?undefined:JSON.stringify(body)});
+  const r=await o.fetch(u,{method:m,body:body===undefined||m=='GET'||m=='DELETE'?undefined:JSON.stringify(body)});
   if(!r.ok){const e=new Error('db '+r.status);e.status=r.status;throw e}
   return r.json()}
  const newCode=()=>{let c='';for(let i=0;i<6;i++)c+=ALPHA[Math.floor(Math.random()*ALPHA.length)];return c};
