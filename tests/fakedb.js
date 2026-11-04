@@ -1,7 +1,8 @@
 const clk = { t: 1_000_000, now() { return clk.t; } };
 // Minimal Realtime Database REST fake. Emulates: sv timestamps, immutable log entries, write-once queue/$uid/m,
 // and members-only match access (the intent of database.rules.json).
-function makeDb() {
+function makeDb(opts = { rules: require('../database.rules.json') }) {
+  const RS = opts.rules ? require('./rulesim') : null;
   const root = {};
   const get = (p) => p.split('/').filter(Boolean).reduce((n, k) => (n == null ? n : n[k]), root);
   const stamp = (v) => {
@@ -64,7 +65,13 @@ function makeDb() {
     if (down.has(uid)) throw new Error('offline');
     const p = decodeURIComponent(u.pathname).replace(/^\//, '').replace(/\.json$/, '');
     const m = opt.method || 'GET';
-    if (!allowed(uid, m, p, opt.body === undefined ? undefined : JSON.parse(opt.body))) return R({ error: 'Permission denied' }, 401);
+    const raw = opt.body === undefined ? undefined : JSON.parse(opt.body);
+    if (RS) {
+      const sv = stamp(raw);
+      const writes = m == 'PATCH' ? Object.keys(sv).map(k => [p + '/' + k, sv[k]]) : [[p, m == 'DELETE' ? null : sv]];
+      const ok = m == 'GET' ? RS.check(opts.rules, '.read', uid, root, p) : writes.every(([wp, wv]) => RS.check(opts.rules, '.write', uid, root, wp, wv));
+      if (!ok) return R({ error: 'Permission denied' }, 401);
+    } else if (!allowed(uid, m, p, raw)) return R({ error: 'Permission denied' }, 401);
     if (m == 'GET') {
       let v = get(p);
       const ob = u.searchParams.get('orderBy');
