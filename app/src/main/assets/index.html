@@ -137,7 +137,6 @@ body.battle{background:var(--bg) var(--bgb) center/cover no-repeat fixed}
 @keyframes foilGlow{50%{filter:brightness(1.1)}}
 @keyframes legendGlow{50%{filter:brightness(1.16) saturate(1.25)}}
 @keyframes foilSweep{0%,58%{transform:translateX(-70%) rotate(8deg)}80%,100%{transform:translateX(70%) rotate(8deg)}}
-@media(max-width:600px){.split{display:block}.dlist{position:static;max-height:280px;margin-top:8px}.main .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
 @media(max-width:380px){.hand .card{flex-basis:138px;width:138px}.card{height:230px}}
 @media(prefers-reduced-motion:reduce){.rar2,.rar3,.rar2::after,.rar3::after,.pkov.r2,.pkov.r3{animation:none}}
 .set{display:none}
@@ -171,6 +170,8 @@ body.battle{background:var(--bg) var(--bgb) center/cover no-repeat fixed}
 @media(max-width:420px){#intro{padding:10px}.introBox{padding:14px}.introMatch{gap:7px}.introPlayer{padding:9px 3px}.introPlayer .portrait{width:58px;height:58px;flex-basis:58px}}
 @media(prefers-reduced-motion:reduce){.introBox{animation:none}}
 small{opacity:.8}h3{margin:6px 0 0}
+@media(max-width:600px){.dlist{flex-basis:104px}.dl{font-size:10.5px}.main .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+.dlr{display:flex;flex-direction:column;gap:2px;background:#2b2218;border-radius:6px;padding:2px}.dlr .dl{padding:3px 2px}.dlc{display:flex;align-items:center;justify-content:space-between;gap:4px}.dlc b{font-size:12px}.dlb{flex:1;min-height:30px;font-size:18px;line-height:1;padding:0;border-radius:6px;border:1px solid var(--ln);background:#3a2d1c;color:var(--fg)}.dlb:disabled{opacity:.35}.dlb:active{border-color:var(--acc)}
 </style></head>
 <body><div id="app"></div>
 <script src="cards.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="net.js"></script><script src="social.js"></script>
@@ -522,8 +523,8 @@ function cardsHTML(){const n=S.deck.length,dc=x=>S.deck.filter(y=>y==x).length,f
  sameD=b=>b.deck.length==S.deck.length&&[...b.deck].sort().join()==[...S.deck].sort().join(),
  bl=S.builds.map((b,k)=>`<div class="rw"><b>${sameD(b)?'✓ ':''}${b.name} <small>${b.deck.length} cards${sameD(b)?' · current':''}</small></b><button class="btn" data-a="bload" data-i="${k}">Load</button><button class="btn" data-a="bupd" data-i="${k}" ${n?'':'disabled'} aria-label="Overwrite ${b.name} with current deck">${V.bc===k?'Sure?':'Update'}</button><button class="btn" data-a="bren" data-i="${k}" aria-label="Rename ${b.name}">✏️</button><button class="btn" data-a="bdel" data-i="${k}" aria-label="Delete ${b.name}">🗑</button></div>`).join('');
  const xa=xtraAll(),selb=xa[0]?(V.cs?`<div class="op sellbox"><span>Sell ${xa[0]} spare cards for 🪙${xa[1]}?</span><span><button class="btn pri" data-a="sellall">Confirm</button> <button class="btn" data-a="sellno">Cancel</button></span></div>`:`<button class="btn sellall" data-a="sellask">💰 Sell all spare cards (${xa[0]}) → 🪙${xa[1]}</button>`):'<small>No spare cards. You keep 3 copies of each card; extras can be sold for gold.</small>',
- grp=[['c','Creatures'],['s','Spells'],['i','Gear']].map(([t,nm])=>{const u=[...new Set(S.deck.filter(x=>BN[x].t==t))].sort((a,b)=>BN[a].cost-BN[b].cost||a.localeCompare(b));return u.length?`<h4>${nm} <small>${cnt(t)}</small></h4>`+u.map(x=>`<button class="dl" data-a="dm" data-i="${ALL.indexOf(BN[x])}" aria-label="Remove one ${x}"><i style="background:${RC[BN[x].rar]}"></i><em>${BN[x].cost}</em><span>${x}</span><b>×${dc(x)}</b></button>`).join(''):''}).join(''),
- side=`<aside class="dlist"><h3>In deck <small>${n}/30</small></h3>${grp||'<small>Empty. Tap cards to add them.</small>'}<small class="hint">Tap a row to remove one copy.</small></aside>`;
+ grp=[['c','Creatures'],['s','Spells'],['i','Gear']].map(([t,nm])=>{const u=[...new Set(S.deck.filter(x=>BN[x].t==t))].sort((a,b)=>BN[a].cost-BN[b].cost||a.localeCompare(b));return u.length?`<h4>${nm} <small>${cnt(t)}</small></h4>`+u.map(x=>{const c=BN[x],ix=ALL.indexOf(c),k=dc(x),max=Math.min(3,own(x));return `<div class="dlr"><button class="dl" data-a="dprev" data-z="${x}" aria-label="Preview ${x}"><i style="background:${RC[c.rar]}"></i><em>${c.cost}</em><span>${x}</span></button><div class="dlc"><button class="dlb" data-a="dm" data-i="${ix}" aria-label="Remove one ${x}">−</button><b>×${k}</b><button class="dlb" data-a="dp" data-i="${ix}" ${n>=30||k>=max?'disabled':''} aria-label="Add one ${x}">+</button></div></div>`}).join(''):''}).join(''),
+ side=`<aside class="dlist"><h3>In deck <small>${n}/30</small></h3>${grp||'<small>Empty. Tap cards to add them.</small>'}<small class="hint">− / + change copies. Tap a name to preview the card.</small></aside>`;
  return `<div class="dkbar"><div class="dkt"><b>Deck ${n}/30</b><span class="${n<20?'bad':'good'}">${st}</span></div><div class="meter"><i style="width:${pct}%" class="${n<20?'bad':'good'}"></i><u style="left:${20/30*100}%"></u></div><small>${cnt('c')} creatures · ${cnt('s')} spells · ${cnt('i')} gear · max 3 copies · 20 minimum</small><div class="bar"><button class="btn" data-a="auto">Auto build</button><button class="btn" data-a="clear" ${n?'':'disabled'}>Clear</button></div></div>
  <details class="rules" ${V.bo?'open':''}><summary data-a="btog">Saved builds (${S.builds.length}/${MAXB})</summary>${bl||'<small>No builds yet. Save your current deck to switch between decks quickly. Update overwrites a build with your current deck; ✏️ renames it to the name typed below.</small>'}${V.msg?`<small style="color:#ff8a7a">${V.msg}</small>`:''}<div class="bar" style="margin-top:6px"><input id="bn" maxlength="20" placeholder="Build name" aria-label="Build name"><button class="btn pri" data-a="bsave" ${!n?'disabled':''}>Save deck as build</button></div></details>
  <div class="split"><div class="main">
@@ -757,6 +758,7 @@ $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)ret
  else if(a=='sellask')V.cs=true;else if(a=='sellno')V.cs=false;
  else if(a=='sellall'){let g=0;ALL.forEach(c=>{const e=xtra(c);if(e){S.col[c.name]-=e;g+=e*SELL[c.rar]}});S.gold+=g;V.cs=false;V.sold='Sold spare cards for 🪙'+g+'.'}
  else if(a=='dp'){const n=ALL[i].name;if(S.deck.length<30&&S.deck.filter(x=>x==n).length<Math.min(3,own(n)))S.deck.push(n)}
+ else if(a=='dprev'){zoomShow(b)}
  else if(a=='dm'){const j=S.deck.indexOf(ALL[i].name);if(j>=0)S.deck.splice(j,1)}
  else if(a=='qm')V.qty=Math.max(1,(V.qty||1)-1);else if(a=='qp')V.qty=(V.qty||1)+1;else if(a=='qmax')V.qty=Math.max(1,Math.floor(S.gold/100));
  else if(a=='buy'){const n=Math.min(V.qty||1,Math.floor(S.gold/100));if(n>0){S.gold-=100*n;S.packs.std+=n;V.qty=1}}
