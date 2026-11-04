@@ -20,6 +20,7 @@ This work includes adapted material from the System Reference Document 5.1 ("SRD
 ## Third-party components
 - Android: AndroidX, Google Credentials/Identity libraries (Apache-2.0).
 - Cloud save: Google Firebase (subject to Google's terms).
+- Music and sound effects: no audio files, samples or third-party tunes. Menu, battle and pack-opening music are original loops generated at runtime by WebAudio oscillators and noise (`index.html`, "Original procedural music"); the chord progressions and melodies were written for this project. Nothing is downloaded.
 
 ## Still needed before a wide release
 - Choose a licence for this repository's own code (none is set, so default copyright applies).

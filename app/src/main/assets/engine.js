@@ -29,8 +29,18 @@ function attack(s,a,t){const o=opp(s),tc=t.c,d=tc?dist(G.b.indexOf(a),G.b.indexO
  if(tc&&tc.hp>0&&a.hp>0&&!G.over){if(d<=tc.rch){const m2=roll(tc,a.ac);if(m2){G.hit=1;dmg(s,a,tc.atk*m2);G.hit=0}}else log(`${tc.name} cannot reach ${a.name}.`)}}
 function ok(tg,s,t,c){const en=t.side!=s;if(tg=='allyC'&&c&&c.slot&&t.c&&t.c['s'+c.slot])return false;return tg=='any'?en:tg=='enemyC'?en&&!!t.c:tg=='ally'?!en:tg=='allyC'?!en&&!!t.c:false}
 function mres(x,s){if(has(x,'mr')&&x.o!=s&&d20()>10){log(x.name+' shrugs off the spell!');return true}return false}
+const AREA={splash:1,blast:1,col:1,rowl:1,chain:1},col=i=>i%COLS;
+// Who a spell hits when aimed at creature tc: [creature, damage] pairs. Used by the rules, the AI and the UI hint.
+function hits(s,c,tc){const o=opp(s),E=units(o),i=ix(tc),k=c.kind,n2=c.n2==null?c.n:c.n2,rest=E.filter(x=>x!==tc);let r=[[tc,c.n]];
+ if(k=='splash')rest.forEach(x=>dist(ix(x),i)==1&&r.push([x,n2]));
+ else if(k=='blast')rest.forEach(x=>{const j=ix(x);Math.abs(row(j)-row(i))<=1&&Math.abs(col(j)-col(i))<=1&&r.push([x,n2])});
+ else if(k=='col')rest.forEach(x=>col(ix(x))==col(i)&&r.push([x,c.n]));
+ else if(k=='rowl')rest.forEach(x=>row(ix(x))==row(i)&&r.push([x,c.n]));
+ else if(k=='chain'){let cur=tc,n=c.n;const seen=[tc];for(let h=0;h<2;h++){n-=c.d||2;if(n<1)break;const nx=rest.filter(x=>!seen.includes(x)&&dist(ix(x),ix(cur))<=2).sort((a,b)=>dist(ix(a),ix(cur))-dist(ix(b),ix(cur))||ix(a)-ix(b))[0];if(!nx)break;seen.push(nx);r.push([nx,n]);cur=nx}}
+ return r}
 function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,i:t&&t.c?ix(t.c):-1,s:t?t.side:o,all:c.kind=='aoe'||c.kind=='turn'||c.kind=='mheal'});log((s=='p'?'You use ':'Foe uses ')+c.name+'.');
  if(c.kind=='dmg'){if(mres(t.c,s))return;let n=c.n;if(saves(t.c))n>>=1;dmg(t.side,t.c,n)}
+ else if(AREA[c.kind]){if(!t.c){dmg(t.side,null,c.n);return}hits(s,c,t.c).forEach(([x,n])=>{if(x.hp<=0||mres(x,s))return;if(saves(x))n>>=1;dmg(o,x,n)})}
  else if(c.kind=='heal')heal(t.side,t.c,c.n);
  else if(c.kind=='aoe')units(o).forEach(x=>{if(mres(x,s))return;let n=c.n;if(saves(x))n>>=1;dmg(o,x,n)});
  else if(c.kind=='draw'){for(let i=0;i<c.n;i++)draw(s)}
@@ -42,6 +52,6 @@ function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,i:t&&t.c?ix(t.c):-
  else if(c.kind=='bless'){const b=c.n||1;t.c.atk+=b;t.c.hp+=b;t.c.mhp+=b}
  else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0;u.hp+=d.hp||0;u.mhp+=d.hp||0;u.rch+=d.rch||0;if(d.kw&&!has(u,d.kw)){u.k2=((u.k2||'')+' '+d.kw).trim();if(d.kw=='haste'&&u.fresh){u.ready=true;u.mv=u.init}}if(c.slot)u['s'+c.slot]=1}}
 function play(s,c,t,pos){const X=G[s];X.hand=X.hand.filter(x=>x!==c);X.mp-=c.cost;if(c.t=='c'){c.o=s;c.fresh=1;c.mv=has(c,'haste')?c.init:0;c.ready=has(c,'haste');G.b[pos]=c;ev({k:'sum',i:pos,s});log((s=='p'?'You summon ':'Foe summons ')+c.name+'.')}else cast(s,c,t)}
-const api={has,use,rnd,d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,play};
+const api={AREA,hits,has,use,rnd,d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,play};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversEngine=api;
 })(typeof self!=='undefined'?self:globalThis);

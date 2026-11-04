@@ -33,6 +33,10 @@ function turn(G, s) {
       if (c.t == 'c') { const f = P.HOME[s].find(q => !G.b[q]); if (f !== undefined && act({ a: 'summon', h, pos: f })) { did = true; break; } continue; }
       let ok = false;
       if (c.kind == 'aoe') { if (foes().length >= 2) ok = act({ a: 'cast', h }); }
+      else if (E.AREA[c.kind]) {
+        const sc = foes().map(([u, i]) => [E.hits(s, c, u).reduce((m, [x, n]) => m + Math.min(n, x.hp), 0), i]).sort((a, b) => b[0] - a[0])[0];
+        ok = sc ? sc[0] >= c.n && act({ a: 'cast', h, t: { side: o, i: sc[1] } }) : act({ a: 'cast', h, t: { side: o, i: null } });
+      }
       else if (c.kind == 'dmg') {
         const k = foes().find(([u]) => u.hp <= c.n) || foes().sort((a, b) => b[0].atk - a[0].atk)[0];
         ok = k ? act({ a: 'cast', h, t: { side: o, i: k[1] } }) : (c.tg == 'any' && act({ a: 'cast', h, t: { side: o, i: null } }));
