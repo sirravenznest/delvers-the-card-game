@@ -65,7 +65,7 @@ function act(G,s,a){
   const u=G.b[a.from];if(!u||u.o!=s)return no('Not your creature.');
   if(G.b[a.to])return no('Tile occupied.');
   if(dist(a.from,a.to)>u.mv)return no('Too far.');
-  G.b[a.to]=u;G.b[a.from]=null;u.mv-=dist(a.from,a.to);G.n++;return{ok:true}}
+  G.b[a.to]=u;G.b[a.from]=null;u.mv-=dist(a.from,a.to);if(G.fx)(G.ev||(G.ev=[])).push({k:'mov',i:a.to,s});G.n++;return{ok:true}}
  if(a.a=='attack'){
   if(!isIdx(a.from))return no('Bad tile.');
   const u=G.b[a.from];if(!u||u.o!=s)return no('Not your creature.');
