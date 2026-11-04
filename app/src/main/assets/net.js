@@ -4,7 +4,7 @@
 const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const SV={'.sv':'timestamp'};
 // Bump whenever card data or rules change: clients on different versions would replay the match differently.
-const PROTO=2,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+const PROTO=3,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000;
 
 function create(o){
