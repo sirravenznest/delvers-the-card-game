@@ -18,7 +18,7 @@ Creatures, spells, weapons, armour and magic items. Play on a 4×5 grid, use abi
 Download: `releases/Delvers-1.7.apk` (saves from v1.1 do not carry over).
 
 ## World & campaign
-Set in **Vaelmark** during the Long Dusk: the Sunforge is failing and the Hollow is leaking in. 36 encounters (24 skirmishes and 12 named bosses) across five acts, each with a story briefing; read the Lore tab. Packs are 🪙100 each, and you choose how many to buy.
+Set in **Vaelmark** during the Long Dusk: the Emberheart is failing and the Hollow is leaking in. 60 encounters (40 skirmishes and 20 named bosses) across nine acts, each with a story briefing; read the Lore tab. Packs are 🪙100 each, and you choose how many to buy.
 
 ## Android build & Google sign-in (cloud save)
 

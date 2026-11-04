@@ -10,7 +10,7 @@ _This is a developer's good-faith review, not legal advice. Consult an IP lawyer
 
 ## Risks and what was done
 - "Dungeons & Dragons", "D&D", and "Advanced Dungeons & Dragons" are trademarks of Wizards of the Coast. The game does not use them in its name, UI, or store listing. A reference in the in-game Guide was removed.
-- Product-identity names were avoided (no Beholder, Mind Flayer, Drizzt, Forgotten Realms, etc.). The word "drow" was replaced with "dark elves".
+- Product-identity names were avoided (no Beholder, Mind Flayer, Drizzt, Forgotten Realms, etc.). Dark elves are used in place of the D&D-specific term for that race.
 - Do not market the game as "D&D compatible" or use the D&D logo/trade dress.
 - The name "Delvers: The Card Game" should be checked for trademark conflicts before a store release, since "Delvers" is a common term.
 
