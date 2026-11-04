@@ -4,6 +4,7 @@ const KW={heal:'Heals hero 1/turn',regen:'Regenerates 2',keen:'Keen aim: hits 1 
 const imm=c=>c.cls=='U'||c.cls=='K';
 const CL={F:['Fighter','#b3402a'],W:['Wizard','#3a62b8'],C:['Cleric','#b8921f'],T:['Thief','#7a4aa8'],R:['Ranger','#3b8a4a'],B:['Beast','#7a6648'],U:['Undead','#5a5a7a'],G:['Giant','#8a5a2b'],D:['Dragon','#b02a4a'],E:['Elemental','#2a8aa0'],K:['Construct','#6b6b6b'],P:['Weapon','#9a4a2a'],A:['Armour','#4a6a9a'],I:['Magic Item','#2f8f8f']};
 const RN=['Common','Uncommon','Rare','Legendary'],RC=['#8a8a8a','#3b8a4a','#3a62b8','#c98a1a'];
+const CLASS={F:'Fighter',W:'Wizard',C:'Cleric',T:'Thief',R:'Ranger'},CTYPE={F:'Humanoid',W:'Humanoid',C:'Humanoid',T:'Humanoid',R:'Humanoid',B:'Beast',U:'Undead',G:'Giant',D:'Dragon',E:'Elemental',K:'Construct'};
 // name,class,cost,attack,health,Aim,Guard,initiative (movement),save,rarity,alignment,keyword,reach (default 1)
 const CR=[
 ['Squire','F',1,1,2,20,8,1,16,0,'LG'],['Town Guard','F',2,2,3,19,6,1,15,0,'LN','tough'],['Tusk Raider','F',2,3,1,18,6,2,16,0,'CE','haste'],['Pikeman','F',2,2,2,19,7,1,15,0,'LN','',2],['Dwarf Fighter','F',4,3,4,16,3,1,10,1,'LG','tough'],['Paladin','F',5,4,5,15,2,1,11,2,'LG','heal'],['Bladedancer','F',3,2,2,16,5,2,12,1,'CN','dbl'],['Emberguard Knight','F',4,3,4,16,3,1,11,1,'LG','tough'],
@@ -17,7 +18,7 @@ const CR=[
 ['Pseudodragon','D',2,1,2,19,5,3,12,1,'NG','mr'],['Wyvern','D',4,3,4,16,4,3,11,2,'N','poison',2],['Red Dragon','D',8,7,8,11,-1,3,6,3,'CE','mr',2],
 ['Fire Elemental','E',4,4,3,16,5,2,12,1,'N','thorns'],['Air Elemental','E',4,3,3,16,3,3,12,1,'N','haste',2],['Earth Elemental','E',5,4,6,16,2,1,11,2,'N','tough'],['Briar Elemental','E',3,2,4,18,6,1,13,1,'N','thorns'],
 ['Gargoyle','K',3,2,3,17,4,2,13,1,'CE','tough'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N','para'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N','mr']
-].map(a=>({t:'c',name:a[0],cls:a[1],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
+].map(a=>({t:'c',name:a[0],cls:a[1],ct:CTYPE[a[1]],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
 // name,class,cost,rarity,target,kind,amount,text
 const SP=[
 ['Magic Missile','W',1,0,'any','dmg',3,'3 dmg, no attack roll. Save halves.'],['Burning Hands','W',2,0,'any','splash',3,'3 dmg to a creature and 2 to each creature touching it. Save halves.',2],['Lightning Bolt','W',3,1,'any','col',4,'4 dmg to a creature and every enemy behind or in front of it in the same column. Save halves.'],
@@ -34,6 +35,6 @@ const IT=[
 ['Boots of Speed','I',2,1,{init:1,kw:'haste'}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Eye of Keenness','I',2,1,{kw:'keen',atk:1}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Amulet of Warding','I',3,2,{kw:'mr',save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
 ].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
-const api={COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,RN,RC,CR,SP,IT,GT,ALL,BN};
+const api={COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversCards=api;
 })(typeof self!=='undefined'?self:globalThis);
