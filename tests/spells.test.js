@@ -1,0 +1,10 @@
+const C=require('../app/src/main/assets/cards.js'),E=require('../app/src/main/assets/engine.js'),assert=require('assert');
+const mkG=()=>({p:{hp:30,mx:30,mp:10,max:10,hand:[],deck:[]},e:{hp:30,mx:30,mp:10,max:10,hand:[],deck:[]},b:Array(C.NT).fill(null),log:[],turn:'p',rs:7});
+const put=(G,i,hp=9,o='e')=>{const u=E.mk({...C.BN['Squire'],hp,save:99,name:'T'+i});u.o=o;G.b[i]=u;return u};
+let ok=0;const t=(n,f)=>{f();ok++;console.log('ok',n)};
+t('splash hits orthogonal neighbours only',()=>{const G=mkG();E.use(G);const a=put(G,1),b=put(G,2),c=put(G,5),d=put(G,6);const h=E.hits('p',C.BN['Burning Hands'],a).map(([u,n])=>[u.name,n]);assert.deepStrictEqual(h,[['T1',3],['T2',2],['T5',2]])});
+t('blast includes diagonals',()=>{const G=mkG();E.use(G);const a=put(G,5),d=put(G,6),e=put(G,10),f=put(G,7);const n=E.hits('p',C.BN['Fireball'],a).map(x=>x[0].name).sort();assert.deepStrictEqual(n,['T10','T5','T6'])});
+t('column and row lines',()=>{const G=mkG();E.use(G);const a=put(G,1),b=put(G,9),c=put(G,2);assert.strictEqual(E.hits('p',C.BN['Lightning Bolt'],a).length,2);assert.strictEqual(E.hits('p',C.BN['Cone of Cold'],a).length,2)});
+t('chain decays and stops',()=>{const G=mkG();E.use(G);const a=put(G,0),b=put(G,1),c=put(G,2),d=put(G,19);const h=E.hits('p',C.BN['Chain Lightning'],a);assert.deepStrictEqual(h.map(x=>x[1]),[6,4,2]);assert(!h.some(x=>x[0]===d))});
+t('cast applies damage, hero when no creature',()=>{const G=mkG();E.use(G);const a=put(G,1,9),b=put(G,2,9);const c={...C.BN['Burning Hands']};E.cast('p',c,{side:'e',c:a});assert.strictEqual(a.hp,6);assert.strictEqual(b.hp,7);E.cast('p',c,{side:'e',c:null});assert.strictEqual(G.e.hp,27)});
+console.log(ok,'spell tests passed');
