@@ -4,7 +4,7 @@
 const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const SV={'.sv':'timestamp'};
 // Bump whenever card data or rules change: clients on different versions would replay the match differently.
-const PROTO=2,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+const PROTO=3,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000;
 
 function create(o){
@@ -27,7 +27,7 @@ function create(o){
   if(!P.validRanked(deck))throw new Error('Ranked decks need exactly 30 cards: max 3 copies, 2 of a Rare, 1 of a Legendary.');
   await T.getRating();
   const a=o.auth(),t0=now();
-  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',r:T.rec.r,d:deck,pv:PROTO,t:SV,j:SV});
+  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,pv:PROTO,t:SV,j:SV});
   const me=await rq('GET','queue/'+a.uid);
   T.off=me.t-t0;T.joinedAt=me.j;T.lastBeat=now();T.deck=deck;T.st='queue';T.err='';T.finished=false;T.over=null;changed()};
  T.leave=async()=>{if(T.st!='queue')return;T.st='idle';try{await rq('DELETE','queue/'+uid())}catch(e){}changed()};
@@ -47,7 +47,8 @@ function create(o){
   try{await rq('PUT',`queue/${best.k}/m`,mid)}catch(e){return false}
   const seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
   const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,pv:PROTO,
-   names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},r:{[me]:mine.r,[best.k]:best.e.r},
+   names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},avatars:{[me]:mine.av||'vanguard',[best.k]:best.e.av||'vanguard'},r:{[me]:mine.r,[best.k]:best.e.r},
+   records:{[me]:{w:mine.w||0,l:mine.l||0},[best.k]:{w:best.e.w||0,l:best.e.l||0}},
    deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d};
   await rq('PUT',`matches/${mid}/meta`,meta);
   T.mid=mid;return true}
@@ -59,7 +60,10 @@ function create(o){
   if(meta.pv!==PROTO){T.mid=null;T.st='over';T.err=VERR;changed();return true}
   T.meta=meta;T.mid=mid;T.seat=meta.p==me?'p':'e';
   const oid=T.seat=='p'?meta.e:meta.p;
-  T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',r:(meta.r&&meta.r[oid])||1000};
+  const meRecord=meta.records&&meta.records[me]||{w:T.rec&&T.rec.w||0,l:T.rec&&T.rec.l||0};
+  const oppRecord=meta.records&&meta.records[oid]||{w:0,l:0};
+  T.myRecord={r:(meta.r&&meta.r[me])||(T.rec&&T.rec.r)||1000,w:meRecord.w||0,l:meRecord.l||0};
+  T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',avatar:meta.avatars&&meta.avatars[oid]||'vanguard',r:(meta.r&&meta.r[oid])||1000,w:oppRecord.w||0,l:oppRecord.l||0};
   if(meta.rk&&!T.rec)await T.getRating();
   T.myR=(meta.r&&meta.r[me])||(T.rec&&T.rec.r)||1000;
   const okDeck=meta.rk?P.validRanked:P.validDeck;
@@ -165,8 +169,9 @@ function create(o){
  // ---- Private (friendly, unranked) games between friends ----
  T.invite=async(fid,fname,deck)=>{
   if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
+  await T.getRating();
   const a=o.auth();
-  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',d:deck,pv:PROTO,t:SV});
+  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,pv:PROTO,t:SV});
   T.deck=deck;T.inviteTo={uid:fid,name:fname||'Friend'};T.inviteAt=now();T.st='invite';T.err='';T.finished=false;T.over=null;changed()};
  T.cancelInvite=async()=>{if(T.st!='invite')return;T.st='idle';const f=T.inviteTo;T.inviteTo=null;try{await rq('DELETE',`invites/${f.uid}/${uid()}`)}catch(e){}changed()};
  T.declineInvite=async from=>{await rq('DELETE',`invites/${uid()}/${from}`)};
@@ -175,8 +180,10 @@ function create(o){
   const inv=await rq('GET',`invites/${uid()}/${from}`);
   if(!inv||!P.validDeck(inv.d))throw new Error('That invite is no longer available.');
   if(inv.pv!==PROTO)throw new Error(VERR);
+  await T.getRating();
   const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},
+  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},avatars:{[me]:o.avatar?o.avatar():'vanguard',[from]:inv.av||'vanguard'},
+   r:{[me]:T.rec.r,[from]:inv.r||1000},records:{[me]:{w:T.rec.w,l:T.rec.l},[from]:{w:inv.w||0,l:inv.l||0}},
    deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck};
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   await rq('PUT',`matches/${mid}/meta`,meta);

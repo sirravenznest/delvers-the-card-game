@@ -7,6 +7,7 @@ const ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',ONLINE_MS=150000,MAXF=50;
 function create(o){
  const S={code:'',name:'',friends:[],incoming:[],outgoing:[],invites:[],err:''};
  const uid=()=>o.auth().uid;
+ const avatar=()=>/^[a-z0-9_-]{1,24}$/.test(String(o.avatar&&o.avatar()||''))?String(o.avatar()):'vanguard';
  async function rq(m,path,body,q){
   const a=o.auth(),u=`${o.db}/${path}.json?auth=${encodeURIComponent(a.tok)}${q?'&'+q:''}`;
   const r=await o.fetch(u,{method:m,body:body===undefined||m=='GET'||m=='DELETE'?undefined:JSON.stringify(body)});
@@ -19,11 +20,11 @@ function create(o){
  S.ensureProfile=async()=>{
   const me=uid(),name=cleanName(o.auth().name);
   const p=await rq('GET','profiles/'+me);
-  if(p&&p.c){S.code=p.c;S.name=name;await rq('PATCH','profiles/'+me,{n:name,t:SV});await S.heartbeat();return S.code}
+  if(p&&p.c){S.code=p.c;S.name=name;await rq('PATCH','profiles/'+me,{n:name,av:avatar(),t:SV});await S.heartbeat();return S.code}
   for(let i=0;i<8;i++){
    const c=newCode();
    try{await rq('PUT','codes/'+c,me)}catch(e){if(e.status==401||e.status==403)continue;throw e}
-   await rq('PUT','profiles/'+me,{n:name,c,t:SV});S.code=c;S.name=name;return c}
+   await rq('PUT','profiles/'+me,{n:name,av:avatar(),c,t:SV});S.code=c;S.name=name;return c}
   throw new Error('Could not create a friend code. Try again.')};
  S.heartbeat=async()=>{await rq('PATCH','profiles/'+uid(),{t:SV});const q=await rq('GET','profiles/'+uid());if(q&&q.t)S.off=q.t-Date.now()};
 
@@ -38,7 +39,7 @@ function create(o){
   const p=await rq('GET','profiles/'+fid);
   const name=(p&&p.n)||'Delver';
   await rq('PUT',`social/${me}/friends/${fid}`,{n:name});
-  await rq('PUT',`social/${fid}/in/${me}`,{n:cleanName(o.auth().name),t:SV});
+  await rq('PUT',`social/${fid}/in/${me}`,{n:cleanName(o.auth().name),av:avatar(),t:SV});
   return{uid:fid,name}};
 
  S.accept=async fid=>{
@@ -55,11 +56,11 @@ function create(o){
   const ids=Object.keys(fr);
   const info=await Promise.all(ids.map(async fid=>{
    const [back,p]=await Promise.all([rq('GET',`social/${fid}/friends/${me}`).catch(()=>null),rq('GET','profiles/'+fid).catch(()=>null)]);
-   return{uid:fid,name:(p&&p.n)||fr[fid].n||'Delver',mutual:!!back,seen:p&&p.t||0}}));
+   return{uid:fid,name:(p&&p.n)||fr[fid].n||'Delver',av:p&&p.av||'vanguard',mutual:!!back,seen:p&&p.t||0}}));
   const t=srvNow||Date.now()+(S.off||0);
   S.friends=info.filter(f=>f.mutual).map(f=>({...f,online:t-f.seen<ONLINE_MS})).sort((a,b)=>b.online-a.online||a.name.localeCompare(b.name));
   S.outgoing=info.filter(f=>!f.mutual);
-  S.incoming=Object.keys(inn).filter(k=>!fr[k]).map(k=>({uid:k,name:cleanName(inn[k]&&inn[k].n)}));
+  S.incoming=Object.keys(inn).filter(k=>!fr[k]).map(k=>({uid:k,name:cleanName(inn[k]&&inn[k].n),av:inn[k]&&inn[k].av||'vanguard'}));
   const inv=await rq('GET','invites/'+me)||{};
   const okIds=new Set(S.friends.map(f=>f.uid));
   S.invites=Object.keys(inv).filter(k=>okIds.has(k)&&inv[k]&&inv[k].d).map(k=>({from:k,name:cleanName(inv[k].n),t:inv[k].t||0}));
