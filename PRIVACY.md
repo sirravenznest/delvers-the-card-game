@@ -1,6 +1,6 @@
 # Privacy Policy: Delvers: The Card Game
 
-_Last updated: 2026-11-04 (policy version 2026-11-04)_
+_Last updated: 2026-11-05 (policy version 2026-11-04; the 2026-11-05 edits add clarifications only and do not change what data we collect or how we use it, so no new agreement is requested)_
 
 Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirravenznest`. This policy explains what data the game handles.
 
@@ -22,6 +22,12 @@ We use this data only to sign you in and sync your save between your devices. We
 ## Retention and deletion
 - **Local data:** clear the app's storage or uninstall the app to delete it.
 - **Cloud data:** sign out to stop syncing. To have your cloud save and account record deleted, open an issue at https://github.com/sirravenznest/delvers-the-card-game/issues asking for deletion (do not include sensitive details). Deleting your data cannot be undone.
+
+## Virtual items, packs and fairness
+Gold, cards, packs, starter decks, avatars and backgrounds are virtual items inside the game. They have **no cash value**, cannot be bought with real money (the game has no purchases, ads or payments), cannot be traded or cashed out, and may be changed or rebalanced in updates. Card packs are random; the exact odds for every pack type are shown in the Packs tab of the game. Missions and daily or weekly resets use your device's clock, so no time or location data is sent to us for them.
+
+## Device features
+The game may briefly vibrate your device during pack openings (Android "vibrate" permission). It does not use your camera, microphone, contacts, location or advertising ID. The game needs internet access only for the optional online features above.
 
 ## Children
 The game is not directed at children under 13 (or under 16 where local law sets a higher age for consent). Do not sign in or use online features if you are below that age. We do not knowingly collect data from children; if you believe we have, contact us and we will delete it.

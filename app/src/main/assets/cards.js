@@ -42,6 +42,10 @@ const STARTERS=[
 {id:'shadow',name:'Shadow Hunt',icon:'🏹',tag:'Fast hasty strikers and beasts. Hits first.',cards:{'Goblin Skulker':2,'Cutpurse':1,'Giant Rat':1,'Cat Burglar':3,'Hunter':3,'Woodsman':3,'Dire Wolf':3,'Elven Ranger':3,'Druid':2,'Harpy':2,'Giant Spider':2,'Owlbear':1,'Poisoned Dagger':1,'Longbow':1,'Magic Missile':1,'Potion of Healing':1}}
 ].map(d=>({...d,list:Object.entries(d.cards).flatMap(([n,k])=>Array(k).fill(n))}));
 const STARTER_PRICE=400;
-const api={STARTERS,STARTER_PRICE,COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
+// Pack odds: percent chance of Common/Uncommon/Rare/Legendary per card, by pack tier. The last card of a pack is upgraded to at least PACK_MIN[t].
+const PACK_W={1:[70,22,7,1],2:[50,30,16,4],3:[30,32,28,10]},PACK_MIN={1:1,2:1,3:2},PACK_SIZE=5,PACK_PRICE=100,SELL=[5,15,40,100];
+function packSlots(t){const w=PACK_W[t]||PACK_W[1],m=PACK_MIN[t]||1,last=w.slice();for(let k=0;k<m;k++){last[m]+=last[k];last[k]=0}
+ return Array.from({length:PACK_SIZE},(_,i)=>i==PACK_SIZE-1?last:w)}
+const api={PACK_W,PACK_MIN,PACK_SIZE,PACK_PRICE,SELL,packSlots,STARTERS,STARTER_PRICE,COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversCards=api;
 })(typeof self!=='undefined'?self:globalThis);
