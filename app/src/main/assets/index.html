@@ -242,8 +242,8 @@ table.rates{width:100%;border-collapse:collapse;margin:4px 0;font-size:13.5px}ta
 .z0 .sar{width:56px;height:30px;margin-left:-28px;font-size:15px}
 .sar:active{transform:scale(.94);filter:brightness(1.2)}
 </style><link rel="stylesheet" href="v224.css"></head>
-<body><div class="rotateHint" role="status"><strong>Turn your device sideways</strong>Delvers 2.2.5 uses landscape for readable cards and battles.</div><div id="app"></div>
-<script src="cards.js"></script><script src="pixel-art.js"></script><script src="battle-music.js"></script><script src="story.js"></script><script src="emotes.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="ranked-bots.js"></script><script src="net.js"></script><script src="social.js"></script>
+<body><div class="rotateHint" role="status"><strong>Turn your device sideways</strong>Delvers 2.2.6 uses landscape for readable cards and battles.</div><div id="app"></div>
+<script src="cards.js"></script><script src="pixel-art.js"></script><script src="battle-music.js"></script><script src="menu-music.js"></script><script src="story.js"></script><script src="emotes.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="ranked-bots.js"></script><script src="net.js"></script><script src="social.js"></script>
 <script>
 const SET={name:'First Adventures',size:122};
 const SAVE_KEY='delvers2';
@@ -513,9 +513,9 @@ const AC_={};
 function art(c,cls){const k=c.name+(cls||'');return AC_[k]||(AC_[k]=DelversArt.art(c,cls||'art'))}
 const bgS=t=>"url('data:image/svg+xml,"+encodeURIComponent(t).replace(/'/g,'%27')+"')";
 const ST_='<g fill="#fff">'+Array.from({length:40},(_,i)=>`<circle cx="${(i*97)%400}" cy="${(i*53)%260}" r="${i%5?1:1.6}" opacity=".7"/>`).join('')+'</g>';
-const BGM=DelversArt.scene('Hallowspire hub');
+const BGM=DelversArt.scene('Hallowspire hub'),BGH=DelversArt.hubScene();
 const BGB=bgS(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1410"/><stop offset="1" stop-color="#0c0906"/></linearGradient><radialGradient id="f"><stop offset="0" stop-color="#ff9a3a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient></defs><rect width="400" height="800" fill="url(#d)"/><g stroke="#2a2018" stroke-width="2" fill="none">${Array.from({length:16},(_,i)=>`<path d="M0 ${i*50}H400"/>`).join('')}${Array.from({length:40},(_,i)=>`<path d="M${(i%8)*55+(Math.floor(i/8)%2)*27} ${Math.floor(i/8)*100}v50"/>`).join('')}</g><circle cx="20" cy="260" r="110" fill="url(#f)"/><circle cx="380" cy="260" r="110" fill="url(#f)"/><g fill="#ffb347"><path d="M20 240q-8 14 0 22 8-8 0-22zM380 240q-8 14 0 22 8-8 0-22z"/></g><g fill="#0007"><path d="M0 0h400v80Q200 150 0 80Z"/><path d="M0 800h400v-90Q200 640 0 710Z"/></g></svg>`);
-document.documentElement.style.setProperty('--bgm',BGM);document.documentElement.style.setProperty('--bgb',BGB);
+document.documentElement.style.setProperty('--bgm',BGM);document.documentElement.style.setProperty('--bgh',BGH);document.documentElement.style.setProperty('--bgb',BGB);
 const SCENE_ART=[
  ['Underhalls','#17121c','#513633','#18111a','<path d="M25 640V300Q25 170 150 170T275 300v340M295 800V430q0-110 70-110t70 110v370" fill="none" stroke="#80614a" stroke-width="24" opacity=".34"/><path d="M0 680L70 560 130 680 220 520 310 690 400 550V800H0Z" fill="#100d13"/>'],
  ['Hollow Court','#100d20','#40345f','#161226','<path d="M0 650L65 550l28 100 52-240 55 240 60-170 42 170 48-300 50 300v150H0Z" fill="#171326"/><g fill="#0b0913"><path d="M55 800V490h42v310m198 0V430h48v370"/></g>'],
@@ -764,7 +764,7 @@ function storyHTML(){const chapters=[...new Set(CAMP.map(o=>o[8]))],current=CAMP
  <aside class="bookChapter"><div class="pageContent sc v">${SB('y','Scroll chapter up')}<small class="runningTitle">The Delver's Chronicle</small><h2>${name}</h2><div class="bookArt" style="background-image:${sceneFor(focus.i)}"><svg class="journeyMap" viewBox="0 0 156 60" role="img" aria-label="Your route through these three encounters" shape-rendering="crispEdges"><path d="M18 38H48V22H78V38H138" fill="none" stroke="#f4e3b8" stroke-width="3" stroke-dasharray="4 4"/>${route}</svg></div><small class="journeyGoal">Your trail leads to ${OP[Math.floor(focus.i/3)][0]}.</small><p>${CAMP[focus.i][9]}</p><blockquote><b>${STORY[focus.i].speaker}</b><br>${STORY[focus.i].line}</blockquote><small>${entries.filter(x=>x.i<S.prog).length} / ${entries.length} encounters cleared</small>${SA('y','Scroll chapter down')}</div><footer class="pageFolio"><span>Vaelmark</span><span>${spread*2+1}</span></footer></aside>
  <div class="bookPages"><div class="pageContent sc v">${SB('y','Scroll encounters up')}<small class="runningTitle">The road ahead</small><h3>A trail through ${name.split(' · ')[1]}</h3><span class="bookOrnament" aria-hidden="true">— ◆ —</span>${encounters}<small class="bookHint">${V.msg||'Follow the clues. Each victory opens the next stretch of your adventure.'}</small>${SA('y','Scroll encounters down')}</div>
  <footer class="pageFolio bookNav"><button class="btn" data-a="bookleaf" data-i="${spread-1}" ${spread==0?'disabled':''} aria-label="Previous pages">‹</button><span>${spread*2+2}</span><button class="btn" data-a="bookleaf" data-i="${spread+1}" ${spread>=OP.length-1?'disabled':''} aria-label="Next pages">›</button></footer></div></section>`}
-function menuHeaderHTML(){const hub=V.v=='hub';return `<header class="navbar ${hub?'hubHeader':''}">${hub?`<div class="hubBrand"><h1>Delvers: The Card Game</h1><small>First Adventures · ${ALL.length} cards · v2.2.5</small></div>`:'<button class="btn homeLink" data-a="nav" data-v="hub">‹ Hub</button>'}<span class="gold">🪙 ${S.gold}</span><span class="navtools">${hub?`<button class="mute profileShortcut" data-a="nav" data-v="profile" aria-label="Open profile">${portrait(S.avatar)}</button>`:''}<button class="mute" data-a="snd" aria-label="Sound ${mute?'off':'on'}">${mute?'🔇':'🔊'}</button><button class="mute" data-a="mus" aria-label="Music ${musOff?'off':'on'}" style="${musOff||mute?'opacity:.45':''}">🎵</button></span></header>`}
+function menuHeaderHTML(){const hub=V.v=='hub';return `<header class="navbar ${hub?'hubHeader':''}">${hub?`<div class="hubBrand"><h1>Delvers: The Card Game</h1><small>First Adventures · ${ALL.length} cards · v2.2.6</small></div>`:'<button class="btn homeLink" data-a="nav" data-v="hub">‹ Hub</button>'}<span class="gold">🪙 ${S.gold}</span><span class="navtools">${hub?`<button class="mute profileShortcut" data-a="nav" data-v="profile" aria-label="Open profile">${portrait(S.avatar)}</button>`:''}<button class="mute" data-a="snd" aria-label="Sound ${mute?'off':'on'}">${mute?'🔇':'🔊'}</button><button class="mute" data-a="mus" aria-label="Music ${musOff?'off':'on'}" style="${musOff||mute?'opacity:.45':''}">🎵</button></span></header>`}
 function menuHTML(){if(V.priv)return privHTML();if(V.brief!=null)return briefHTML();if(V.pick&&(S.sp=='ptut'||S.sp=='pacct'))return pickHTML();const T=[...(V.v=='hub'?[['hub','Main menu']]:[]),...DESTINATIONS.map(x=>[x[0],x[1]])];
  let h=menuHeaderHTML()+`<div class="sw x">${SB('x','Scroll tabs left')}<div class="nav sc" role="tablist">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" role="tab" aria-selected="${V.v==t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}${t[0]=='missions'&&msnReady()?' <span class="dot" aria-label="reward ready">●</span>':''}</button>`).join('')}</div>${SA('x','Scroll tabs right')}</div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}${privBanner()}<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
  if(V.v=='hub')h+=hubHTML();
@@ -882,11 +882,11 @@ const SB=(ax,l)=>ax=='x'?`<button class="sar b x" data-a="sar" data-d="-1" aria-
 function sarUpdate(){$app.querySelectorAll('.sc').forEach(sc=>{const v=sc.classList.contains('v'),sw=v?sc:sc.parentNode,p=v?sc.scrollTop:sc.scrollLeft,sz=v?sc.clientHeight:sc.clientWidth,tot=v?sc.scrollHeight:sc.scrollWidth;
  sw.querySelectorAll('.sar').forEach(b=>{b.hidden=b.classList.contains('b')?p<4:p+sz>=tot-4})})}
 function render(){
- musicSet(G?(G.over?null:'battle'):V.pk?'pack':'menu');
+ musicSet(G?(G.over?null:'battle'):V.pk?'pack':V.v=='hub'&&!V.priv&&V.brief==null&&!V.pick?'hub':'menu');
  document.documentElement.style.setProperty('--bgb',G?sceneFor(G.pvp&&V.pv?String(V.pv.mid):G.oi):BGB);
  if(G&&G.over&&!G.fin)finish();
  if(G&&G.over&&!G.mc&&!G.tut){G.mc=1;if(!G.pvp||S.lastOnlineMatch!=V.pv.mid){if(G.pvp)S.lastOnlineMatch=V.pv.mid;msnFight(G)}}
- document.body.className=G?'battle'+(G.lesson?' lesson':''):'menu';
+ document.body.className=G?'battle'+(G.lesson?' lesson':''):'menu'+(V.v=='hub'&&!V.priv&&V.brief==null&&!V.pick?' hubbg':'');
  document.body.dataset.view=G?'battle':V.v;
  if(G)V.navOn=null;
  const logFocus=$app.querySelector('#battleLog')?.contains(document.activeElement)?{a:document.activeElement.dataset.a,k:document.activeElement.dataset.k,entries:document.activeElement.classList.contains('logEntries')}:null;
@@ -944,6 +944,7 @@ const MCH=[[50,53,57],[55,59,62],[50,53,57],[48,52,55],[46,50,53],[48,52,55],[50
  BML=[[[0,76,2],[2,79,1],[3,83,1],[4,81,2],[6,79,2]],[[0,76,2],[2,79,2],[4,83,2],[6,86,2]],[[0,84,2],[2,79,2],[4,76,2],[6,79,2]],[[0,86,2],[2,85,1],[3,86,1],[4,81,4]],[[0,83,2],[2,79,1],[3,83,1],[4,88,2],[6,86,2]],[[0,84,3],[3,86,1],[4,88,2],[6,84,2]],[[0,86,2],[2,81,2],[4,85,2],[6,81,2]],[[0,83,4],[4,82,2],[6,83,2]]],
  PCH=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]];
 const SONGS={
+ hub:{d:DelversMenuMusic.theme.d,p(st,t){DelversMenuMusic.step(st,t,{note:mn,kick:mk_,noise:mz})}},
  menu:{d:.4,p(st,t){const b=st>>3,i=st&7,c=MCH[b&7],pd=.4;if(i==0){c.forEach(m=>mn(m,pd*8,'sine',.05,t));mn(c[0]-12,pd*4,'sine',.13,t);mn(c[0]-12,pd*3,'sine',.1,t+pd*4)}
   mn(c[[0,1,2,1,2,1,2,1][i]]+12,pd*1.6,'triangle',.07,t);(MML[b&7]||[]).forEach(([s,m,l])=>{if(s==i&&(b>>3&1||b&1))mn(m,pd*l,'triangle',.08,t)})}},
  battle:{d:.2,p(st,t){const b=st>>3,i=st&7,c=BCH[b&7],d=.2;mn(c[0]-12+[0,0,12,0,0,12,0,7][i],d*.9,'sawtooth',.07,t,500);if(i==0||i==4)mk_(t,.3);if(i==2||i==6)mz(t,.12,.12,1800,1);mz(t,.04,.04,6000,1);
