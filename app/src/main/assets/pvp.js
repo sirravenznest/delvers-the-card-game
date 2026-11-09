@@ -27,11 +27,7 @@ function validDeck(names){
  const n={};for(const x of names){if(!BN[x])return false;n[x]=(n[x]||0)+1;if(n[x]>3)return false}
  return true}
 
-// Ranked format: exactly 30 cards; copy limits shrink with rarity (3 common/uncommon, 2 rare, 1 legendary).
-function validRanked(names){
- if(!Array.isArray(names)||names.length!=30)return false;
- const n={};for(const x of names){const c=BN[x];if(!c)return false;n[x]=(n[x]||0)+1;if(n[x]>(c.rar>=3?1:c.rar==2?2:3))return false}
- return true}
+const validRanked=validDeck;
 
 // Returns {ok:true} after applying, or {ok:false,err} leaving the state untouched.
 function act(G,s,a){

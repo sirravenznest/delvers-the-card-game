@@ -16,7 +16,13 @@ async function player(uid,name){
  });
  await context.route(/googleapis\.com/,route=>route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'{}'}));
  const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(url);
- await p.evaluate(()=>{S.sp='done';sv();V.v='ranked';render()});
+ await p.evaluate(({uid})=>{
+  const n=uid=='landBob'?29:20;
+  S.deck=[...ALL.filter(c=>c.rar==0).slice(0,10).flatMap(c=>Array(3).fill(c.name)).slice(0,n-6),...Array(3).fill(ALL.find(c=>c.rar==2).name),...Array(3).fill(ALL.find(c=>c.rar==3).name)];
+  S.sp='done';sv();V.v='ranked';render();
+ },{uid});
+ assert(await p.locator('[data-a="rfind"]').isEnabled(),'normal deck with three Rares and Legendaries is ranked legal');
+ assert(!(await p.locator('#app').innerText()).includes('Needs exactly 30 cards'));
  return {p,context,errors};
 }
 async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable')}

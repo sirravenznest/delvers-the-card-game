@@ -5,6 +5,7 @@ const C=require(path.join(A,'cards.js')),P=require(path.join(A,'pvp.js'));
 const N=require(path.join(A,'net.js'));
 const {makeDb,clk}=require('./fakedb');
 const deck=()=>C.ALL.filter(c=>c.rar==0).slice(0,10).flatMap(c=>Array(3).fill(c.name));
+const normalDeck=n=>[...deck().slice(0,n-6),...Array(3).fill(C.ALL.find(c=>c.rar==2).name),...Array(3).fill(C.ALL.find(c=>c.rar==3).name)];
 const auth=(uid,name)=>()=>({uid,tok:uid,name});
 const client=(db,uid)=>({T:N.create({db:'https://x',fetch:db.fetch,now:clk.now,auth:auth(uid,uid)})});
 const step=async(cs,ms=1000)=>{clk.t+=ms;for(const c of cs)await c.T.tick()};
@@ -28,7 +29,7 @@ function gateQueueRead(db,uid,occurrence){
 
  // No bot before 20 seconds; at the boundary, a labelled synthetic opponent is created.
  {
-  clk.t=20_000_000;const db=makeDb(),a=client(db,'uA'),d=deck();
+  clk.t=20_000_000;const db=makeDb(),a=client(db,'uA'),d=normalDeck(20);
   await a.T.join(d);await step([a],N.BOT_WAIT_MS-1);
   assert.strictEqual(a.T.st,'queue');assert.strictEqual(a.T.botAvailable,false);
   await step([a],1);
@@ -59,11 +60,12 @@ function gateQueueRead(db,uid,occurrence){
 
  // Human pairing wins at the 20-second boundary when already queued.
  {
-  clk.t+=100_000;const db=makeDb(),a=client(db,'uA'),b=client(db,'uB'),d=deck();
-  await a.T.join(d);await step([a],N.BOT_WAIT_MS-1);await b.T.join(d);
+  clk.t+=100_000;const db=makeDb(),a=client(db,'uA'),b=client(db,'uB');
+  await a.T.join(normalDeck(29));await step([a],N.BOT_WAIT_MS-1);await b.T.join(normalDeck(20));
   await step([a,b],1);
   assert.strictEqual(a.T.st,'match');assert.strictEqual(b.T.st,'match');
   assert(!a.T.opp.bot&&!b.T.opp.bot,'a queued human takes priority over bot fallback');
+  assert.deepStrictEqual([a.T.meta.deckP.length,a.T.meta.deckE.length].sort((a,b)=>a-b),[20,29]);
   console.log('PASS human pairing takes priority at fallback threshold');
  }
 

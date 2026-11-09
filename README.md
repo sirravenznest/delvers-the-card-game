@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.7
+
+Ranked now uses the normal deck rules: 20–30 cards and up to 3 copies of any card, regardless of rarity. Both human matches and rated bots accept these decks. Online opponents must update to this version because older clients enforce the removed restrictions. Existing saved decks and collections are unchanged.
+
+Emotes have their own main-menu collection, previews, Profile access, and direct Store navigation. The battle picker shows full phrases with separate text and graphic groups, scrolling, keyboard focus, and Escape support. All owned emotes are available without equipping; text unlocks remain free and graphic emotes cost 350 gold. Opponent-mute preferences are shared between the menu and battle.
+
 ## 2.2.6
 
 The main menu has its own pixel-art night scene of Hallowspire and an original title theme, "Hallowspire Dawn" (other menu screens keep the calm harp loop).

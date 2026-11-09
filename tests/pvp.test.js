@@ -75,13 +75,18 @@ const [a, b] = P.elo(1000, 1000, 1);
 assert(a == 1016 && b == 984);
 console.log(`OK: ${matches} matches (${over} finished: p ${wins.p}, e ${wins.e}), ${actions} actions, ${rejected} illegal actions rejected without side effects, all replays identical`);
 {
-  const ok = [...Array(10).keys()].flatMap(() => []);
   const base = C.ALL.filter(c => c.rar <= 1).slice(0, 10).flatMap(c => [c.name, c.name, c.name]);
-  assert(P.validRanked(base), 'valid 30-card deck');
-  assert(!P.validRanked(base.slice(1)), '29 cards invalid');
+  assert.strictEqual(P.validRanked, P.validDeck, 'ranked shares the normal deck validator');
+  for (let n = 20; n <= 30; n++) assert(P.validRanked(base.slice(0, n)), `${n} cards allowed`);
+  assert(!P.validRanked(base.slice(0, 19)), 'fewer than 20 cards invalid');
+  assert(!P.validRanked([...base, base[0]]), 'more than 30 cards invalid');
   const leg = C.ALL.find(c => c.rar == 3).name, rare = C.ALL.find(c => c.rar == 2).name;
-  assert(!P.validRanked([...base.slice(2), leg, leg]), '2 legendaries invalid');
-  assert(P.validRanked([...base.slice(2), leg, rare]) || true);
-  assert(!P.validRanked([...base.slice(3), rare, rare, rare]), '3 rares invalid');
+  for (const card of [base[0], rare, leg]) {
+    const rest = base.filter(name => name != card).slice(0, 17);
+    assert(P.validRanked([...rest, card, card, card]), 'three copies allowed at any rarity');
+    assert(!P.validRanked([...rest, card, card, card, card]), 'four copies invalid at any rarity');
+  }
+  assert(!P.validRanked([...base.slice(1), 'Unknown card']), 'unknown card invalid');
+  for (const invalid of [null, {}, 'deck']) assert(!P.validRanked(invalid));
   console.log('PASS ranked deck format');
 }
