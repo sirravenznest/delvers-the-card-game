@@ -10,12 +10,15 @@ const deck = () => { const d = [], cnt = {}; for (const c of C.ALL.filter(c => c
 const auth = (uid, name) => () => ({ uid, tok: uid, name });
 const mkNet = (db, uid, name) => N.create({ db: 'https://x', fetch: db.fetch, now: clk.now, auth: auth(uid, name) });
 (async () => {
-  assert.strictEqual(N.PROTO, 3, 'v2.1 requires its own online protocol');
+  assert.strictEqual(N.PROTO, 4, 'the expanded card rules require a fresh online protocol');
   // ranked: a v2.0 queue entry is never paired
   let db = makeDb(); const a = mkNet(db, 'uA', 'Ann'), d = deck();
   await db.fetch('https://x/queue/uOld.json?auth=uOld', { method: 'PUT', body: JSON.stringify({ n: 'Old', r: 1000, d, pv: 2, t: { '.sv': 'timestamp' }, j: { '.sv': 'timestamp' } }) });
   await a.join(d); for (let i = 0; i < 4; i++) { await a.tick(); clk.t += 1000; }
   assert.strictEqual(a.st, 'queue', 'does not pair with a legacy client'); console.log('PASS ranked skips legacy-version queue entries');
+  await db.fetch('https://x/queue/uV3.json?auth=uV3', { method: 'PUT', body: JSON.stringify({ n: 'Old v2.2', r: 1000, d, pv: 3, t: { '.sv': 'timestamp' }, j: { '.sv': 'timestamp' } }) });
+  await a.tick(); assert.strictEqual(a.st, 'queue', 'v3 clients with the previous card set are not paired');
+  console.log('PASS ranked skips previous card-set protocol');
   // A v2.0 client pairs with us and writes a match: we refuse it politely.
   await db.fetch('https://x/queue/uA/m.json?auth=uOld', { method: 'PUT', body: JSON.stringify('mOld') });
   await db.fetch('https://x/matches/mOld/meta.json?auth=uOld', { method: 'PUT', body: JSON.stringify({ p: 'uOld', e: 'uA', seed: 1, rk: 1, tl: 75, pv: 2, deckP: d, deckE: d, r: {}, names: {} }) });

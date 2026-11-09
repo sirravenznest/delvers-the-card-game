@@ -17,7 +17,14 @@ const CR=[
 ['Ogre','G',5,5,5,17,5,1,14,1,'CE'],['Hill Giant','G',6,5,6,16,4,1,12,2,'CE','',2],['Troll','G',6,5,6,15,4,1,12,2,'CE','regen'],['Ancient Treant','G',6,4,8,17,5,1,10,2,'N','thorns'],['Cyclops','G',7,6,7,14,3,1,10,2,'CN','',2],
 ['Pseudodragon','D',2,1,2,19,5,3,12,1,'NG','mr'],['Wyvern','D',4,3,4,16,4,3,11,2,'N','poison',2],['Red Dragon','D',8,7,8,11,-1,3,6,3,'CE','mr',2],
 ['Fire Elemental','E',4,4,3,16,5,2,12,1,'N','thorns'],['Air Elemental','E',4,3,3,16,3,3,12,1,'N','haste',2],['Earth Elemental','E',5,4,6,16,2,1,11,2,'N','tough'],['Briar Elemental','E',3,2,4,18,6,1,13,1,'N','thorns'],
-['Gargoyle','K',3,2,3,17,4,2,13,1,'CE','tough'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N','para'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N','mr']
+['Gargoyle','K',3,2,3,17,4,2,13,1,'CE','tough'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N','para'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N','mr'],
+// Cheap legends trade durability (and Cera's attack) for a specialised role.
+['Sister Cera, Last Candle','C',1,0,1,20,9,1,14,3,'LG','heal'],
+['Nim, Gatemarket Guide','T',2,2,1,17,8,3,16,3,'CN','back'],
+['Ashen Road Escort','F',3,2,4,19,7,1,15,0,'LN','',2],
+['Hollow Seal Scribe','W',3,2,3,18,7,1,10,1,'N','mr',2],
+['Gloamwood Lookout','R',3,3,2,18,7,2,14,1,'NG','keen',2],
+['Rustfang Runner','T',2,1,2,18,7,3,14,0,'CN','haste']
 ].map(a=>({t:'c',name:a[0],cls:a[1],ct:CTYPE[a[1]],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
 // name,class,cost,rarity,target,kind,amount,text
 const SP=[
@@ -26,6 +33,7 @@ const SP=[
 ['Sleep','W',2,1,'enemyC','sleep',1,'Foe skips its next turn. Save negates.'],['Hold Person','W',3,2,'enemyC','sleep',2,'Foe skips its next 2 turns. Save negates.'],
 ['Cure Light Wounds','C',1,0,'ally','heal',4,'Heal 4.'],['Cure Serious Wounds','C',3,1,'ally','heal',8,'Heal 8.'],['Bless','C',2,0,'allyC','bless',1,'+1 attack, +1 health.'],['Smite','C',3,1,'enemyC','dmg',4,'4 dmg to a creature. Save halves.'],
 ['Arcane Insight','W',2,1,'none','draw',2,'Draw 2 cards.'],['Disintegrate','W',6,3,'enemyC','dmg',10,'10 dmg to a creature. Save halves.'],['Turn Undead','C',3,1,'none','turn',5,'5 dmg to every enemy Undead. Ignores saves.'],['Mass Cure Wounds','C',5,2,'none','mheal',3,'Heal 3 to your hero and all your creatures.'],['Mana Potion','I',0,1,'none','mana',1,'Gain 1 Mana this turn.'],['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.'],['Potion of Heroism','I',2,1,'allyC','bless',2,'+2 attack, +2 health.'],['Potion of Speed','I',2,1,'allyC','haste',0,'The creature refreshes: it may move and attack again this turn.'],['Wand of Lightning','I',4,2,'any','dmg',6,'6 dmg. Save halves.']
+,['Emberwatch Vigil','C',3,1,'none','mheal',2,'Heal 2 to your hero and all your creatures.']
 ].map(a=>({t:'s',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:a[4],kind:a[5],n:a[6],n2:a[8],txt:a[7],sub:a[1]=='I'?'Magic Item':'Spell'}));
 const GT=d=>[d.atk&&`+${d.atk} attack`,d.thac0&&(d.thac0<0?`+${-d.thac0} to hit`:`${-d.thac0} to hit`),d.ac&&`Guard ${d.ac}`,d.hp&&`+${d.hp} health`,d.init&&`+${d.init} initiative`,d.rch&&`+${d.rch} reach`,d.save&&`Save ${d.save}`,d.kw&&KW[d.kw]].filter(Boolean).join(', ');
 // name,class (P weapon, A armour, I magic),cost,rarity,effects. A creature carries one weapon and one armour.
@@ -33,6 +41,7 @@ const IT=[
 ['Dagger','P',1,0,{atk:1}],['Club','P',1,0,{atk:2,thac0:1}],['Spear','P',2,0,{atk:1,rch:1}],['Poisoned Dagger','P',2,1,{atk:1,kw:'poison'}],['Assassin Knife','P',2,1,{atk:1,kw:'back'}],['Rapier','P',2,1,{atk:1,thac0:-1,init:1}],['Long Sword','P',2,1,{atk:2,thac0:-1}],['Halberd','P',3,1,{atk:2,rch:1}],['Longbow','P',3,1,{atk:1,thac0:-2,rch:1}],['War Hammer','P',3,2,{atk:3}],['Twin Axes','P',3,2,{atk:1,kw:'dbl'}],['Vampiric Blade','P',3,2,{atk:2,kw:'lifelink'}],['Flame Tongue','P',4,2,{atk:3,thac0:-2}],['Vorpal Blade','P',5,3,{atk:4,thac0:-3}],
 ['Leather Armor','A',1,0,{ac:-1,hp:1}],['Shield','A',1,0,{ac:-2}],['Buckler','A',1,0,{ac:-1,init:1}],['Chain Mail','A',2,1,{ac:-3}],['Tower Shield','A',2,1,{ac:-1,hp:2,kw:'tough'}],['Warding Robes','A',2,1,{ac:-1,hp:1,save:-3}],['Spiked Mail','A',3,1,{ac:-2,kw:'thorns'}],['Mithril Shirt','A',3,2,{ac:-3,init:1}],['Plate Armor','A',4,2,{ac:-4,hp:1,kw:'tough'}],['Dragonscale Mail','A',5,3,{ac:-5,hp:2,save:-2,kw:'thorns'}],
 ['Boots of Speed','I',2,1,{init:1,kw:'haste'}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Eye of Keenness','I',2,1,{kw:'keen',atk:1}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Amulet of Warding','I',3,2,{kw:'mr',save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
+,['Deep Anvil Charm','I',2,1,{hp:1,save:-2}]
 ].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
 // Starter decks: 30 cards, Common and Uncommon only, at most 3 copies each. Choosing one after the tutorial adds these cards to your collection.
@@ -43,9 +52,14 @@ const STARTERS=[
 ].map(d=>({...d,list:Object.entries(d.cards).flatMap(([n,k])=>Array(k).fill(n))}));
 const STARTER_PRICE=400;
 // Pack odds: percent chance of Common/Uncommon/Rare/Legendary per card, by pack tier. The last card of a pack is upgraded to at least PACK_MIN[t].
-const PACK_W={1:[70,22,7,1],2:[50,30,16,4],3:[30,32,28,10]},PACK_MIN={1:1,2:1,3:2},PACK_SIZE=5,PACK_PRICE=100,SELL=[5,15,40,100];
+const PACK_W={1:[70,22,7,1],2:[50,30,16,4],3:[30,32,28,10]},PACK_MIN={1:1,2:1,3:2},PACK_SIZE=5,PACK_PRICE=100,SELL=[3,10,25,60];
+// Index-aligned with three daily and FOUR weekly missions; zeros are pack-only rewards.
+const MISSION_GOLD={daily:[15,10,10],weekly:[50,0,0,35]};
+// Opening bases (12,16,40) pay 30+30+40; the first-clear floor never applies to farming.
+function campaignGold(base,first,tier=1){return Math.round((first?Math.max(30,base):Math.max(3,base*.15))*([0,1,1.35,1.75][tier]||1))}
+function lossGold(base){return Math.max(2,Math.round(base*.05))}
 function packSlots(t){const w=PACK_W[t]||PACK_W[1],m=PACK_MIN[t]||1,last=w.slice();for(let k=0;k<m;k++){last[m]+=last[k];last[k]=0}
  return Array.from({length:PACK_SIZE},(_,i)=>i==PACK_SIZE-1?last:w)}
-const api={PACK_W,PACK_MIN,PACK_SIZE,PACK_PRICE,SELL,packSlots,STARTERS,STARTER_PRICE,COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
+const api={PACK_W,PACK_MIN,PACK_SIZE,PACK_PRICE,SELL,packSlots,campaignGold,lossGold,MISSION_GOLD,STARTERS,STARTER_PRICE,COLS,ROWS,NT,BACK,FOEB,KW,imm,CL,CLASS,CTYPE,RN,RC,CR,SP,IT,GT,ALL,BN};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversCards=api;
 })(typeof self!=='undefined'?self:globalThis);

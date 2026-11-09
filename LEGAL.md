@@ -5,7 +5,7 @@ _This is a developer's good-faith review, not legal advice. Consult an IP lawyer
 ## What is generally safe
 - **Game mechanics** (d20 rolls, Aim-versus-Guard hit maths, hit points, mana, keywords like haste/poison) are ideas and systems, not protected by copyright.
 - **Code, card text, lore, and the world of Vaelmark** are original work by this project.
-- **Art** is emoji/SVG drawn in-game. Emoji glyphs come from the device's system font, so none is bundled.
+- **Card art, portraits and scenes** are original, procedurally drawn pixel-style SVGs (`pixel-art.js`) with a shared palette and sprite vocabulary. UI emoji glyphs come from the device's system font, so none is bundled. No third-party game artwork or card frames are included.
 - **Generic fantasy creatures and spells** (goblin, skeleton, dragon, Fireball, Magic Missile, Lightning Bolt, Cure Light Wounds, Gelatinous Cube, Owlbear) appear in the Systems Reference Document 5.1, which Wizards of the Coast released under CC-BY-4.0. If you keep these names, include the attribution below.
 
 ## Risks and what was done
@@ -20,7 +20,7 @@ This work includes adapted material from the System Reference Document 5.1 ("SRD
 ## Third-party components
 - Android: AndroidX, Google Credentials/Identity libraries (Apache-2.0).
 - Cloud save: Google Firebase (subject to Google's terms).
-- Music and sound effects: no audio files, samples or third-party tunes. Menu, battle and pack-opening music are original loops generated at runtime by WebAudio oscillators and noise (`index.html`, "Original procedural music"); the chord progressions and melodies were written for this project. Nothing is downloaded.
+- Music and sound effects: no audio files, samples or third-party tunes. Menu, pack-opening and four shuffled battle tracks are original sequences generated at runtime by WebAudio oscillators and noise (`index.html` and `battle-music.js`); the chord progressions and melodies were written for this project. Nothing is downloaded. General retro/card-game usability inspiration does not include copied compositions, artwork, branding or distinctive layouts.
 
 ## Still needed before a wide release
 - Choose a licence for this repository's own code (none is set, so default copyright applies).

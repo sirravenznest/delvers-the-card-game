@@ -77,8 +77,13 @@ function makeDb(opts = { rules: require('../database.rules.json') }) {
       let v = get(p);
       const ob = u.searchParams.get('orderBy');
       if (v && ob == '"$key"') {
-        const s = Number(JSON.parse(u.searchParams.get('startAt')));
-        v = Object.fromEntries(Object.entries(v).filter(([k]) => Number(k) >= s));
+        const start = u.searchParams.has('startAt') ? String(JSON.parse(u.searchParams.get('startAt'))) : null;
+        const end = u.searchParams.has('endAt') ? String(JSON.parse(u.searchParams.get('endAt'))) : null;
+        const isInt = k => /^(0|[1-9]\d*)$/.test(k) && Number(k) <= 2147483647;
+        const compare = (a,b) => isInt(a)&&isInt(b) ? Number(a)-Number(b) : isInt(a) ? -1 : isInt(b) ? 1 : a<b ? -1 : a>b ? 1 : 0;
+        let entries = Object.entries(v).filter(([k]) => (start===null||compare(k,start)>=0)&&(end===null||compare(k,end)<=0)).sort(([a],[b])=>compare(a,b));
+        if(u.searchParams.has('limitToLast'))entries=entries.slice(-Number(u.searchParams.get('limitToLast')));
+        v = Object.fromEntries(entries);
       } else if (v && ob == '"r"') {
         const lim = Number(u.searchParams.get('limitToLast') || 1e9);
         v = Object.fromEntries(Object.entries(v).sort((a, b) => a[1].r - b[1].r).slice(-lim));
