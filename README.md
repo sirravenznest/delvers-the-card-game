@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.6
+
+The main menu has its own pixel-art night scene of Hallowspire and an original title theme, "Hallowspire Dawn" (other menu screens keep the calm harp loop).
+
 ## 2.2.5
 
 Improved gold readout contrast: dark bordered pill and a cool-toned moon in the menu scene instead of a yellow sun.
