@@ -43,7 +43,7 @@ function art(c,cls='art'){return `<svg class="${cls}" viewBox="0 0 64 40" shape-
 function scene(seed,colors){
  const h=hash(String(seed)),p=palette,a=colors||[p.ink,p.dark,p.stone];let s=rect(0,0,128,64,a[0])+rect(0,28,128,36,a[1]);
  for(let i=0;i<20;i++)s+=rect((h+i*23)%128,(h+i*7)%26,1,1,p.light);
- s+=rect(95,8,10,10,p.gold)+rect(92,11,16,4,p.gold);
+ s+=rect(95,8,10,10,'#8fa3c4')+rect(92,11,16,4,'#8fa3c4');
  for(let i=0;i<16;i++){const y=30+(h+i*13)%14;s+=rect(i*8,y,8,64-y,a[2]);s+=rect(i*8+2,y-4,4,4,a[2])}
  const name=String(seed).toLowerCase();
  if(/road|underhall|warren/.test(name))s+=`<path d="M56 64h25L67 34h-6Z" fill="${p.stone}"/>`;

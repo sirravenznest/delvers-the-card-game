@@ -54,7 +54,7 @@ button{cursor:pointer}button:disabled{cursor:default}
 .nav button{padding:7px 10px;font-size:13px;min-height:34px}
 .hubTitle{display:flex;justify-content:space-between;align-items:center;gap:12px}.hubTitle h1{font-size:24px;margin:6px 0}
 .navbar{flex:none;gap:10px}.navbar .homeLink{padding:4px 8px;font-size:12px;min-height:32px}
-.navbar .gold{white-space:nowrap;margin-left:auto}
+.navbar .gold{white-space:nowrap;margin-left:auto;padding:4px 10px;background:#111625f2;border:1px solid #f3ca69;border-radius:12px;color:#f3ca69;text-shadow:none}
 .hubHeader{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;padding:2px 0 6px;border-bottom:1px solid #8a9ab855}
 .hubBrand h1{font:700 clamp(16px,2.4vw,25px)/1.1 Arial,sans-serif;margin:0 0 4px;color:#fff}
 .hubBrand small{font-size:11px;color:#c5d3e6}
