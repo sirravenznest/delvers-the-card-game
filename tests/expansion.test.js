@@ -56,9 +56,9 @@ test('122 unique cards; all 114 original names, definitions and starters unchang
   }
 });
 
-test('new cards obey ranked rarity caps and replay identical legal actions', () => {
+test('new cards share normal three-copy limits in ranked and replay identical legal actions', () => {
   for (const name of names) {
-    const c = C.BN[name], cap = c.rar == 3 ? 1 : c.rar == 2 ? 2 : 3;
+    const c = C.BN[name], cap = 3;
     const deck = substitute(C.STARTERS[0].list, 'Squire', name, cap);
     assert(P.validRanked(deck), name);
     const illegal = deck.slice();

@@ -6,7 +6,7 @@ const B=typeof require!=='undefined'?require('./ranked-bots.js'):root.DelversRan
 const EM=typeof require!=='undefined'?require('./emotes.js'):root.DelversEmotes;
 const SV={'.sv':'timestamp'};
 // Bump whenever card data or rules change: clients on different versions would replay the match differently.
-const PROTO=4,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+const PROTO=5,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000,BOT_WAIT_MS=20000;
 
 function create(o){
@@ -47,7 +47,7 @@ function create(o){
  T.leaderboard=async()=>{const r=await rq('GET','ratings',null,'orderBy="r"&limitToLast=20')||{};return Object.keys(r).map(k=>({uid:k,n:r[k].n||'Delver',r:r[k].r,w:r[k].w||0,l:r[k].l||0})).sort((a,b)=>b.r-a.r)};
 
  T.join=async deck=>{
-  if(!P.validRanked(deck))throw new Error('Ranked decks need exactly 30 cards: max 3 copies, 2 of a Rare, 1 of a Legendary.');
+  if(!P.validRanked(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
   if(!B)throw new Error('Ranked bot matching is unavailable. Please reload the app.');
   await T.getRating();
   // A prior pending result already booked its loss. A new queue entry commits that loss.

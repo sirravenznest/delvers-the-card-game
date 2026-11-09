@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const URL=process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html';
 const sizes=[[568,320],[640,360],[740,360],[844,390],[915,412],[1024,600],[1280,720]];
-const tabs=['hub','duel','ranked','cards','deck','store','packs','missions','friends','profile','lore','guide'];
+const tabs=['hub','duel','ranked','cards','deck','store','packs','missions','friends','profile','emotes','lore','guide'];
 let browser;
 async function pageFor(w,h){
  const context=await browser.newContext({viewport:{width:w,height:h},hasTouch:true});
@@ -19,7 +19,7 @@ async function run(){
  for(const [w,h] of sizes){
   const {page:p,context,errors}=await pageFor(w,h);
   assert.equal(await p.evaluate(()=>V.saveMsg),'','new save has no false storage warning');
-  assert.equal(await p.locator('.hubTile').count(),11);
+  assert.equal(await p.locator('.hubTile').count(),12);
   assert.equal(await p.locator('.hubHeader').count(),1,'one combined hub header');
   assert.equal(await p.locator('[data-a="tutstart"]').count(),1,'no duplicate tutorial prompts');
   for(const tab of tabs){
