@@ -1,6 +1,6 @@
 # Privacy Policy: Delvers: The Card Game
 
-_Last updated: 2026-11-05 (policy version 2026-11-04; the 2026-11-05 edits add clarifications only and do not change what data we collect or how we use it, so no new agreement is requested)_
+_Last updated: 2026-11-09 (policy version 2026-11-09)_
 
 Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirravenznest`. This policy explains what data the game handles.
 
@@ -8,7 +8,7 @@ Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirra
 The app shows this policy in-game. Google sign-in, cloud save, ranked and friends stay switched off until you tap **I agree**. You can read the policy again and **withdraw your agreement** from the Profile tab; online features then switch off again. Playing offline needs no agreement. If this policy changes materially, the app asks you to agree again.
 
 ## Playing without an account
-By default, all progress (collection, decks, gold, campaign progress, missions, tutorial and starter-deck status) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers.
+By default, all progress (collection, decks, gold, campaign progress, missions, tutorial and starter-deck status, cosmetic/emote unlocks and emote-mute preference) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers. Story dialogue is displayed as text; it does not use a microphone or speech service.
 
 ## Signing in with Google (Android, optional)
 If you choose **Sign in with Google**, the game uses Google Sign-In and Google Firebase (Authentication and Cloud Firestore) to provide cloud save. When you sign in we process:
@@ -42,7 +42,10 @@ Changes will be posted in this file in the repository, with an updated date.
 Open an issue at https://github.com/sirravenznest/delvers-the-card-game/issues.
 
 ## Online play data (ranked and friends)
-If you use ranked or friends, we store in Firebase Realtime Database: the public username you choose (not your Google name), your avatar, a friend code, your friend list and requests, your rating and win/loss record, and match action logs (the moves of a match). **Other players can see your username, avatar and rating.** Choose a username that does not identify you. Remove friends in-app; contact the maintainer to delete your data.
+If you use ranked or friends, we store in Firebase Realtime Database: the public username you choose (not your Google name), your avatar, a friend code, your friend list and requests, your rating and win/loss record, and match action logs (the moves of a match). Fixed-choice emotes you send online are stored in the match log with your account ID and a timestamp; your opponent can see them and can mute them. There is no free-form chat. **Other players can see your username, avatar and rating.** Choose a username that does not identify you. Remove friends in-app; contact the maintainer to delete your data.
+
+## Rated computer opponents
+Ranked matchmaking searches for a human first. After 20 seconds it may automatically match you with a clearly labelled **BOT**, using themed decks and difficulty appropriate to your rating tier. Wins, losses and resignations against these bots affect your rating and public record, just like human ranked matches. Bots are synthetic opponents, not real player profiles or accounts. Bot match metadata and action logs are stored with your online play data. No external AI service receives your information. Ranked results are processed by game clients; they are not independently verified by a server, and the ladder is experimental.
 
 ## Legal basis and international transfers
 Where the GDPR or UK GDPR applies, we rely on your **consent** (the I agree button) for sign-in, cloud save and online play, and you may withdraw it at any time without affecting earlier processing. Google may process data in countries outside your own under its own safeguards.

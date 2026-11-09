@@ -39,7 +39,7 @@ function act(G,s,a){
  const no=err=>({ok:false,err});
  if(G.over)return no('Match is over.');
  if(!a||typeof a!='object')return no('Bad action.');
- if(a.a=='resign'){G.over=opp(s);G.n++;return{ok:true}}
+ if(a.a=='resign'){E.log('Resigned.','result',s);G.over=opp(s);G.n++;return{ok:true}}
  if(G.turn!=s)return no('Not your turn.');
  const X=G[s],o=opp(s),isIdx=i=>Number.isInteger(i)&&i>=0&&i<NT;
  const target=t=>{ // {side,i} i=null means hero
@@ -65,7 +65,7 @@ function act(G,s,a){
   const u=G.b[a.from];if(!u||u.o!=s)return no('Not your creature.');
   if(G.b[a.to])return no('Tile occupied.');
   if(dist(a.from,a.to)>u.mv)return no('Too far.');
-  G.b[a.to]=u;G.b[a.from]=null;u.mv-=dist(a.from,a.to);if(G.fx)(G.ev||(G.ev=[])).push({k:'mov',i:a.to,s});G.n++;return{ok:true}}
+  E.move(s,a.from,a.to);G.n++;return{ok:true}}
  if(a.a=='attack'){
   if(!isIdx(a.from))return no('Bad tile.');
   const u=G.b[a.from];if(!u||u.o!=s)return no('Not your creature.');
