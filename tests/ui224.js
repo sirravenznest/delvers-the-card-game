@@ -11,11 +11,41 @@ async function pageFor(w,h){
  await context.addInitScript(()=>{localStorage.setItem('delvers_mute','1');if(!localStorage.getItem('delvers_consent'))localStorage.setItem('delvers_consent','2026-11-09')});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(URL);await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
+ await page.goto(URL);await page.locator('.titleActions .pri').click();await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
  return {page,context,errors};
 }
 async function run(){
  browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});
+ const firstRun=await browser.newContext({viewport:{width:568,height:320},hasTouch:true});
+ await firstRun.addInitScript(()=>{if(localStorage.getItem('delvers_mute')===null)localStorage.setItem('delvers_mute','1')});
+ const intro=await firstRun.newPage();await intro.goto(URL);
+ assert.equal(await intro.locator('.titleScreen').count(),1,'new players see the branded title screen');
+ assert.equal(await intro.locator('.hubTile').count(),0,'new players do not skip the title screen');
+ assert(await intro.evaluate(()=>{const r=document.querySelector('.titlePanel').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1}),'title screen fits a short landscape viewport');
+ await intro.click('[data-a="snd"]');
+ assert.equal(await intro.evaluate(()=>MUS.mode),'title','title music starts after a user gesture');
+ assert.equal(await intro.evaluate(()=>AC&&AC.state),'running','title sound effects can play after the same gesture');
+ assert.equal(await intro.evaluate(()=>DelversMenuMusic.titleTheme.name),'Emberheart Awakening','title uses its own original song');
+ await intro.click('[data-a="titlesign"]');
+ assert.equal(await intro.locator('.gold').innerText(),'Privacy policy · 2026-11-09','Google sign-in opens privacy consent first');
+ await intro.click('[data-a="agree"]');
+ assert.equal(await intro.locator('.titleScreen').count(),1,'accepting privacy returns to the title screen');
+ assert(await intro.evaluate(()=>agreed()),'online consent is recorded');
+ await intro.click('[data-a="titleoffline"]');
+ assert.equal(await intro.locator('.hubTile').count(),11,'offline play starts without a Google account');
+ const returning=await intro.evaluate(()=>{S.gold=731;S.prog=4;sv();return S});
+ await intro.evaluate(()=>{localStorage.setItem('delvers_mute','1');localStorage.setItem('delvers_mus','1');localStorage.setItem('delvers_title_seen','1')});
+ await intro.reload();
+ assert.equal(await intro.locator('.titleScreen').count(),1,'returning players see the title even with the legacy seen flag');
+ assert.equal(await intro.locator('[data-a="titlecontinue"]').count(),1,'offline returning players get Continue');
+ assert.deepEqual(await intro.evaluate(()=>S),returning,'opening the title preserves existing progress');
+ assert(await intro.evaluate(()=>agreed()&&mute&&musOff&&MUS.mode===null),'consent and muted audio preferences survive launch');
+ assert.equal(await intro.locator('[data-a="agree"]').count(),0,'returning players are not forced to repeat consent');
+ await intro.click('[data-a="titlecontinue"]');
+ assert.equal(await intro.locator('.hubTile').count(),11,'Continue immediately enters the hub without waiting for animation');
+ await intro.locator('.hubTile[data-v="deck"]').click();
+ assert.equal(await intro.locator('.titleScreen').count(),0,'normal menu navigation does not replay the title');
+ await firstRun.close();
  for(const [w,h] of sizes){
   const {page:p,context,errors}=await pageFor(w,h);
   assert.equal(await p.evaluate(()=>V.saveMsg),'','new save has no false storage warning');
@@ -49,13 +79,46 @@ async function run(){
     assert.deepEqual(overlaps,[],`${w}x${h}: deck card details do not overlap or escape the card`);
     const listControlOverlap=await p.locator('.dlist .dlr').evaluateAll(rows=>rows.some(row=>{const name=row.querySelector('.dl').getBoundingClientRect(),controls=row.querySelector('.dlc').getBoundingClientRect();return name.left<controls.right-1&&name.right>controls.left+1&&name.top<controls.bottom-1&&name.bottom>controls.top+1}));
     assert(!listControlOverlap,`${w}x${h}: deck-list text does not overlap copy controls`);
+    const savedBuilds=await p.evaluate(()=>S.builds);
+    for(const filters of [false,true])for(const builds of [false,true]){
+     await p.evaluate(({filters,builds})=>{
+      V.fo=filters;V.bo=builds;
+      V.fs=filters?{t:['c','s','i'],r:['0','1','2','3'],c:['0','1','2','3']}:{};V.fd=filters;
+      S.builds=Array.from({length:10},(_,i)=>({name:`Saved build number ${i}`,deck:[...S.deck]}));
+      render();
+     },{filters,builds});
+     const issues=await p.evaluate(()=>{
+      const bad=[],rect=e=>e.getBoundingClientRect(),overlap=(a,b)=>a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1;
+      const siblings=(root,selector)=>{const es=[...root.querySelectorAll(selector)].filter(e=>rect(e).width&&rect(e).height);for(let i=0;i<es.length;i++)for(let j=i+1;j<es.length;j++)if(overlap(rect(es[i]),rect(es[j])))bad.push(`${es[i].className} overlaps ${es[j].className}`)};
+      const workspace=document.querySelector('.deckWorkspace'),browse=document.querySelector('.deckBrowse'),editor=document.querySelector('.deckEditor'),list=document.querySelector('.dlist'),gallery=document.querySelector('.deckCardGrid');
+      if(rect(editor).width<rect(workspace).width*.42)bad.push('current deck receives less than 42% of workspace');
+      if(list.clientHeight<70||gallery.clientHeight<70)bad.push('deck or gallery loses usable scrolling height');
+      siblings(workspace,'.deckBrowse,.deckEditor');
+      siblings(browse,'.deckBrowseTools,.deckCardGrid');
+      siblings(editor,'.deckTools,.dlist');
+      siblings(browse,'.deckFilterBar,.deckFilterPanel,.deckActiveFilters,.deckHint');
+      siblings(browse,'.deckFilterBar>*');
+      const panel=browse.querySelector('.deckFilterPanel');
+      if(panel){siblings(panel,'.fg');for(const group of panel.querySelectorAll('.fg'))siblings(group,':scope>b,:scope>.chips')}
+      for(const row of workspace.querySelectorAll('.dlr'))siblings(row,':scope>.dl,:scope>.dlc');
+      for(const e of workspace.querySelectorAll('.deckFilterBar,.deckFilterPanel,.deckTools,.dlist,.deckCardGrid'))if(e.scrollWidth>e.clientWidth+1)bad.push(`${e.className} overflows horizontally`);
+      if(document.getElementById('app').scrollHeight>document.getElementById('app').clientHeight+1)bad.push('page overflow');
+      return bad;
+     });
+     assert.deepEqual(issues,[],`${w}x${h}: no overlap with filters=${filters}, saved builds=${builds}`);
+     if(filters){
+      await p.locator('.deckFilterPanel [data-a="fdk"]').evaluate(e=>e.scrollIntoView({block:'nearest'}));
+      assert(await p.locator('.deckFilterPanel [data-a="fdk"]').evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2))}),'last filter remains reachable without covering other controls');
+     }
+    }
+    await p.evaluate(builds=>{S.builds=builds;V.fo=false;V.bo=false;V.fs={};V.fd=false;render()},savedBuilds);
    }
    if(tab=='duel')assert(await p.locator('.book').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1}),'open book fits landscape');
   }
   await p.evaluate(()=>{V.v='cards';render()});
   const collectionCard=p.locator('.main .card').first(),name=await collectionCard.getAttribute('data-z');
   await collectionCard.dispatchEvent('pointerdown',{pointerType:'touch',clientX:220,clientY:100});
-  await p.waitForSelector('#zm[role="dialog"]');
+  await p.waitForSelector('#zm[role="dialog"][aria-modal="true"]');
   assert((await p.locator('#zm').innerText()).includes(name),'touch hold opens card details');
   await collectionCard.dispatchEvent('pointerup',{pointerType:'touch'});
   await p.keyboard.press('Escape');assert.equal(await p.locator('#zm').count(),0);
@@ -332,13 +395,13 @@ async function run(){
  await p.click('[data-a="pickst"][data-id="iron"]',{force:true});
  assert(await p.evaluate(()=>S.sp=='done'&&S.deck.length==30));
  const saved=await p.evaluate(()=>({col:S.col,gold:S.gold,deck:S.deck,stars:S.stars,packs:S.packs,sp:S.sp}));
- await p.reload();
+ await p.reload();await p.click('[data-a="titlecontinue"]');
  assert.deepEqual(await p.evaluate(()=>({col:S.col,gold:S.gold,deck:S.deck,stars:S.stars,packs:S.packs,sp:S.sp})),saved,'save reload');
  await p.evaluate(()=>{S.packs.std=1;V.v='packs';sv();render()});
  const owned=await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0));
  await p.click('[data-a="open"]');await p.click('[data-a="pks"]',{force:true});
  assert.equal(await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0)),owned+5,'skip keeps cards');
- await p.reload();assert.equal(await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0)),owned+5,'pack save persists');
+ await p.reload();await p.click('[data-a="titlecontinue"]');assert.equal(await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0)),owned+5,'pack save persists');
  await p.evaluate(()=>{V.v='store';V.storeTab='emotes';S.gold=400;render()});
  assert(await p.evaluate(()=>DelversEmotes.defaults.every(id=>S.cosmetics.emotes.includes(id))),'base text emotes are included automatically');
  assert.equal(await p.locator('[data-a="emoteunlock"][data-k="wellplayed"]').count(),0,'base text is not a Store purchase');
@@ -346,7 +409,7 @@ async function run(){
  assert.equal(await p.evaluate(()=>S.gold),50,'graphic emote costs gold');
  assert(await p.locator('[data-a="emoteunlock"][data-k="ember"]').isDisabled(),'owned graphics cannot be bought twice');
  assert(await p.locator('[data-a="emoteunlock"][data-k="heart"]').isDisabled(),'cannot buy graphics without enough gold');
- await p.reload();assert(await p.evaluate(()=>S.cosmetics.emotes.includes('ember')),'emote purchase saved');
+ await p.reload();await p.click('[data-a="titlecontinue"]');assert(await p.evaluate(()=>S.cosmetics.emotes.includes('ember')),'emote purchase saved');
  await p.evaluate(()=>{S.prog=0;S.stars={};S.sp='done';V.v='duel';newGame(0,1);V.intro=null;G.over='p';render()});
  assert.equal(await p.locator('[data-a="nextstory"]').count(),1,'victory offers next story encounter');
  await p.click('[data-a="nextstory"]',{force:true});

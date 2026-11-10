@@ -3,6 +3,16 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.14
+
+The Android release signing key has been replaced after its previous private key was exposed in the public repository. Existing installs must sync progress to Cloud Save, uninstall the previous app and install this APK; uninstalling removes device-only saves. Future installs can update normally. Release builds now use protected signing secrets; see [CLOUD_SETUP.md](CLOUD_SETUP.md#release-signing-key-migration-2214).
+
+The Windows/Electron desktop wrapper has been discontinued and removed. Android is the supported app.
+
+## Deck builder layout
+
+The Android landscape deck builder separates the card browser and current-deck editor into balanced, independently scrolling panes. Search, sorting and expandable filters stay in the browser pane; deck status, saved builds and copy controls stay in the editor pane. Expanded filters and saved builds have bounded scrolling areas so neither covers the card gallery or deck list. Deck names wrap instead of overlapping copy controls.
+
 ## 2.2.13
 
 Profile pictures use dedicated character portraits rather than reused card sprites. Story and cosmetic backgrounds render their location-specific artwork, with a dark battlefield overlay to keep controls readable. The Profile page previews the current Story scene.
@@ -84,9 +94,11 @@ Set in **Vaelmark** during the Long Dusk: the Emberheart is failing and the Holl
 
 ## Android build & Google sign-in (cloud save)
 
-The Android app is a Gradle project built by GitHub Actions (`.github/workflows/android.yml`) and published to the [android-latest release](../../releases/tag/android-latest). It is signed with the committed debug key in `android-signing/`, so its SHA-1 stays stable for Firebase. The old `build-apk.sh` produces a basic APK without sign-in.
+The Android app is a Gradle project built by GitHub Actions (`.github/workflows/android.yml`) and published to the [android-latest release](../../releases/tag/android-latest). Main-branch release builds use the protected signing secrets documented in [CLOUD_SETUP.md](CLOUD_SETUP.md#release-signing-key-migration-2214). Pull requests use a temporary debug key. The legacy `build-apk.sh` also requires the protected release signing environment variables.
 
 Google sign-in uses Android Credential Manager, then Firebase Auth and Firestore over REST, to cross-save progress. See [CLOUD_SETUP.md](CLOUD_SETUP.md). Sign-in is Android-only.
+
+Every app launch opens the original pixel-art Delvers title scene with its own synthesized theme and ember chime. Begin offline or Continue is immediately available, without waiting for the animation. Returning players keep their progress, privacy consent and audio preferences. Google sign-in is optional, and privacy consent is required before online features.
 
 ## Regression checks
 
