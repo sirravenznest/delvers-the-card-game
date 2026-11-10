@@ -9,6 +9,8 @@ Winning practice awards **one free Standard pack**, alongside the existing free 
 
 Existing players who already earned their starter receive the missing pack when continuing from the title, without another starter or changes to their deck. The saved `tutorialMenus` reward/progress marker prevents repeat grants on reload, tutorial replay or restore from a current cloud save. Unfinished menu lessons can be resumed from the Hub. Closing during pack opening resumes its saved card summary rather than granting or opening another pack. Save failures roll pack acquisition and reward grants back with a visible error.
 
+Pack and deck guidance is confined to the dedicated tutorial; normal Packs and Deck screens remain free of tutorial banners. Leaving the tutorial preserves unfinished real-lesson progress. Opening the awarded Standard pack normally records its cards for the later lesson, even when opening multiple packs; later ordinary openings remain available. On a completed tutorial replay, the pack lesson uses explicitly labelled example cards, not a real reward: no cards, currency or packs are granted or consumed.
+
 During pack reveals, **Open all** immediately shows every obtained card in the summary; it does not discard cards. The separate Packs-menu **Open all** opens all unopened packs outside the guided free-pack lesson.
 
 Run `tests/tutorial-menus-ui.js` with the local-server/Playwright setup below to cover tutorial rewards, existing-player grants, save failures, resumable real-menu lessons and replay protection. Cloud UI checks also cover delayed sync and restored one-time reward markers.
@@ -38,6 +40,10 @@ Pack openings have an original Delvers seal, tear effects, rarity-specific halos
 Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
 
 Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+
+## 2.2.21
+
+Keeps pack and deck guidance in the dedicated tutorial, leaving the normal screens clean. Tutorial replays use a clearly labelled practice pack with example cards and no rewards after the free pack has been opened.
 
 ## 2.2.20
 
