@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.9
+
+The Deck screen groups deck status and saved builds above the searchable, sortable, filterable card gallery and current-deck list. Compact landscape layouts keep card controls visible and remove redundant scroll arrows. Existing deck rules, saved builds, collections and progress are preserved.
+
 ## 2.2.8
 
 Combat restores a full-width hand along the bottom, with compact readable cards and full details on hold/hover/right-click. The 4×5 battlefield stays above it, with status and controls on the right. Every unit has a persistent YOU (blue solid) or FOE (red dashed) marker that follows ownership across rows and online seat mirroring, independent of class, rarity, readiness or targeting.
