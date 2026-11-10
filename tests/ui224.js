@@ -64,6 +64,8 @@ async function run(){
   await p.click('#zm',{force:true});assert.equal(await p.locator('#zm').count(),0);
   await collectionCard.hover();await p.waitForSelector('#zm.hover');
   await p.mouse.move(1,1);await p.waitForSelector('#zm',{state:'detached'});
+  await p.evaluate(()=>{V.v='profile';render()});
+  assert(await p.locator('.backgroundChoice .sceneThumb').first().evaluate(e=>getComputedStyle(e).backgroundImage.startsWith('url')),'Story scene profile preview uses current chapter art');
   await p.evaluate(()=>{V.v='store';render()});
   await p.click('[data-a="storecategory"][data-k="cosmetics"]');
   assert.equal(await p.locator('.sceneThumb').count(),12);
@@ -355,9 +357,14 @@ async function run(){
  await p.click('[data-a="battleintro"]',{force:true});
  await p.evaluate(()=>{G=null;V.v='duel';V.brief=null;render()});
  assert.equal(await p.locator('.bookChapter').count(),1);assert.equal(await p.locator('.bookPages').count(),1);
+ assert.deepEqual(await p.locator('.chapterControls button').allTextContents(),['Previous','Next'],'chapter navigation uses labeled controls');
+ assert.equal(await p.locator('.storyProgress').innerText(),`${await p.evaluate(()=>S.prog)} / 60 encounters cleared`);
+ assert.equal(await p.locator('.storyProgressTrack').getAttribute('aria-valuenow'),String(await p.evaluate(()=>S.prog)),'story progress is accessible');
+ assert.deepEqual(await p.locator('.bookNav button').allTextContents(),['Previous','Next'],'encounter pages use labeled controls');
+ assert.equal(await p.locator('.book .sar').count(),0,'story pages scroll without overlay arrow controls');
  await p.locator('.storyContinue').click({force:true});assert.equal(await p.evaluate(()=>V.brief),1,'book resumes the next uncleared encounter');
  await p.click('[data-a="back"]',{force:true});
- for(let i=0;i<3;i++)await p.click('[aria-label="Next pages"]',{force:true});
+ for(let i=0;i<3;i++)await p.click('[aria-label="Next encounter page"]',{force:true});
  assert.equal(await p.evaluate(()=>V.chapter),1,'turning pages crosses into the next chapter');
  assert.equal(await p.locator('.pageFolio').first().innerText(),'Vaelmark\n7','page numbers continue across chapters');
  for(const tier of [2,3]){

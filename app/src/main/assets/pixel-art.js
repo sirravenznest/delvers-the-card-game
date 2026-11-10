@@ -68,5 +68,38 @@ function hubScene(){
  s+=`<path d="M52 64h24L68 54h-8Z" fill="#1a2440"/>`;
  return `url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 64" shape-rendering="crispEdges" preserveAspectRatio="xMidYMax slice">${s}</svg>`).replace(/'/g,'%27')}')`;
 }
-root.DelversArt={art,scene,hubScene,palette};
+function illustratedScene(seed,colors,details=''){
+ const h=hash(String(seed)),[sky,horizon,ground]=colors;
+ let s=`<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="${sky}"/><stop offset=".7" stop-color="${horizon}"/><stop offset="1" stop-color="${ground}"/></linearGradient><radialGradient id="glow"><stop stop-color="${horizon}" stop-opacity=".5"/><stop offset="1" stop-color="${horizon}" stop-opacity="0"/></radialGradient><radialGradient id="shade"><stop offset=".4" stop-color="#05070c" stop-opacity="0"/><stop offset="1" stop-color="#05070c" stop-opacity=".66"/></radialGradient></defs>`;
+ s+=rect(0,0,400,800,'url(#sky)')+`<circle cx="${100+(h%200)}" cy="${180+(h%120)}" r="220" fill="url(#glow)"/>`;
+ for(let i=0;i<42;i++){const x=(h+i*97)%400,y=(h*3+i*53)%360;s+=rect(x,y,i%7?2:3,i%7?2:3,i%4?'#dce4ef':'#ffc879')}
+ s+=`<path d="M0 520Q95 475 190 525t210-8V800H0Z" fill="${ground}" opacity=".72"/><path d="M0 635Q120 590 230 640t170-12V800H0Z" fill="#060a10" opacity=".34"/>`;
+ s+=details;
+ for(let i=0;i<12;i++){const x=i*36+(h%19),y=675+(h+i*17)%90;s+=rect(x,y,18,2,'#d7c7a2')}
+ s+=`<rect width="400" height="800" fill="url(#shade)"/>`;
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges">${s}</svg>`;
+ return `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g,'%27')}')`;
+}
+function portrait(id,bg='#334b91',fg='#a8d7ff'){
+ const art={
+  vanguard:'<path d="M8 49V36l6-8h20l6 8v13Z" fill="#873d31"/><path d="M14 31 16 15l8-8 9 8 2 17-5 5H18Z" fill="#b9c9d6"/><path d="M14 19 16 9l8-5 10 5 2 10-10-4Z" fill="#e1c47b"/><path d="M20 21h3v3h-3Zm8 0h3v3h-3Z" fill="#111625"/><path d="M17 31h15l-4 6h-7Z" fill="#71879b"/><path d="M23 27h5v2h-5Z" fill="#e8e1cf"/>',
+  arcanist:'<path d="M7 17 20 3h7l14 15-7-3-7-4-7 5Z" fill="#302754"/><path d="M14 17h21v5H14Zm5 4h13v13l-6 7-7-7Z" fill="#d3a875"/><path d="M17 28h4v3h-4Zm10 0h4v3h-4Z" fill="#111625"/><path d="M18 37h15l8 12H8Z" fill="#314c87"/><circle cx="36" cy="12" r="4" fill="#9fe7ff"/><path d="M18 34h14v3H18Z" fill="#f3ca69"/>',
+  warden:'<path d="M8 18 18 5h14l11 15-8-4-5-5H19l-7 9Z" fill="#244932"/><path d="M15 19h19v12l-8 8-11-8Z" fill="#c99568"/><path d="M17 25h5v3h-5Zm10 0h5v3h-5Z" fill="#111625"/><path d="M9 49V37l8-6 9 5 10-5 5 7v11Z" fill="#385a3b"/><path d="M5 31 21 17l2 2L8 35Zm25-9 3-3 10 18-3 2Z" fill="#cfaa68"/><path d="M18 42h17" stroke="#8dc78a" stroke-width="2"/>',
+  cleric:'<path d="M10 19 17 7h15l8 12-8-3H17Z" fill="#9a702c"/><path d="M15 19h19v12l-9 8-10-8Z" fill="#e6c590"/><path d="M17 25h5v3h-5Zm10 0h5v3h-5Z" fill="#24202a"/><path d="M8 49V38l8-7 10 6 10-6 5 7v11Z" fill="#6b5429"/><circle cx="25" cy="13" r="5" fill="#fff0a8"/><path d="M24 33h3v10h-3Zm-3 3h9v3h-9Z" fill="#fff0a8"/>',
+  rogue:'<path d="M8 23 14 8l11 7 11-7 6 15-8-5H16Z" fill="#49345d"/><path d="M15 21h20v10l-10 8-10-8Z" fill="#b77b64"/><path d="M16 24h7v3h-7Zm11 0h7v3h-7Z" fill="#e4d7bf"/><path d="M8 49V37l9-7 8 7 9-7 8 7v12Z" fill="#49345d"/><path d="M20 32h12v4H20Z" fill="#202032"/><path d="m8 34 3-2 7 12-3 2Zm27-2 3 2-7 12-3-2Z" fill="#bcc5d0"/>',
+  beast:'<path d="M8 19 7 6l12 7 7-4 8 5 8-8-1 18-8-6-8 3-9-3Z" fill="#79563a"/><path d="M13 21 19 16h13l7 8-4 11-10 6-10-7Z" fill="#c49a68"/><path d="M14 26h8v3h-8Zm12 0h8v3h-8Z" fill="#17212b"/><path d="m19 34 6-3 7 3-7 6Z" fill="#4a2d28"/><path d="M10 49V39l9-5 6 6 7-6 8 5v10Z" fill="#594333"/>',
+  undead:'<path d="M11 20 14 7l7 6 5-9 5 9 8-6 1 17-8-5-6 3-8-3Z" fill="#515b73"/><path d="M15 20h20v14l-10 8-10-8Z" fill="#d2d3c7"/><path d="M17 25h6v5h-6Zm10 0h6v5h-6Z" fill="#343a58"/><path d="m21 34 4 2 4-2v3l-4 3-4-3Z" fill="#55596a"/><path d="M8 49V39l9-7 8 5 9-5 8 7v10Z" fill="#33384e"/>',
+  dragon:'<path d="M9 21 4 8l12 5 7-8 7 7 13-5-6 17-9-5-9 4Z" fill="#973c43"/><path d="M14 19h21v14l-10 9-10-9Z" fill="#d37a5d"/><path d="M16 25h7v3h-7Zm10 0h7v3h-7Z" fill="#321b25"/><path d="m19 35 6-3 6 3-6 4Z" fill="#f3c26b"/><path d="M8 49V39l9-7 8 6 9-6 8 7v10Z" fill="#792d3c"/><path d="m15 19 4 3m14-3-4 3m-12 9 3 2m15-2-3 2" stroke="#f0a27a" stroke-width="2"/>',
+  elemental:'<path d="M8 42 13 29 10 22 17 17 16 8 25 14 33 7 32 19 41 23 35 31 39 42 29 38 23 46 18 38Z" fill="#47b8bf"/><path d="m15 23 8-7 10 6-2 14-7 6-8-7Z" fill="#9ce8e7"/><path d="m18 25 6-3-2 5h-4Zm10 0 6-3-2 5h-4Z" fill="#153348"/><path d="m22 34 4-3 4 3-4 4Z" fill="#e8f7e9"/><path d="m9 12 4 4m24 13 5 2M8 39l4-4" stroke="#d4ffff" stroke-width="2"/>',
+  construct:'<path d="M11 17h26v20H11Z" fill="#68777a"/><path d="M16 11h16l5 8-5 4H16l-5-4Z" fill="#a5a58b"/><path d="M17 24h5v5h-5Zm10 0h5v5h-5Z" fill="#73e0df"/><path d="M21 33h7v3h-7Z" fill="#36434a"/><path d="M7 49V39l9-5h17l8 5v10Z" fill="#4c5c61"/><circle cx="24" cy="19" r="14" fill="none" stroke="#c3a45e" stroke-width="2"/><path d="M21 4h6v5h-6Zm-16 13h7v5H5Zm33 0h6v5h-6Z" fill="#c3a45e"/>',
+  phoenix:'<path d="M9 22 4 11l13 5 7-12 8 12 13-5-6 16-8-5-8 4-8-5Z" fill="#f0a13c"/><path d="M15 20h20v13l-10 8-10-8Z" fill="#d39164"/><path d="M17 25h6v3h-6Zm10 0h6v3h-6Z" fill="#332128"/><path d="M8 49V39l9-7 8 6 9-6 8 7v10Z" fill="#8a3c27"/><path d="M21 35h8v3h-8Zm2 3h4v6h-4Z" fill="#ffd46a"/>',
+  moonseer:'<path d="M8 20 16 7h18l8 13-9-5H17Z" fill="#343b70"/><path d="M15 20h20v12l-10 9-10-9Z" fill="#c99d83"/><path d="M17 25h6v3h-6Zm10 0h6v3h-6Z" fill="#22253f"/><path d="M8 49V39l9-7 8 5 9-5 8 7v10Z" fill="#333d72"/><path d="M28 7a7 7 0 1 0 8 9 8 8 0 1 1-8-9Z" fill="#e4e6ff"/><path d="M20 35h10" stroke="#a9b5ef" stroke-width="2"/>',
+  stormcaller:'<path d="M8 22 13 8l8 8 5-9 9 9 6-8-2 19-9-5-9 4-8-5Z" fill="#176873"/><path d="M15 21h20v12l-10 9-10-9Z" fill="#b98166"/><path d="M17 25h6v3h-6Zm10 0h6v3h-6Z" fill="#182632"/><path d="M8 49V39l9-7 8 6 9-6 8 7v10Z" fill="#1e5968"/><path d="m22 29 5-8-1 6h5l-7 10 1-7Z" fill="#b7f4ff"/>',
+  wyrmkin:'<path d="M9 22 5 9l12 5 8-9 7 9 12-5-5 18-9-5-8 4-8-5Z" fill="#763b67"/><path d="M14 20h21v13l-10 9-11-9Z" fill="#d39a82"/><path d="M16 25h7v3h-7Zm10 0h7v3h-7Z" fill="#332239"/><path d="m19 35 6-3 6 3-6 4Z" fill="#f0c3a0"/><path d="M8 49V39l9-7 8 6 9-6 8 7v10Z" fill="#593052"/><path d="m14 18 4 2m16-2-4 2m-13 12 3 2m14-2-3 2" stroke="#f2bcdb" stroke-width="2"/>'
+ };
+ const silhouette=art[id]||art.vanguard;
+ const svg=`<svg viewBox="0 0 48 52" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true"><rect width="48" height="52" fill="${bg}"/><path d="M0 0h48v52H0Z" fill="url(#portraitBg)"/><defs><linearGradient id="portraitBg" x2="0" y2="1"><stop stop-color="${fg}" stop-opacity=".34"/><stop offset="1" stop-color="${bg}"/></linearGradient></defs><path d="M0 44 14 30h20l14 14v8H0Z" fill="#0b1018" opacity=".5"/>${silhouette}<path d="M2 2h44v48H2Z" fill="none" stroke="${fg}" stroke-opacity=".45" stroke-width="1"/></svg>`;
+ return svg;
+}
+root.DelversArt={art,scene,hubScene,illustratedScene,portrait,palette};
 })(typeof self!=='undefined'?self:globalThis);

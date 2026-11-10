@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.13
+
+Profile pictures use dedicated character portraits rather than reused card sprites. Story and cosmetic backgrounds render their location-specific artwork, with a dark battlefield overlay to keep controls readable. The Profile page previews the current Story scene.
+
+Story uses labeled Previous/Next chapter and encounter-page controls, a cleared-encounter progress bar, and a Back to Hub button. Book pages scroll normally without overlay scroll arrows. Existing saves, cosmetic ownership and campaign progress are preserved.
+
 ## 2.2.12
 
 Ranked and friendly battle intros stay mounted during network refreshes, preventing the entrance animation from restarting and preserving button focus and scroll position.
