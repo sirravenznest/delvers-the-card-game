@@ -1,0 +1,74 @@
+.dustBalance{display:block;color:#bcecff;font:10px/1 Arial,sans-serif;white-space:nowrap}
+.card[class*="cc-"],.tile[class*="cc-"]{isolation:isolate}
+.card.rar2::after,.card.rar3::after{content:none}
+.cc-frame-silver{--cf-frame:#dce4ef}.cc-frame-red{--cf-frame:#ff8c90}.cc-frame-blue{--cf-frame:#91caff}.cc-frame-gold{--cf-frame:#ffe297}
+.card[class*="cc-frame-"]::after,.tile[class*="cc-frame-"]::after{content:"";position:absolute;inset:4px;pointer-events:none;border:2px solid var(--cf-frame);border-top-color:color-mix(in srgb,var(--cf-frame) 55%,white);border-bottom-color:color-mix(in srgb,var(--cf-frame) 55%,#332a25);border-radius:4px;z-index:0;box-shadow:inset 0 0 3px #fff5,0 0 4px #0009;background:none;animation:none;transform:none;opacity:1}
+.card[class*="cc-background-"],.tile[class*="cc-background-"]{--cf-holo:repeating-linear-gradient(37deg,#ffffff06 0 1px,transparent 1px 7px),linear-gradient(125deg,#263d65,#603a64,#286d67,#6e582d,#263d65)}
+.card.cc-background-gold-holographic,.tile.cc-background-gold-holographic{--cf-holo:repeating-linear-gradient(37deg,#fff1b015 0 1px,transparent 1px 7px),linear-gradient(125deg,#60431d,#96723a,#535373,#99813b,#60431d)}
+.finishSurface{position:absolute;inset:5px;z-index:-1;pointer-events:none;background-image:var(--cf-holo,none);background-size:100% 100%,250% 250%;animation:card-holographic 12s ease-in-out infinite}
+.card>.cardHead,.card>.artFrame,.card>.identity,.card>.abilities,.card>.stats,.card>.cardFoot,.tile>.tileHeader,.tile>.stats,.tile>.ab{position:relative;z-index:1}
+.artFrame{display:block;position:relative;flex:none;line-height:0;overflow:hidden}
+body.battle .hand .card .artFrame{display:none}
+body.battle .hand .card .finishSurface,body.battle .tile.u .finishSurface{inset:6px 6px 6px auto;width:3px;z-index:0}
+.cc-lettering-silver{--cf-lettering:#e2ebff}.cc-lettering-red{--cf-lettering:#ffadb1}.cc-lettering-blue{--cf-lettering:#a4d8ff}.cc-lettering-gold{--cf-lettering:#ffe297}
+.card[class*="cc-lettering-"] .cardName,.card.zoom[class*="cc-lettering-"] .cardName,body.battle .hand .card[class*="cc-lettering-"] .cardName,body.battle .tile.u[class*="cc-lettering-"] .tileName{color:var(--cf-lettering);background:linear-gradient(175deg,#fff 5%,var(--cf-lettering) 25%,var(--cf-lettering) 45%,#fff 49%,var(--cf-lettering) 55%,var(--cf-lettering) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(0 1px 1px #000)}
+.card.cc-foil-foil::before,.tile.cc-foil-foil::before,.card.cc-foil-foil .artFrame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.24;background:repeating-linear-gradient(115deg,transparent 0 20%,#8fdaff 26%,#fff1c4 29%,#efb5ff 32%,transparent 40% 60%);background-size:300% 100%;animation:card-foil 7s ease-in-out infinite}
+.card.cc-foil-foil .artFrame::after{z-index:1}
+body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;background:none;-webkit-text-fill-color:currentColor;filter:none}
+@keyframes card-holographic{50%{background-position:100% 100%}}
+@keyframes card-foil{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+.copyButton{width:100%;margin-top:3px;padding:5px;font:12px Arial,sans-serif}
+.deckCopyRow .btn{width:100%;text-align:left;padding:5px;overflow-wrap:anywhere}
+.deckCopyRow small{display:block;font:10px/1.2 Arial,sans-serif}
+.packExtras{padding:8px;border:1px solid #6a5638;border-radius:8px}
+.packExtras h3{margin:0 0 4px}.packExtras>.btn{display:block;margin-top:6px}
+.copyShade{position:fixed;inset:0;z-index:45;background:#000d;display:flex;align-items:center;justify-content:center;padding:8px}
+#copyManager{width:min(960px,100%);height:min(640px,100%);display:flex;flex-direction:column;min-height:0;background:#201b26;border:2px solid #91caff;border-radius:12px;padding:8px;color:#f1e8d6}
+#copyManager header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+#copyManager h2{margin:0;font:700 16px/1.2 Arial,sans-serif}
+.copyBody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;min-height:0;flex:1}
+.copyPreview{overflow-y:auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:6px}
+.copyPreview .card.zoom{width:min(220px,100%);flex-shrink:0;max-width:100%}
+.copyPreview>small{font:11px/1.3 Arial,sans-serif}
+.copyControls{overflow:auto;min-height:0;padding:6px}
+.copyControls select{width:100%;min-height:40px;background:#17121e;color:#fff;font:14px Arial,sans-serif;border:1px solid #91caff;border-radius:6px}
+.copyControls fieldset{margin:6px 0;padding:6px;border:1px solid #6a6380;border-radius:6px}
+.cosmeticChoices{display:flex;flex-wrap:wrap;gap:5px}.cosmeticChoices .btn{padding:6px;flex:1 1 85px}
+.cosmeticChoices small{display:block;font:11px Arial,sans-serif}
+.cosmeticChoices [aria-pressed="true"],.copyControls [data-a="copydeck"][aria-pressed="true"]{border-color:#bcecff;background:#314451}
+.cosmeticConfirm{padding:8px;margin:6px 0;background:#382c23;border:2px solid #ffe297;border-radius:6px}
+.cosmeticConfirm ul{max-height:120px;overflow:auto;padding-left:22px}
+.pkov{--pack-accent:#a3d8ff}
+.packReady .pkpack,.tearing .pkhalf{background:repeating-linear-gradient(45deg,#ffffff06 0 1px,transparent 1px 9px),linear-gradient(145deg,#47365f,#183e51 60%,#5f4329);border-color:#e4c88a}
+.packSeal{display:grid;place-items:center;position:relative;width:80px;height:80px;border:3px double #f4d692;border-radius:50%;font:700 52px Georgia,serif;color:#fff0c1;box-shadow:0 0 18px #f4d69245,inset 0 0 18px #f4d69222}
+.packBrand{position:absolute;bottom:15px;left:0;right:0;font:700 11px Arial,sans-serif;letter-spacing:4px;color:#ffe9b2}
+.packSeam{position:absolute;left:5px;right:5px;top:15px;border-top:2px dashed #fff4}
+.packAura{position:absolute;left:50%;top:48%;width:min(70vw,65vh);aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid var(--pack-accent);border-radius:50%;background:repeating-conic-gradient(from 13deg,transparent 0 21deg,#bcecff1a 22deg 23deg,transparent 24deg 30deg);box-shadow:0 0 65px #8acfff28,inset 0 0 70px #8acfff25;pointer-events:none;animation:pack-orbit 18s linear infinite}
+.packReady .packAura{width:min(85vw,85vh);opacity:.6}
+.pkov.packReveal{animation:none}
+.pkov.packReveal::before{opacity:.08}
+.packRare{--pack-accent:#92cfff}.packLegendary{--pack-accent:#ffe297}
+.packLegendary .packAura{border:3px double #ffe297;background:repeating-conic-gradient(from 13deg,transparent 0 21deg,#ffe29722 22deg 23deg,transparent 24deg 30deg);box-shadow:0 0 70px #ffcf6a40,inset 0 0 70px #ffcf6a30}
+.packCosmetic .packAura{background:conic-gradient(from 13deg,#8fe1ff35,#d9a1f535,#ffe9a335,#8fe1ff35);border:3px double #ddcfff;box-shadow:0 0 70px #d9a1f540}
+.packGoldCosmetic .packAura{background:conic-gradient(from 13deg,#ffe29755,#ac91d530,#d9bc5755,#ffe29755);border-color:#ffe297}
+.packCosmetic .pkface{filter:drop-shadow(0 0 20px #c5b7ff99)}
+.pkCosmeticLabel{display:block;color:#dfcfff;font:700 15px/1.3 Arial,sans-serif;letter-spacing:1px;margin-top:8px}
+.packGoldCosmetic .pkCosmeticLabel{color:#ffe297}
+.pkFinish{display:block;color:#f2ecff;font:12px/1.4 Arial,sans-serif;letter-spacing:0;margin:4px auto;max-width:250px}
+.packNext{display:block;color:#d4dbea;font:11px/1.3 Arial,sans-serif;letter-spacing:0;margin-top:6px}
+.packIndex{font:11px Arial,sans-serif;letter-spacing:2px}
+.pkov .packSkip{position:absolute;top:8px;right:8px;z-index:5;min-height:40px}
+.packOpening{position:absolute;bottom:20px;letter-spacing:2px}
+@keyframes pack-orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@media(max-height:420px){
+ .pkov.packReveal{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:8px;padding:12px}
+ .packReveal>.pkface,.packReveal>.pkback{grid-column:2;grid-row:1/-1;align-self:center}
+ .packReveal>.packIndex{grid-column:1;grid-row:1;align-self:end}
+ .packReveal>.pkn{grid-column:3;grid-row:1/-1;align-self:center;overflow-wrap:anywhere;font-size:16px}
+ .packReveal>.pkd{grid-column:1;grid-row:2;justify-self:center}
+ .packReveal>.pkback{height:min(235px,calc(100dvh - 24px))}
+ .packReveal .pkCosmeticLabel{font-size:12px}.packReveal .pkFinish{font-size:11px}
+}
+@media(max-height:360px){#copyManager{padding:5px}.copyBody{gap:5px}.copyPreview .card.zoom{height:234px;min-height:234px}.copyControls p{margin:6px 0}}
+@media(prefers-reduced-motion:reduce){.card[class*="cc-"],.tile[class*="cc-"],.card.cc-foil-foil::before,.tile.cc-foil-foil::before,.card.cc-foil-foil .artFrame::after,.finishSurface{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.packAura{animation:none!important}.packReveal .pkface{animation:none!important}}

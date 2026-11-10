@@ -1,6 +1,6 @@
 # Privacy Policy: Delvers: The Card Game
 
-_Last updated: 2026-11-09 (policy version 2026-11-09)_
+_Last updated: 2026-11-10 (policy version 2026-11-09; card-cosmetic data clarification)_
 
 Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirravenznest`. This policy explains what data the game handles.
 
@@ -8,13 +8,13 @@ Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirra
 The app shows this policy in-game. Google sign-in, cloud save, ranked and friends stay switched off until you tap **I agree**. You can read the policy again and **withdraw your agreement** from the Profile tab; online features then switch off again. Playing offline needs no agreement. If this policy changes materially, the app asks you to agree again.
 
 ## Playing without an account
-By default, all progress (collection, decks, gold, campaign progress, missions, tutorial and starter-deck status, cosmetic/emote unlocks and emote-mute preference) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers. Story dialogue is displayed as text; it does not use a microphone or speech service.
+By default, all progress (collection, individual card copies, decks, gold, Arcane Dust, campaign progress, missions, tutorial and starter-deck status, cosmetic/emote unlocks, selected card treatments, pack receipts and emote-mute preference) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers. Story dialogue is displayed as text; it does not use a microphone or speech service.
 
 ## Signing in with Google (Android, optional)
 If you choose **Sign in with Google**, the game uses Google Sign-In and Google Firebase (Authentication and Cloud Firestore) to provide cloud save. When you sign in we process:
 
 - Your Google account's unique ID, email address, and display name (provided by Google).
-- Your game save data (collection, decks, gold, progress), stored in Firestore under your account.
+- Your game save data (including collection, decks, gold, Arcane Dust, progress, per-copy cosmetic unlocks and selections, and the latest pack receipt), stored in Firestore under your account.
 - Authentication tokens, stored on your device so you stay signed in.
 
 We use this data only to sign you in and sync your save between your devices. We do not sell or share it, and we do not use it for advertising. Data is processed by Google under [Google's Privacy Policy](https://policies.google.com/privacy) and the [Firebase terms](https://firebase.google.com/terms).
@@ -24,7 +24,7 @@ We use this data only to sign you in and sync your save between your devices. We
 - **Cloud data:** sign out to stop syncing. To have your cloud save and account record deleted, open an issue at https://github.com/sirravenznest/delvers-the-card-game/issues asking for deletion (do not include sensitive details). Deleting your data cannot be undone.
 
 ## Virtual items, packs and fairness
-Gold, cards, packs, starter decks, avatars and backgrounds are virtual items inside the game. They have **no cash value**, cannot be bought with real money (the game has no purchases, ads or payments), cannot be traded or cashed out, and may be changed or rebalanced in updates. Card packs are random; the exact odds for every pack type are shown in the Packs tab of the game. Missions and daily or weekly resets use your device's clock, so no time or location data is sent to us for them.
+Gold, Arcane Dust, cards, packs, starter decks, card finishes, avatars and backgrounds are virtual items inside the game. They have **no cash value**, cannot be bought with real money (the game has no purchases, ads or payments), cannot be traded or cashed out, and may be changed or rebalanced in updates. Card packs and cosmetic drops are random; the exact odds for every pack type and cosmetic treatment are shown in the Packs tab of the game. Missions and daily or weekly resets use your device's clock, so no time or location data is sent to us for them.
 
 ## Device features
 The game may briefly vibrate your device during pack openings (Android "vibrate" permission). It does not use your camera, microphone, contacts, location or advertising ID. The game needs internet access only for the optional online features above.
@@ -42,7 +42,7 @@ Changes will be posted in this file in the repository, with an updated date.
 Open an issue at https://github.com/sirravenznest/delvers-the-card-game/issues.
 
 ## Online play data (ranked and friends)
-If you use ranked or friends, we store in Firebase Realtime Database: the public username you choose (not your Google name), your avatar, a friend code, your friend list and requests, your rating and win/loss record, and match action logs (the moves of a match). Fixed-choice emotes you send online are stored in the match log with your account ID and a timestamp; your opponent can see them and can mute them. There is no free-form chat. **Other players can see your username, avatar and rating.** Choose a username that does not identify you. Remove friends in-app; contact the maintainer to delete your data.
+If you use ranked or friends, we store in Firebase Realtime Database: the public username you choose (not your Google name), your avatar, a friend code, your friend list and requests, your rating and win/loss record, and match action logs (the moves of a match). Equipped card appearances travel with queue entries, invitations and match metadata so your opponent sees the same finishes. Your Dust balance, unlock provenance and local copy identifiers are not sent as online match metadata. Fixed-choice emotes you send online are stored in the match log with your account ID and a timestamp; your opponent can see them and can mute them. There is no free-form chat. **Other players can see your username, avatar and rating; match opponents also see equipped card appearances.** Choose a username that does not identify you. Remove friends in-app; contact the maintainer to delete your data.
 
 ## Rated computer opponents
 Ranked matchmaking searches for a human first. After 20 seconds it may automatically match you with a clearly labelled **BOT**, using themed decks and difficulty appropriate to your rating tier. Wins, losses and resignations against these bots affect your rating and public record, just like human ranked matches. Bots are synthetic opponents, not real player profiles or accounts. Bot match metadata and action logs are stored with your online play data. No external AI service receives your information. Ranked results are processed by game clients; they are not independently verified by a server, and the ladder is experimental.

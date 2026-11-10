@@ -10,7 +10,7 @@ const deck = () => { const d = [], cnt = {}; for (const c of C.ALL.filter(c => c
 const auth = (uid, name) => () => ({ uid, tok: uid, name });
 const mkNet = (db, uid, name) => N.create({ db: 'https://x', fetch: db.fetch, now: clk.now, auth: auth(uid, name) });
 (async () => {
-  assert.strictEqual(N.PROTO, 5, 'shared ranked deck rules require a fresh online protocol');
+  assert.strictEqual(N.PROTO, 6, 'per-copy battle appearances require a fresh online protocol');
   // ranked: a v2.0 queue entry is never paired
   let db = makeDb(); const a = mkNet(db, 'uA', 'Ann'), d = deck();
   await db.fetch('https://x/queue/uOld.json?auth=uOld', { method: 'PUT', body: JSON.stringify({ n: 'Old', r: 1000, d, pv: 2, t: { '.sv': 'timestamp' }, j: { '.sv': 'timestamp' } }) });
@@ -21,6 +21,8 @@ const mkNet = (db, uid, name) => N.create({ db: 'https://x', fetch: db.fetch, no
   console.log('PASS ranked skips previous card-set protocol');
   await db.fetch('https://x/queue/uV4.json?auth=uV4', { method: 'PUT', body: JSON.stringify({ n: 'Old ranked rules', r: 1000, d, pv: 4, t: { '.sv': 'timestamp' }, j: { '.sv': 'timestamp' } }) });
   await a.tick(); assert.strictEqual(a.st, 'queue', 'clients enforcing the old ranked restrictions are not paired');
+  await db.fetch('https://x/queue/uV5.json?auth=uV5', { method: 'PUT', body: JSON.stringify({ n: 'Old cosmetic support', r: 1000, d, pv: 5, t: { '.sv': 'timestamp' }, j: { '.sv': 'timestamp' } }) });
+  await a.tick(); assert.strictEqual(a.st, 'queue', 'clients without shared cosmetic appearances are not paired');
   // A v2.0 client pairs with us and writes a match: we refuse it politely.
   await db.fetch('https://x/queue/uA/m.json?auth=uOld', { method: 'PUT', body: JSON.stringify('mOld') });
   await db.fetch('https://x/matches/mOld/meta.json?auth=uOld', { method: 'PUT', body: JSON.stringify({ p: 'uOld', e: 'uA', seed: 1, rk: 1, tl: 75, pv: 2, deckP: d, deckE: d, r: {}, names: {} }) });

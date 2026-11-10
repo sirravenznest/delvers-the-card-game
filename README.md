@@ -3,6 +3,34 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## Card cosmetics & Arcane Dust (development)
+
+Collection, Deck and pack results have **Copies & cosmetics** controls. Each individual copy can combine a metallic frame, metallic title lettering, holographic background and foil shine. Previewing is free; a confirmed purchase permanently unlocks the treatment on that copy, and switching unlocked treatments is free. Deck slots and saved builds retain the exact chosen copies. Existing collections migrate to plain copies without changing quantities, gold or decks.
+
+| Treatment | Arcane Dust per copy |
+|---|---:|
+| Silver, red or blue frame/title lettering | 25 each |
+| Gold frame/title lettering | 75 each |
+| Foil | 300 |
+| Holographic background | 600 |
+| Gold holographic background | 1,200 |
+
+Plain spare breakdown keeps at least **three total copies per card name** and pays the existing gold reward plus **5 / 15 / 50 / 150 Arcane Dust** for Common / Uncommon / Rare / Legendary. Purchased-cosmetic copies cannot be broken down, even with their default appearance selected. Pack-only cosmetic spares require a separate confirmation and pay normal gold and rarity Dust plus **6% of their granted treatment's price, rounded down** (1 / 4 / 18 / 36 / 72 bonus Dust for basic colours / gold / foil / holographic / gold holographic). Bulk breakdown never includes cosmetic copies. Purchasing any additional treatment permanently protects an originally pack-granted copy too.
+
+**Packs → Break down extras** lists the exact plain spare copies and both rewards before confirmation. It considers only the last individual pack opened, never older collection copies. **Open all** uses only its final individual pack for this action. The receipt persists across reloads, and consumed copies cannot pay twice.
+
+Every packed card independently has a **0.25% / 0.75% / 1.5%** cosmetic chance in Standard / Veteran / Legendary packs, without changing card-rarity odds. A cosmetic drop unlocks and equips one treatment for free. Basic foil and silver/red/blue treatments are possible even on Common cards in Standard packs. Gold treatments require at least Uncommon, holographic requires Rare or Legendary, and gold holographic requires Legendary. Higher card rarity improves the treatment mix; higher pack tiers weight gold, foil and holographic treatments more heavily. Exact conditional treatment odds are shown under Pull rates.
+
+Finishes use original procedural CSS, not third-party game assets. They appear in menus, pack reveals, full-card previews, battle hands and battlefield units. Gameplay colours always take precedence: playable/blocked cards, blue/red ownership, readiness, targets, changed stats, class bands and rarity indicators keep their original colours. In compact battle views, holographic backgrounds become decorative accents rather than replacing status backgrounds; exhausted unit names retain their muted appearance. All campaign difficulties, human ranked, rated bots and friendly matches support cosmetics. Tutorial lessons and guided practice use plain cards. Reduced-motion settings disable animated shimmer.
+
+Pack openings have an original Delvers seal, tear effects, rarity-specific halos and particles, and a distinct shimmer celebration and label for cosmetic discoveries. Muting still controls all generated sounds; reduced motion removes animated effects, and Skip stays reachable during every stage. Reveal effects never change the already-granted pack contents or rewards.
+
+Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+
+## 2.2.18
+
+Adds individual-card cosmetic finishes, Arcane Dust, cosmetic pack drops, protected breakdown rules, and upgraded pack reveals. Finishes preserve gameplay colour cues across menus and battles.
+
 ## 2.2.17
 
 Practice is manual-only, without Auto-play. Each practice objective opens automatically only once per fight, even when selecting cards, deselecting units or changing turns returns to an earlier objective. The Objective button still allows manual review; starting a new practice fight resets these reminders.
@@ -119,7 +147,7 @@ After the title, new players without story progress get a dedicated Learn to pla
 ## Regression checks
 
 Run Node suites with `for f in tests/*.test.js; do node "$f" || exit; done`.
-For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/practice-ui.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Practice checks cover one-time objectives, manual review and replay. Campaign checks play real turns with shortened presentation delays; cloud-reset and online checks use simulated services, not production Firebase.
+For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/card-cosmetics-ui.js`, `tests/practice-ui.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Cosmetic checks exercise per-copy purchases, menus, previews, persistence, pack rewards and salvage. Practice checks cover one-time objectives, manual review and replay. Campaign checks play real turns with shortened presentation delays and cosmetic-equipped decks at all difficulties; cloud-reset and online checks use simulated services, not production Firebase. Online checks verify both players' finishes in human ranked, friendly and bot battles.
 
 ## Legal & privacy
 See [PRIVACY.md](PRIVACY.md) and [LEGAL.md](LEGAL.md) (IP notes, SRD 5.1 attribution).

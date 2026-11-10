@@ -6,6 +6,7 @@ _This is a developer's good-faith review, not legal advice. Consult an IP lawyer
 - **Game mechanics** (d20 rolls, Aim-versus-Guard hit maths, hit points, mana, keywords like haste/poison) are ideas and systems, not protected by copyright.
 - **Code, card text, lore, and the world of Vaelmark** are original work by this project.
 - **Card art, portraits and scenes** are original, procedurally drawn pixel-style SVGs (`pixel-art.js`) with a shared palette and sprite vocabulary. UI emoji glyphs come from the device's system font, so none is bundled. No third-party game artwork or card frames are included.
+- **Card finishes** are original procedural CSS (`card-cosmetics.css`): metallic frames and lettering, foil sheen and holographic backgrounds. Other trading-card games are references for general material qualities only; their assets, distinctive frames, branding and animations are not reproduced.
 - **Generic fantasy creatures and spells** (goblin, skeleton, dragon, Fireball, Magic Missile, Lightning Bolt, Cure Light Wounds, Gelatinous Cube, Owlbear) appear in the Systems Reference Document 5.1, which Wizards of the Coast released under CC-BY-4.0. If you keep these names, include the attribution below.
 
 ## Risks and what was done
