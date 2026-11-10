@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.16
+
+Tutorial lessons and practice objectives are focused pop-ups, replacing the cramped side panel. Confirm an objective to clear the battle screen, and reopen it at any time using the Objective button in battle controls. Completing a guided action opens the next objective automatically.
+
 ## 2.2.15
 
 One-time testing reset for signed-in accounts: the updated app replaces pre-reset saves on their next successful cloud sync. Cards, decks, gold, packs, starter-deck ownership, cosmetics, missions, tutorial and campaign progress return to new-game defaults. Google accounts, ranked records, friends and online matches are not reset. Offline-only players are unchanged until signing in.
@@ -106,7 +110,7 @@ Google sign-in uses Android Credential Manager, then Firebase Auth and Firestore
 
 Every app launch opens the original pixel-art Delvers title scene with its own synthesized theme and ember chime. Begin offline or Continue is immediately available, without waiting for the animation. Returning players keep their progress, privacy consent and audio preferences. Google sign-in is optional, and privacy consent is required before online features.
 
-After the title, new players without story progress get a dedicated Learn to play / Skip welcome screen. Completing or skipping the tutorial keeps it from interrupting later launches; it remains replayable from Guide. Set details appear only on Collection, Deck and Packs.
+After the title, new players without story progress get a dedicated Learn to play / Skip welcome screen. Tutorial lessons and practice objectives open as focused pop-ups; confirm each objective to clear the board, and reopen it from battle controls whenever needed. Completing or skipping the tutorial keeps it from interrupting later launches; it remains replayable from Guide. Set details appear only on Collection, Deck and Packs.
 
 ## Regression checks
 
