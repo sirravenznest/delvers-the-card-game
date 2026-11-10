@@ -247,6 +247,7 @@ table.rates{width:100%;border-collapse:collapse;margin:4px 0;font-size:13.5px}ta
 <script>
 const SET={name:'First Adventures',size:122};
 const SAVE_KEY='delvers2';
+const SAVE_EPOCH=1;
 const MAXB=10;
 const AVATARS=[
  {id:'vanguard',name:'Vanguard',glyph:'🛡️',bg:'#7c3c2b',fg:'#ffd08a'},
@@ -349,6 +350,7 @@ function clean(data){
   }
   const cosmetics=cleanCosmetics(data.cosmetics),av=AVATARS.find(x=>x.id==data.avatar);
   return{
+   saveEpoch:Number.isSafeInteger(data.saveEpoch)&&data.saveEpoch>=0?data.saveEpoch:0,
    gold:Number.isFinite(Number(data.gold))?Math.max(0,Math.floor(Number(data.gold))):150,
    col,deck,builds:(Array.isArray(data.builds)?data.builds:[]).slice(0,MAXB).map(b=>({name:String(b&&b.name||'Build').slice(0,20),deck:(Array.isArray(b&&b.deck)?b.deck:[]).filter(x=>BN[x]).slice(0,30)})),
    prog:Number.isFinite(Number(data.prog))?Math.max(0,Math.min(CAMP.length,Math.floor(Number(data.prog))*(data.ver==2?1:3))):0,ver:2,stars:cleanStars(data.stars),ts:Math.max(0,Math.floor(Number(data.ts))||0),
@@ -385,29 +387,40 @@ async function idTok(){if(!AU)throw new Error('Not signed in');
  return AU.idToken}
 const docUrl=()=>`https://firestore.googleapis.com/v1/projects/${CLOUD.projectId}/databases/(default)/documents/users/${AU.uid}`;
 async function cloudGet(){try{const j=await jf(docUrl(),{headers:{Authorization:'Bearer '+await idTok()}}),f=j.fields||{};
-  return f.save?{save:JSON.parse(f.save.stringValue),ts:+(f.updated&&f.updated.integerValue)||0}:null}catch(e){if(e.status==404)return null;throw e}}
-async function cloudPut(){const ts=S.ts||Date.now();
- await jf(docUrl()+'?updateMask.fieldPaths=save&updateMask.fieldPaths=updated',{method:'PATCH',headers:{Authorization:'Bearer '+await idTok(),'Content-Type':'application/json'},body:JSON.stringify({fields:{save:{stringValue:JSON.stringify(S)},updated:{integerValue:String(ts)}}})});
+  return f.save?{save:JSON.parse(f.save.stringValue),ts:+(f.updated&&f.updated.integerValue)||0,resetEpoch:+(f.resetEpoch&&f.resetEpoch.integerValue)||0,version:j.updateTime}:null}catch(e){if(e.status==404)return null;throw e}}
+async function cloudPut(save=S,version){if(save.saveEpoch!==SAVE_EPOCH)throw new Error('This save predates the testing reset. Sync your account before uploading.');
+ const ts=save.ts||Date.now();
+ await jf(docUrl()+'?updateMask.fieldPaths=save&updateMask.fieldPaths=updated&updateMask.fieldPaths=resetEpoch'+(version?'&currentDocument.updateTime='+encodeURIComponent(version):''),{method:'PATCH',headers:{Authorization:'Bearer '+await idTok(),'Content-Type':'application/json'},body:JSON.stringify({fields:{save:{stringValue:JSON.stringify(save)},updated:{integerValue:String(ts)},resetEpoch:{integerValue:String(SAVE_EPOCH)}}})});
  AU.base=ts;saveAuth();V.cloud.at=Date.now()}
 let cT=0,cBusy=false,cAgain=false;
 function cloudQueue(){if(!agreed()||!AU||!cloudOn()||!V.cloud.ready||V.cloud.conf)return;clearTimeout(cT);cT=setTimeout(cloudPush,2500)}
-async function cloudPush(){if(!AU||V.cloud.conf)return;if(cBusy){cAgain=true;return}cBusy=true;
+async function cloudPush(){if(!AU||!V.cloud.ready||V.cloud.conf)return;if(cBusy){cAgain=true;return}cBusy=true;
  try{cSet('syncing');await cloudPut();cSet('ok')}catch(e){cSet('err','Cloud save failed: '+e.message)}
  cBusy=false;if(cAgain){cAgain=false;cloudQueue()}}
 const pristine=()=>S.prog==0&&S.gold==150&&!S.builds.length&&!S.packs.std&&!S.packs.t2&&!S.packs.t3&&Object.keys(S.col).every(k=>S.col[k]==(ST[k]||0));
 const sumS=x=>`${Math.min(x.prog,CAMP.length)}/${CAMP.length} battles won · 🪙${x.gold} · ${Object.values(x.col).reduce((a,b)=>a+b,0)} cards`;
 function adopt(cs){S=cs;lastSig=sig();try{localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}AU.base=S.ts;saveAuth();V.cloud.conf=null;V.cloud.ready=true;V.cloud.at=Date.now();cSet('ok')}
 // Compare the last synced timestamp with both copies: only one side changed -> follow it; both changed -> ask the player.
-async function cloudSync(){if(!agreed()||!AU||!cloudOn()||G)return;
+async function cloudSync(retry=0){if(!agreed()||!AU||!cloudOn()||G)return;
+ clearTimeout(cT);V.cloud.ready=false;
  try{cSet('syncing');const c=await cloudGet();
+  if(G){cSet('idle','Return to the menu and sync to finish checking your save.');return}
+  if(c&&c.resetEpoch>SAVE_EPOCH||S.saveEpoch>SAVE_EPOCH)throw new Error('This save requires a newer app version.');
+  if(c&&c.resetEpoch<SAVE_EPOCH||!c&&S.saveEpoch<SAVE_EPOCH){
+   const fresh=freshSave();fresh.ts=Date.now();
+   await cloudPut(fresh,c&&c.version);V.pick=false;V.rev=[];V.pk=null;V.chapter=0;V.bookPage=0;V.welcome=!V.title;
+   adopt(fresh);cSet('ok','One-time testing reset complete. Your cards, store ownership and progress have been reset.');return
+  }
   if(!c){await cloudPut();V.cloud.ready=true;cSet('ok');return}
   const cs=clean(c.save);cs.ts=c.ts;
+  if(cs.saveEpoch!==SAVE_EPOCH)throw new Error('An incompatible save was uploaded by an older app. Update all test devices. This save was not restored.');
+  if(S.saveEpoch<SAVE_EPOCH){adopt(cs);return}
   if(JSON.stringify({...cs,ts:0})==sig()){AU.base=S.ts;saveAuth();V.cloud.ready=true;V.cloud.at=Date.now();cSet('ok');return}
   const base=AU.base||0,lc=S.ts!==base,cc=c.ts!==base;
   if(lc&&!cc){V.cloud.ready=true;await cloudPut();cSet('ok')}
   else if(!lc&&cc||pristine())adopt(cs);
   else{V.cloud.conf={cs};V.cloud.ready=true;cSet('conf')}
- }catch(e){if(e.status==401||/TOKEN|CREDENTIAL|USER_/.test(e.message)&&e.status==400){cSet('err','Your sign-in expired. Please sign in again.');AU=null;saveAuth()}else if(e.status==403)cSet('err','Cloud save was refused (permission denied). Check that Firestore is created and its rules are published. '+e.message);else cSet('err','Cloud sync failed: '+e.message)}}
+ }catch(e){if((e.status==409||e.status==412)&&retry<1)return cloudSync(retry+1);if(e.status==401||/TOKEN|CREDENTIAL|USER_/.test(e.message)&&e.status==400){cSet('err','Your sign-in expired. Please sign in again.');AU=null;saveAuth()}else if(e.status==403)cSet('err','Cloud save was refused (permission denied). Check that Firestore is created and its rules are published. '+e.message);else cSet('err','Cloud sync failed: '+e.message)}}
 function gSignIn(){if(!agreed()){V.priv=true;render();return}if(!cloudOn()){cSet('err','Cloud save is not set up in this build.');return}
  if(window.DelversNative&&window.DelversNative.signIn){cSet('signing','Opening Google sign-in…');window.DelversNative.signIn(CLOUD.webClientId)}
  else cSet('err','Google sign-in is available in the Android app. Your progress is still saved on this device.')}
@@ -422,7 +435,7 @@ function cloudHTML(){if(V.v!='profile')return'';const c=V.cloud;
  const st=c.st=='syncing'?'Syncing…':c.st=='ok'?'✔ Saved to your account'+(c.at?' · '+new Date(c.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''):'';
  let h=`<div class="op" style="display:block"><b>☁ ${AU.name||AU.email||'Signed in'}</b><br><small>${AU.email&&AU.name?AU.email+' · ':''}${st}</small>`;
  if(c.conf)h+=`<div class="mid" style="margin-top:6px" role="alert"><b>Two different saves found.</b><br>☁ Cloud: ${sumS(c.conf.cs)}<br>📱 This device: ${sumS(S)}<div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="cuse">Use cloud save</button><button class="btn" style="flex:1" data-a="cloc">Keep this device</button></div><small>The one you don't choose is overwritten.</small></div>`;
- if(c.msg&&c.st=='err')h+=`<small role="alert" style="display:block;margin-top:4px;color:#ff9a7a">${c.msg}</small>`;
+ if(c.msg)h+=`<small role="${c.st=='err'?'alert':'status'}" style="display:block;margin-top:4px${c.st=='err'?';color:#ff9a7a':''}">${esc(c.msg)}</small>`;
  return h+`<div class="bar" style="margin-top:6px"><button class="btn" style="flex:1" data-a="gsync" ${c.st=='syncing'||c.conf?'disabled':''}>Sync now</button><button class="btn" style="flex:1" data-a="gout">Sign out</button></div></div>`}
 function profileHTML(){const a=AVATARS.find(x=>x.id==S.avatar)||AVATARS[0],owned=Object.values(S.col).reduce((n,x)=>n+(x>0),0),cos=S.cosmetics,rr=NET&&NET.rec;
  const avatars=AVATARS.filter(x=>!x.price||cos.avatars.includes(x.id));
@@ -443,12 +456,13 @@ function cosmeticStoreHTML(){const av=AVATARS.filter(x=>x.price),ownedA=new Set(
 function monsterPreviewHTML(){return `<div class="sec"><button class="btn" data-a="storeback">← Back to Store</button><h2>The Monster Handbook</h2><span class="badge">Preview · Coming soon</span><p>A future card set built around a wider range of fantasy monsters and mighty Legendary heroes.</p><div class="op" style="display:block"><b>What to expect</b><ul><li>More creature types and monster-focused strategies.</li><li>Powerful Legendary heroes, limited to one copy per deck.</li><li>New original art, abilities and encounter ideas.</li></ul></div><small>This is a concept preview only. No cards from this set are available yet, and no release date is announced.</small></div>`}
 const own=n=>S.col[n]||0,sh=a=>a.sort(()=>Math.random()-.5),pick=a=>a[Math.floor(Math.random()*a.length)];
 // Auto deck: up to 18 creatures (cheaper ones first), then spells and items, up to 30 cards.
-function auto(){const d=[],add=(c,lim)=>{for(let i=0;i<Math.min(3,own(c.name))&&d.length<lim;i++)d.push(c.name)},
+function auto(save=S){const d=[],add=(c,lim)=>{for(let i=0;i<Math.min(3,save.col[c.name]||0)&&d.length<lim;i++)d.push(c.name)},
  srt=[...ALL].sort((a,b)=>(a.cost>5)-(b.cost>5)||b.rar-a.rar||a.cost-b.cost);
  srt.filter(c=>c.t=='c').forEach(c=>add(c,18));srt.filter(c=>c.t!='c').forEach(c=>add(c,30));srt.forEach(c=>add(c,30));return d}
 S=loadSave();
 const newSave=!S;
-if(!S){S={gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,stars:{},builds:[],packs:{std:0,t2:0,t3:0},avatar:'vanguard',cosmetics:cleanCosmetics(null),emotesMuted:false,lastOnlineMatch:'',sp:'tut',sd:[],ms:cleanM(null)};S.deck=auto()}
+function freshSave(){const save={saveEpoch:SAVE_EPOCH,gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,stars:{},builds:[],packs:{std:0,t2:0,t3:0},avatar:'vanguard',cosmetics:cleanCosmetics(null),emotesMuted:false,lastOnlineMatch:'',sp:'tut',sd:[],ms:cleanM(null),ts:0};save.deck=auto(save);return save}
+if(!S)S=freshSave();
 const {d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,AREA,hits}=DelversEngine,play=(...a)=>{const r=DelversEngine.play(...a);if(a[0]=='p'&&G&&!G.tut)msnAdd('play',1);return r},sl=ms=>new Promise(r=>setTimeout(r,ms));
 function newGame(oi,t){t=Math.max(1,Math.min(3,t|0||1));const o=CAMP[oi].slice(),mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
  o[1]=Math.round(o[1]*(1+.2*(t-1)));o[2]=Math.min(3,o[2]+t-1);o[3]=Math.min(3,o[3]+t-1);o[5]+=t>2?1:0;

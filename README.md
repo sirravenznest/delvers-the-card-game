@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.15
+
+One-time testing reset for signed-in accounts: the updated app replaces pre-reset saves on their next successful cloud sync. Cards, decks, gold, packs, starter-deck ownership, cosmetics, missions, tutorial and campaign progress return to new-game defaults. Google accounts, ranked records, friends and online matches are not reset. Offline-only players are unchanged until signing in.
+
+A separate cloud reset marker prevents repeating the reset on later launches or other updated devices. No Firebase configuration or rules changes are required. Older APKs can still upload pre-reset saves; updated apps reject those saves rather than restoring them or repeating the reset. All test devices should update to 2.2.15.
+
 ## 2.2.14
 
 The Android release signing key has been replaced after its previous private key was exposed in the public repository. Existing installs must sync progress to Cloud Save, uninstall the previous app and install this APK; uninstalling removes device-only saves. Future installs can update normally. Release builds now use protected signing secrets; see [CLOUD_SETUP.md](CLOUD_SETUP.md#release-signing-key-migration-2214).
@@ -105,7 +111,7 @@ After the title, new players without story progress get a dedicated Learn to pla
 ## Regression checks
 
 Run Node suites with `for f in tests/*.test.js; do node "$f" || exit; done`.
-For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Campaign checks play real turns with shortened presentation delays; online checks use a local fake database, not production Firebase.
+For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Campaign checks play real turns with shortened presentation delays; cloud-reset and online checks use simulated services, not production Firebase.
 
 ## Legal & privacy
 See [PRIVACY.md](PRIVACY.md) and [LEGAL.md](LEGAL.md) (IP notes, SRD 5.1 attribution).
