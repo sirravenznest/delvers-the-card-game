@@ -17,8 +17,8 @@ sed 's/<manifest /<manifest package="com.sirravenznest.delvers" /' \
 aapt package -f \
     --min-sdk-version 23 \
     --target-sdk-version 28 \
-    --version-code 34 \
-    --version-name 2.2.20 \
+    --version-code 35 \
+    --version-name 2.2.21 \
     --rename-manifest-package "$PACKAGE" \
     -M "$BUILD/AndroidManifest.xml" \
     -I "$ANDROID_JAR" \
