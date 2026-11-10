@@ -16,7 +16,7 @@ const list=[
  {id:'heart',name:'Kindred hearts',text:'A little light for your road.',price:350,
   pixels:[[3,4,4,2,'#f48b9b'],[9,4,4,2,'#f48b9b'],[2,6,12,3,'#de526f'],[3,9,10,2,'#de526f'],[5,11,6,2,'#bd3c64'],[7,13,2,1,'#bd3c64'],[4,5,2,2,'#ffd7d9']]}
 ];
-const defaults=['hello','goodgame'],byId=Object.fromEntries(list.map(e=>[e.id,e]));
+const defaults=list.filter(e=>!e.pixels).map(e=>e.id),byId=Object.fromEntries(list.map(e=>[e.id,e]));
 function clean(ids){return [...new Set([...defaults,...(Array.isArray(ids)?ids:[]).filter(id=>byId[id])])]}
 function art(e){return e&&e.pixels?`<svg class="emoteArt" viewBox="0 0 16 16" role="img" aria-label="${e.name}" shape-rendering="crispEdges">${e.pixels.map(([x,y,w,h,c])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`).join('')}</svg>`:''}
 const api={list,defaults,byId,clean,art,COOLDOWN_MS:3000};

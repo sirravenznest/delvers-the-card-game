@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const URL=process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html';
 const sizes=[[568,320],[640,360],[740,360],[844,390],[915,412],[1024,600],[1280,720]];
-const tabs=['hub','duel','ranked','cards','deck','store','packs','missions','friends','profile','emotes','lore','guide'];
+const tabs=['hub','duel','ranked','cards','deck','store','packs','missions','friends','profile','lore','guide'];
 let browser;
 async function pageFor(w,h){
  const context=await browser.newContext({viewport:{width:w,height:h},hasTouch:true});
@@ -19,7 +19,7 @@ async function run(){
  for(const [w,h] of sizes){
   const {page:p,context,errors}=await pageFor(w,h);
   assert.equal(await p.evaluate(()=>V.saveMsg),'','new save has no false storage warning');
-  assert.equal(await p.locator('.hubTile').count(),12);
+  assert.equal(await p.locator('.hubTile').count(),11);
   assert.equal(await p.locator('.hubHeader').count(),1,'one combined hub header');
   assert.equal(await p.locator('[data-a="tutstart"]').count(),1,'no duplicate tutorial prompts');
   for(const tab of tabs){
@@ -43,6 +43,7 @@ async function run(){
   await collectionCard.hover();await p.waitForSelector('#zm.hover');
   await p.mouse.move(1,1);await p.waitForSelector('#zm',{state:'detached'});
   await p.evaluate(()=>{V.v='store';render()});
+  await p.click('[data-a="storecategory"][data-k="cosmetics"]');
   assert.equal(await p.locator('.sceneThumb').count(),12);
   assert(await p.evaluate(()=>[...document.querySelectorAll('.sceneThumb')].every(e=>getComputedStyle(e).backgroundImage.startsWith('url'))),'store preview source');
   await p.evaluate(()=>{V.v='packs';V.rates=true;render()});
@@ -63,16 +64,23 @@ async function run(){
   });
   assert.deepEqual(clipping,[],`${w}x${h}: all 122 cards visible`);
   await p.evaluate(()=>{V.v='duel';newGame(0,1);V.intro=null;G.p.hand=['Squire','Archmage','Goblin Skulker','Dagger'].map(n=>mk(BN[n]));render()});
-  const battle=await p.evaluate(()=>{const app=document.getElementById('app'),hand=document.querySelector('.hand'),end=document.querySelector('[data-a="end"]').getBoundingClientRect(),card=hand.querySelector('.card').getBoundingClientRect();return {overflow:app.scrollHeight>app.clientHeight+1,cardTop:card.top,cardBottom:card.bottom,hand:hand.getBoundingClientRect().bottom,end:end.bottom,vh:innerHeight}});
+  const battle=await p.evaluate(()=>{const app=document.getElementById('app'),hand=document.querySelector('.hand'),end=document.querySelector('[data-a="end"]').getBoundingClientRect(),card=hand.querySelector('.card').getBoundingClientRect(),tray=document.querySelector('.hw').getBoundingClientRect(),board=document.querySelector('.board').getBoundingClientRect();return {overflow:app.scrollHeight>app.clientHeight+1,cardTop:card.top,cardBottom:card.bottom,hand:hand.getBoundingClientRect().bottom,end:end.bottom,vh:innerHeight,trayTop:tray.top,trayBottom:tray.bottom,trayWidth:tray.width,boardBottom:board.bottom,appWidth:app.clientWidth}});
   assert(!battle.overflow&&battle.cardTop>=0&&battle.cardBottom<=h+1&&battle.end<=h+1,`${w}x${h} battle fit: ${JSON.stringify(battle)}`);
+  assert(battle.trayTop>=battle.boardBottom&&battle.trayBottom>=h-8,'hand stays below the battlefield at the bottom');
+  assert(battle.trayWidth>=battle.appWidth-20,'hand spans the combat screen, not a side column');
   const crowded=await p.evaluate(()=>{
    const creatures=ALL.filter(c=>c.t=='c').sort((a,b)=>b.hp-a.hp);
-   G.b=Array.from({length:NT},(_,i)=>{const u=mk(creatures[i%creatures.length]);u.o=i<8?'e':'p';u.sP=1;u.sA=1;u.sI=1;u.k2='tough thorns lifelink';return u});
+   G.b=Array.from({length:NT},(_,i)=>{const u=mk(creatures[i%creatures.length]);u.o=i%2?'e':'p';u.sP=1;u.sA=1;u.sI=1;u.k2='tough thorns lifelink';return u});
    G.p.hand=Array.from({length:7},(_,i)=>mk(creatures[i]));render();
    const bad=[];
    if(document.querySelector('.nav,.hubGrid'))bad.push('menu navigation leaked into battle');
    for(const tile of document.querySelectorAll('.tile.u')){
     const r=tile.getBoundingClientRect();
+    const mine=G.b[+tile.dataset.i].o=='p',style=getComputedStyle(tile);
+    if(tile.querySelector('.tileOwner').textContent!=(mine?'YOU':'FOE'))bad.push('wrong owner badge');
+    if(!tile.getAttribute('aria-label').startsWith(mine?'Your unit:':'Opponent unit:'))bad.push('wrong accessible owner');
+    if(style.borderLeftStyle!=(mine?'solid':'dashed'))bad.push('ownership border lost');
+    if(style.borderLeftColor!=(mine?'rgb(114, 198, 255)':'rgb(245, 155, 137)'))bad.push('ownership colour lost');
     for(const e of tile.querySelectorAll('.stats,.stat b,.stat strong')){
      const x=e.getBoundingClientRect();
      if(x.top<r.top||x.bottom>r.bottom||e.scrollWidth>e.clientWidth+1)bad.push(tile.dataset.i+' clipped '+e.className+': '+e.textContent);
@@ -84,6 +92,19 @@ async function run(){
    return bad;
   });
   assert.deepEqual(crowded,[],`${w}x${h}: full board, equipped units and seven-card hand`);
+  const highlights=await p.evaluate(()=>{
+   const own=document.querySelector('.tile.p'),foe=document.querySelector('.tile.e'),out=[];
+   for(const cls of ['ready','done','sel','tgt']){
+    own.classList.add(cls);foe.classList.add(cls);
+    for(const [tile,label] of [[own,'YOU'],[foe,'FOE']]){
+     const style=getComputedStyle(tile);
+     if(tile.querySelector('.tileOwner').textContent!=label||style.borderLeftColor!=(label=='YOU'?'rgb(114, 198, 255)':'rgb(245, 155, 137)'))out.push(cls+' hides '+label);
+    }
+    own.classList.remove(cls);foe.classList.remove(cls);
+   }
+   return out;
+  });
+  assert.deepEqual(highlights,[],'selection, readiness, exhaustion and targeting preserve ownership');
   await p.evaluate(()=>{G.b=Array(NT).fill(null);render()});
   await p.evaluate(()=>{document.querySelector('.hand').scrollLeft=150});
   const left=await p.evaluate(()=>document.querySelector('.hand').scrollLeft);
@@ -112,6 +133,17 @@ async function run(){
   assert.equal(await p.locator('#battleLog').count(),0);
   assert.equal(await p.evaluate(()=>DelversPvp.hash(G)),logState,'review never changes rules or randomness');
   await p.mouse.move(1,1);
+  await p.evaluate(()=>{
+   G.b=Array(NT).fill(null);G.sel=null;
+   const own=mk(BN['Goblin Skulker']),foe=mk(BN['Goblin Skulker']);
+   own.o='p';own.mv=2;own.ready=true;foe.o='e';
+   G.b[8]=own;G.b[16]=foe;render();
+  });
+  await p.click('.tile[data-i="8"]');
+  await p.click('.tile[data-i="4"]');
+  assert.equal(await p.locator('.tile[data-i="4"] .tileOwner').innerText(),'YOU','a real move into the opposing half preserves your ownership');
+  assert.equal(await p.locator('.tile[data-i="16"] .tileOwner').innerText(),'FOE','an opponent in your deployment row is still labelled FOE');
+  await p.evaluate(()=>{G.b=Array(NT).fill(null);G.sel=null;render()});
   await p.evaluate(()=>{const u=mk(BN['Goblin Skulker']);u.o='p';u.atk+=1;u.mhp+=2;u.hp=1;u.mv=0;u.sP=1;u.k2='tough';G.b[16]=u;render()});
   const tile=p.locator('.tile.u');
   assert.equal(await tile.locator('.stat').count(),6,'all six board stats retained');
@@ -142,13 +174,18 @@ async function run(){
   await p.click('[data-a="emotetoggle"]',{force:true});await p.click('[data-a="emotemute"]',{force:true});
   assert(await p.evaluate(()=>S.emotesMuted),'opponent emotes can be muted');
   await p.click('[data-a="emotetoggle"]',{force:true});
+  await p.evaluate(()=>startTut());
+  assert(await p.locator('.lessonCoach').evaluate(e=>{
+   const r=e.getBoundingClientRect();
+   return r.top>=document.querySelector('.board').getBoundingClientRect().bottom&&r.bottom<=innerHeight+1&&[...e.querySelectorAll('button')].every(b=>{const x=b.getBoundingClientRect();return x.top>=r.top&&x.bottom<=r.bottom});
+  }),'tutorial instructions and navigation fit beside the bottom hand');
   assert.deepEqual(errors,[],`${w}x${h} JS errors`);
   console.log('PASS menus, all-card template, pack/zoom, battle, scrolling, retry',w,h);
   await context.close();
  }
  const {page:p,context,errors}=await pageFor(844,390);
  await p.evaluate(()=>startTut());
- const perform=async actions=>{for(const [a,i] of actions){const selector=`[data-a="${a}"]${i==null?'':`[data-i="${i}"]`}`;await p.click(selector,{force:true})}assert(await p.evaluate(()=>G.lesson.done),'lesson action completed');await p.click('[data-a="lessonnext"]',{force:true})};
+ const perform=async actions=>{for(const [a,i] of actions){const selector=`[data-a="${a}"]${i==null?'':`[data-i="${i}"]`}`;await p.click(selector,{force:true})}assert(await p.evaluate(()=>G.lesson.done),'lesson action completed');await p.click('[data-a="lessonnext"]')};
  await perform([['hand',0],['cell',16]]);
  await perform([['end']]);
  await perform([['cell',16],['cell',12]]);
@@ -174,9 +211,9 @@ async function run(){
  await p.click('[data-a="open"]');await p.click('[data-a="pks"]',{force:true});
  assert.equal(await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0)),owned+5,'skip keeps cards');
  await p.reload();assert.equal(await p.evaluate(()=>ALL.reduce((n,c)=>n+own(c.name),0)),owned+5,'pack save persists');
- await p.evaluate(()=>{V.v='store';S.gold=400;render()});
- await p.click('[data-a="emoteunlock"][data-k="wellplayed"]',{force:true});
- assert.equal(await p.evaluate(()=>S.gold),400,'text emote unlock is free');
+ await p.evaluate(()=>{V.v='store';V.storeTab='emotes';S.gold=400;render()});
+ assert(await p.evaluate(()=>DelversEmotes.defaults.every(id=>S.cosmetics.emotes.includes(id))),'base text emotes are included automatically');
+ assert.equal(await p.locator('[data-a="emoteunlock"][data-k="wellplayed"]').count(),0,'base text is not a Store purchase');
  await p.click('[data-a="emoteunlock"][data-k="ember"]',{force:true});
  assert.equal(await p.evaluate(()=>S.gold),50,'graphic emote costs gold');
  assert(await p.locator('[data-a="emoteunlock"][data-k="ember"]').isDisabled(),'owned graphics cannot be bought twice');

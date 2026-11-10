@@ -25,7 +25,21 @@ async function player(uid,name){
  assert(!(await p.locator('#app').innerText()).includes('Needs exactly 30 cards'));
  return {p,context,errors};
 }
-async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable')}
+async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
+ assert(await p.evaluate(()=>document.querySelector('.hw').getBoundingClientRect().top>=document.querySelector('.board').getBoundingClientRect().bottom),'online hand is below the board');
+ assert.equal(await p.locator('.combatActions [data-a="quit"]').count(),0,'online combat has Resign, not a redundant inactive Quit');
+ const ownership=await p.evaluate(()=>{
+  const saved=NET.G.b;
+  NET.G.b=Array(NT).fill(null);
+  const a=mk(BN.Squire),b=mk(BN['Town Guard']);a.o='p';b.o='e';NET.G.b[0]=a;NET.G.b[19]=b;
+  G=pvView();render();
+  const result=[...document.querySelectorAll('.tile.u')].map(tile=>({name:tile.dataset.z,owner:tile.querySelector('.tileOwner').textContent}));
+  NET.G.b=saved;G=pvView();DelversEngine.use(G);render();
+  return{seat:NET.seat,units:result};
+ });
+ assert.deepEqual(ownership.units.map(u=>u.owner).sort(),['FOE','YOU']);
+ assert.equal(ownership.units.find(u=>u.name=='Squire').owner,ownership.seat=='p'?'YOU':'FOE','owner is relative to the viewer, not board row or host seat');
+}
 async function run(){
  browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});
  const A=await player('landAlice','Alice'),B=await player('landBob','Bob');

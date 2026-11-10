@@ -15,8 +15,10 @@ assert.throws(()=>Story.build([],[]));
 assert(story[59].after.includes('Your legend is written'));
 assert.equal(new Set(Emotes.list.map(e=>e.id)).size,Emotes.list.length);
 for(const e of Emotes.list){assert.equal(e.price,e.pixels?350:0);assert(e.text.length<70);assert.equal(!!Emotes.art(e),!!e.pixels)}
-assert.deepEqual(Emotes.clean(['hello','bad','ember','ember']),['hello','goodgame','ember']);
-console.log('PASS 60 connected story scenes, original dialogue, free text and gold-only graphics');
+assert.deepEqual(Emotes.defaults,Emotes.list.filter(e=>!e.pixels).map(e=>e.id));
+assert.deepEqual(Emotes.clean(null),Emotes.defaults,'all base text emotes are available by default');
+assert.deepEqual(Emotes.clean(['hello','bad','ember','ember']),[...Emotes.defaults,'ember'],'old saves gain all base text and retain purchased graphics');
+console.log('PASS 60 connected story scenes, original dialogue, default text and gold-only graphics');
 
 (async()=>{
  clk.t=30_000_000;const db=makeDb(),d=C.STARTERS[0].list;
@@ -38,5 +40,7 @@ console.log('PASS 60 connected story scenes, original dialogue, free text and go
  const prefix='emote_a_',old=b.emote.key;
  db.root.matches[a.mid].log[prefix+'9999999999999999_bad']={u:'a',emote:'free form is forbidden',t:clk.t};
  await b.tick();assert.equal(b.emote.key,old,'invalid fixed-choice message ignored');
+ a.act({a:'resign'});
+ await assert.rejects(a.sendEmote('hello'),/No active match/,'emotes are for active combat, not results');
  console.log('PASS member-only emotes, cooldown, off-turn delivery, graphics and deterministic game isolation');
 })().catch(e=>{console.error(e);process.exitCode=1});
