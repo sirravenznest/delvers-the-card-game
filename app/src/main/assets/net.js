@@ -4,9 +4,10 @@
 const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const B=typeof require!=='undefined'?require('./ranked-bots.js'):root.DelversRankedBots;
 const EM=typeof require!=='undefined'?require('./emotes.js'):root.DelversEmotes;
+const F=typeof require!=='undefined'?require('./card-cosmetics.js'):root.DelversCardCosmetics;
 const SV={'.sv':'timestamp'};
-// Bump whenever card data or rules change: clients on different versions would replay the match differently.
-const PROTO=5,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+// Bump when rules or the shared battle presentation contract changes.
+const PROTO=6,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000,BOT_WAIT_MS=20000;
 
 function create(o){
@@ -15,6 +16,7 @@ function create(o){
   finished:false,outbox:[],sending:false,busy:false,emote:null,lastEmoteAt:-Infinity,lastEmoteKey:null};
  const now=()=>o.now?o.now():Date.now();
  const uid=()=>o.auth().uid;
+ const deckLooks=deck=>{const looks=o.cardLooks?o.cardLooks():[];return deck.map((_,i)=>F.cleanLook(looks[i]))};
  async function rq(m,path,body,q){
   const a=o.auth(),u=`${o.db}/${path}.json?auth=${encodeURIComponent(a.tok)}${q?'&'+q:''}`;
   const r=await o.fetch(u,{method:m,body:body===undefined||m=='GET'||m=='DELETE'?undefined:JSON.stringify(body)});
@@ -53,7 +55,7 @@ function create(o){
   // A prior pending result already booked its loss. A new queue entry commits that loss.
   if(T.rec.from){await rq('PATCH','ratings/'+uid(),{from:null});T.rec.from=null}
   const a=o.auth(),t0=now();
-  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,pv:PROTO,t:SV,j:SV});
+  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV,j:SV});
   const me=await rq('GET','queue/'+a.uid);
   T.queueGen++;T.off=me.t-t0;T.joinedAt=me.j;T.lastBeat=now();T.queueAge=0;T.botAvailable=false;
   T.deck=deck;T.st='queue';T.err='';T.finished=false;T.over=null;changed()};
@@ -90,7 +92,8 @@ function create(o){
   const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,pv:PROTO,
    names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},avatars:{[me]:mine.av||'vanguard',[best.k]:best.e.av||'vanguard'},r:{[me]:mine.r,[best.k]:best.e.r},
    records:{[me]:{w:mine.w||0,l:mine.l||0},[best.k]:{w:best.e.w||0,l:best.e.l||0}},
-   deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d};
+   deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d,
+   looksP:(meFirst?mine.looks:best.e.looks)||[],looksE:(meFirst?best.e.looks:mine.looks)||[]};
   await rq('PUT',`matches/${mid}/meta`,meta);
   if(gen!==T.queueGen||T.st!='queue')return false;
   T.mid=mid;return true}
@@ -117,6 +120,7 @@ function create(o){
    r:{[me]:mine.r,[botId]:bot.r},
    records:{[me]:{w:mine.w||0,l:mine.l||0},[botId]:{w:0,l:0}},
    deckP:meFirst?mine.d:bot.deck,deckE:meFirst?bot.deck:mine.d,
+   looksP:meFirst?mine.looks||[]:[],looksE:meFirst?[]:mine.looks||[],
    bot:{v:1,uid:botId,label:bot.label,name:bot.name,tier:bot.tier,r:bot.r,skill:bot.skill,theme:bot.theme,title:bot.title}};
   const still=await rq('GET','queue/'+me);
   if(gen!==T.queueGen||T.st!='queue'||!still||still.m!==mid){
@@ -147,7 +151,7 @@ function create(o){
   if(!okDeck(meta.deckP)||!okDeck(meta.deckE)){T.st='over';T.err='The match was invalid.';changed();return true}
   const mine=T.seat=='p'?meta.deckP:meta.deckE;
   if(JSON.stringify(mine)!=JSON.stringify(T.deck)){T.st='over';T.err='The match was invalid.';changed();return true}
-  T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE);
+  T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE});
   T.lastT=srv();T.idle=0;T.outbox=[];T.finished=false;T.over=null;
   try{await rq('DELETE','queue/'+me)}catch(e){}
   // The loss is booked up front so that quitting a ranked match costs rating; a win restores it.
@@ -182,7 +186,7 @@ function create(o){
    T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',avatar:meta.avatars&&meta.avatars[oid]||'vanguard',
     r:(meta.r&&meta.r[oid])||1000,w:rec.w||0,l:rec.l||0,bot:T.isBot,label:T.isBot?'BOT':null,
     tier:T.isBot?meta.bot.tier:null,theme:T.isBot?meta.bot.title:null};
-   T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE);T.G.over=result.w;
+   T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE});T.G.over=result.w;
    T.ranked=!!meta.rk;T.from=null;T.over=result.w;T.why=result.why;T.st='over';T.finished=true;
    // A previous client may have saved the result but lost its rating write. Finalize
    // only the matching pending marker; completed results are otherwise idempotent.
@@ -302,7 +306,7 @@ function create(o){
   if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
   await T.getRating();
   const a=o.auth();
-  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,pv:PROTO,t:SV});
+  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV});
   T.deck=deck;T.inviteTo={uid:fid,name:fname||'Friend'};T.inviteAt=now();T.st='invite';T.err='';T.finished=false;T.over=null;changed()};
  T.cancelInvite=async()=>{if(T.st!='invite')return;T.st='idle';const f=T.inviteTo;T.inviteTo=null;try{await rq('DELETE',`invites/${f.uid}/${uid()}`)}catch(e){}changed()};
  T.declineInvite=async from=>{await rq('DELETE',`invites/${uid()}/${from}`)};
@@ -315,7 +319,8 @@ function create(o){
   const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
   const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},avatars:{[me]:o.avatar?o.avatar():'vanguard',[from]:inv.av||'vanguard'},
    r:{[me]:T.rec.r,[from]:inv.r||1000},records:{[me]:{w:T.rec.w,l:T.rec.l},[from]:{w:inv.w||0,l:inv.l||0}},
-   deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck};
+   deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck,
+   looksP:meFirst?deckLooks(deck):inv.looks||[],looksE:meFirst?inv.looks||[]:deckLooks(deck)};
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   await rq('PUT',`matches/${mid}/meta`,meta);
   await rq('PUT',`invites/${me}/${from}/m`,mid);

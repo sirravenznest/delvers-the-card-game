@@ -3,6 +3,7 @@
 (function(root){
 const C=typeof require!=='undefined'?require('./cards.js'):root.DelversCards;
 const E=typeof require!=='undefined'?require('./engine.js'):root.DelversEngine;
+const F=typeof require!=='undefined'?require('./card-cosmetics.js'):root.DelversCardCosmetics;
 const {ROWS,NT,BACK,FOEB,BN}=C;
 const {use,rnd,opp,row,dist,mk,units,draw,startTurn,attack,ok,play}=E;
 const HOME={p:BACK,e:FOEB};
@@ -14,7 +15,7 @@ function newMatch(seed,deckP,deckE,opt){
  const mkp=()=>({hp:20,mx:20,mp:0,max:0,deck:[],hand:[]});
  const G={rs:seed>>>0,b:Array(NT).fill(null),p:mkp(),e:mkp(),turn:'p',over:null,log:[],n:0,pv:1};
  use(G);
- const build=(s,names)=>{const d=names.map(n=>mk(BN[n]));for(let i=d.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[d[i],d[j]]=[d[j],d[i]]}G[s].deck=d};
+ const build=(s,names)=>{const looks=opt[s==='p'?'looksP':'looksE'];const d=names.map((n,i)=>mk({...BN[n],look:F.cleanLook(looks?.[i])}));for(let i=d.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[d[i],d[j]]=[d[j],d[i]]}G[s].deck=d};
  build('p',deckP);build('e',deckE);
  for(let i=0;i<3;i++){draw('p');draw('e')}
  if(opt.extraCard)draw('e');
@@ -78,7 +79,7 @@ function hash(G){
 
 // Rebuilds a match from its record: {seed,deckP,deckE,log:[[seat,action],...]}.
 function replay(m){
- const G=newMatch(m.seed,m.deckP,m.deckE);
+ const G=newMatch(m.seed,m.deckP,m.deckE,{looksP:m.looksP,looksE:m.looksE});
  for(let i=0;i<m.log.length;i++){const r=act(G,m.log[i][0],m.log[i][1]);if(!r.ok)return{ok:false,at:i,err:r.err}}
  return{ok:true,G}}
 

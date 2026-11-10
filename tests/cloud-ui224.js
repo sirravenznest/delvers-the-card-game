@@ -67,14 +67,23 @@ async function run(){
  baseline=await seed.page.evaluate(()=>freshSave());await seed.context.close();
  const legacy=oldSave(),x=await player({local:legacy,cloud:documentFor(legacy)});
  await checkReset(x);
- await x.page.evaluate(async()=>{S.gold=400;buyStarter('iron');S.gold=321;S.prog=1;S.sp='done';sv();await cloudPush()});
+ await x.page.evaluate(async()=>{
+  S.gold=400;buyStarter('iron');S.gold=321;S.prog=1;S.sp='done';
+  S.dust=1000;CF.unlock(S,S.deckCopies[0],'foil','foil');CF.unlock(S,S.deckCopies[0],'frame','gold');
+  const [id]=CF.add(S,'Squire');CF.grantPack(S,id,1,()=>0);S.lastPack={ids:[id]};
+  S.builds.push({name:'Finished deck',deck:S.deck.slice(),copyIds:S.deckCopies.slice()});
+  sv();await cloudPush();
+ });
  const earned=await x.page.evaluate(()=>S),writes=x.state.writes.length;
  assert.deepEqual(earned.sd,['iron'],'starter decks can be bought again after reset');
+ assert.equal(earned.dust,625,'cosmetic purchases deduct Dust before cloud upload');
+ assert(earned.copies[earned.deck[0]].find(c=>c.id===earned.deckCopies[0]).purchased,'purchased-copy protection is saved');
+ assert.equal(earned.lastPack.ids.length,1,'last pack receipt is saved');
  await x.page.reload();await x.page.waitForFunction(()=>V.cloud.st==='ok');
  assert.deepEqual(await x.page.evaluate(()=>S),earned,'new testing progress and purchases survive reload and sync');
  assert.equal(x.state.writes.length,writes,'reset is not repeated on relaunch');
  const otherDevice=await player({local:legacy,cloud:x.state.doc});
- assert.deepEqual(await otherDevice.page.evaluate(()=>S),earned,'a stale second device adopts the post-reset cloud save');
+ assert.deepEqual(await otherDevice.page.evaluate(()=>S),earned,'a second device restores Dust, exact deck copies, purchases, pack provenance, receipt and saved builds');
  assert.equal(otherDevice.state.writes.length,0,'second device does not repeat the reset or upload old progress');
  await otherDevice.context.close();
  x.state.doc.fields.save.stringValue=JSON.stringify(legacy);

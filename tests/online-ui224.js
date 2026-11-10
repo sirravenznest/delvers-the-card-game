@@ -21,6 +21,9 @@ async function player(uid,name){
  await p.evaluate(({uid})=>{
   const n=uid=='landBob'?29:20;
   S.deck=[...ALL.filter(c=>c.rar==0).slice(0,10).flatMap(c=>Array(3).fill(c.name)).slice(0,n-6),...Array(3).fill(ALL.find(c=>c.rar==2).name),...Array(3).fill(ALL.find(c=>c.rar==3).name)];
+  for(const name of S.deck)S.col[name]=Math.max(3,S.col[name]||0);
+  CF.normalize(S);
+  for(const id of S.deckCopies){const {copy}=CF.find(S,id);copy.look={frame:uid==='landAlice'?'gold':'blue',lettering:'silver',background:'holographic',foil:'foil'};for(const slot of CF.SLOTS)copy.unlocked[slot]=[copy.look[slot]];copy.purchased=true}
   S.sp='done';sv();V.v='ranked';render();
  },{uid});
  assert(await p.locator('[data-a="rfind"]').isEnabled(),'normal deck with three Rares and Legendaries is ranked legal');
@@ -39,6 +42,8 @@ async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});as
  assert.deepEqual(stableIntro,{same:true,focus:true,scroll:true,animation:true,count:1},'ranked polling preserves intro node, completed animation, focus and scroll without flicker');
  const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert.equal(await p.locator('#intro').count(),0,'Begin battle dismisses preserved intro');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
  assert(await p.evaluate(()=>document.querySelector('.hw').getBoundingClientRect().top>=document.querySelector('.board').getBoundingClientRect().bottom),'online hand is below the board');
+ assert.equal(await p.locator('.hand .card.cc-foil-foil.cc-background-holographic').count(),await p.evaluate(()=>G.p.hand.length),'ranked, friendly and bot hands show every selected copy style');
+ assert.equal(await p.locator('.hand .card.cc-frame-gold').count(),await p.evaluate(()=>UN()==='Alice'?G.p.hand.length:0),'styles remain attached to the correct online player');
  assert.equal(await p.locator('.combatActions [data-a="quit"]').count(),0,'online combat has Resign, not a redundant inactive Quit');
  assert.equal(await p.locator('.turn .turnState').textContent(),await p.evaluate(()=>G.turn=='p'?'YOUR TURN':'FOE’S TURN'),'turn banner is relative to the online viewer');
  assert.equal(await p.locator('.battleIdentity.you .battlePlayerName').textContent(),await p.evaluate(()=>UN()),'online player is identified by their own username');
@@ -48,14 +53,23 @@ async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});as
  const ownership=await p.evaluate(()=>{
   const saved=NET.G.b;
   NET.G.b=Array(NT).fill(null);
-  const a=mk(BN.Squire),b=mk(BN['Town Guard']);a.o='p';b.o='e';NET.G.b[0]=a;NET.G.b[19]=b;
+  const a=mk({...BN.Squire,look:NET.G.p.hand[0].look}),b=mk({...BN['Town Guard'],look:NET.G.e.hand[0].look});a.o='p';b.o='e';NET.G.b[0]=a;NET.G.b[19]=b;
   G=pvView();render();
-  const result=[...document.querySelectorAll('.tile.u')].map(tile=>({name:tile.dataset.z,owner:tile.querySelector('.tileOwner').textContent}));
+  const result=[...document.querySelectorAll('.tile.u')].map(tile=>({name:tile.dataset.z,owner:tile.querySelector('.tileOwner').textContent,foil:tile.classList.contains('cc-foil-foil'),frame:tile.classList.contains('cc-frame-gold')?'gold':tile.classList.contains('cc-frame-blue')?'blue':null}));
+  zoomShow(document.querySelector('.tile.u'));const zoom=document.querySelector('#zm .card');const zoomLook=zoom.classList.contains('cc-foil-foil');document.getElementById('zm').remove();zAt=0;
   NET.G.b=saved;G=pvView();DelversEngine.use(G);render();
-  return{seat:NET.seat,units:result};
+  return{seat:NET.seat,units:result,zoomLook};
  });
  assert.deepEqual(ownership.units.map(u=>u.owner).sort(),['FOE','YOU']);
  assert.equal(ownership.units.find(u=>u.name=='Squire').owner,ownership.seat=='p'?'YOU':'FOE','owner is relative to the viewer, not board row or host seat');
+ assert.equal(ownership.zoomLook,ownership.units[0].foil,'unit zoom retains the exact online finish');
+ assert(ownership.units.find(u=>u.owner==='YOU').foil,'player unit keeps its finish in every online mode');
+ if(!await p.evaluate(()=>NET.isBot)){
+  assert(ownership.units.every(u=>u.foil),'both seats see the same human unit finishes');
+  const myFrame=await p.evaluate(()=>UN()==='Alice'?'gold':'blue');
+  assert.equal(ownership.units.find(u=>u.owner==='YOU').frame,myFrame,'online mirroring preserves own frame');
+  assert.equal(ownership.units.find(u=>u.owner==='FOE').frame,myFrame==='gold'?'blue':'gold','online mirroring preserves opponent frame');
+ }
 }
 async function run(){
  browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});

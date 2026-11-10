@@ -10,12 +10,14 @@ let browser;
  await p.goto(process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html');
  await p.locator('.titleActions .pri').click();
  await p.click('[data-a="tutskipmenu"]');
- await p.evaluate(()=>{const timeout=window.setTimeout.bind(window);window.setTimeout=(fn,ms,...a)=>timeout(fn,Math.min(ms,2),...a);S.sp='done';S.deck=STARTERS[0].list.slice();for(const n of S.deck)S.col[n]=Math.max(3,S.col[n]||0)});
- for(const [oi,tier] of [[0,1],[2,1],[29,3],[59,1]]){
+ await p.evaluate(()=>{const timeout=window.setTimeout.bind(window);window.setTimeout=(fn,ms,...a)=>timeout(fn,Math.min(ms,2),...a);S.sp='done';S.deck=STARTERS[0].list.slice();for(const n of S.deck)S.col[n]=Math.max(3,S.col[n]||0);CF.normalize(S);for(const id of S.deckCopies){const {copy}=CF.find(S,id);copy.look={frame:'red',lettering:'gold',background:'gold-holographic',foil:'foil'};for(const slot of CF.SLOTS)copy.unlocked[slot]=[copy.look[slot]];copy.purchased=true}});
+ for(const [oi,tier] of [[0,1],[2,1],[20,2],[29,3],[59,1]]){
   const before=await p.evaluate(({oi,tier})=>{S.prog=oi;S.stars[oi]=tier-1;newGame(oi,tier);V.intro=null;render();return{gold:S.gold,win:rew(CAMP[oi],oi,tier),loss:Math.round(lossG(CAMP[oi])*TM[tier])}},{oi,tier});
+  assert.equal(await p.locator('.hand .card.cc-frame-red.cc-foil-foil.cc-background-gold-holographic').count(),await p.evaluate(()=>G.p.hand.length),'every campaign hand uses chosen copy finishes at every difficulty');
   await p.click('[data-a="auto"]',{force:true});
   await p.waitForFunction(()=>G&&G.over&&G.fin,{timeout:60000});
   const after=await p.evaluate(()=>({winner:G.over,gold:S.gold,ms:JSON.stringify(S.ms),result:G.res}));
+  assert.equal(await p.locator('.tile.u.p.cc-frame-red.cc-lettering-gold.cc-background-gold-holographic.cc-foil-foil').count(),await p.evaluate(()=>units('p').length),'campaign units retain cosmetics after actual movement and combat');
   assert.equal(after.gold,before.gold+(after.winner=='p'?before.win:before.loss),'actual battle pays exact reward');
   await p.evaluate(()=>{for(let i=0;i<5;i++)render()});
   assert.deepEqual(await p.evaluate(()=>({gold:S.gold,ms:JSON.stringify(S.ms)})),{gold:after.gold,ms:after.ms},'result renders never repeat rewards');
