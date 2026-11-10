@@ -28,6 +28,11 @@ async function player(uid,name){
 async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
  assert(await p.evaluate(()=>document.querySelector('.hw').getBoundingClientRect().top>=document.querySelector('.board').getBoundingClientRect().bottom),'online hand is below the board');
  assert.equal(await p.locator('.combatActions [data-a="quit"]').count(),0,'online combat has Resign, not a redundant inactive Quit');
+ assert.equal(await p.locator('.turn .turnState').textContent(),await p.evaluate(()=>G.turn=='p'?'YOUR TURN':'FOE’S TURN'),'turn banner is relative to the online viewer');
+ assert.equal(await p.locator('.battleIdentity.you .battlePlayerName').textContent(),await p.evaluate(()=>UN()),'online player is identified by their own username');
+ assert.equal(await p.locator('.battleIdentity.foe .battlePlayerName').textContent(),await p.evaluate(()=>G.opp.n),'opponent name is identified independently of host seat');
+ assert(await p.locator('body').evaluate(e=>e.classList.contains('turnHighlight')),'online match begins with a visual turn notification');
+ assert.equal(await p.evaluate(()=>G.turnNo),await p.evaluate(()=>NET.G.turnNo),'online view retains the actual turn sequence');
  const ownership=await p.evaluate(()=>{
   const saved=NET.G.b;
   NET.G.b=Array(NT).fill(null);
@@ -49,6 +54,8 @@ async function run(){
  await B.p.waitForSelector('.emoteBubble.e');assert((await B.p.locator('.emoteBubble.e').innerText()).includes('Hello, Delver!'),'online emote delivered');
  const first=await A.p.evaluate(()=>G.turn=='p')?A:B,second=first===A?B:A;
  await first.p.click('[data-a="end"]');await second.p.waitForFunction(()=>G.turn=='p');
+ assert.equal(await second.p.locator('.turn .turnState').textContent(),'YOUR TURN','online end-turn updates the other player banner');
+ assert(await second.p.locator('body').evaluate(e=>e.classList.contains('turnHighlight')),'online turn arrival highlights the screen');
  await second.p.click('[data-a="logtoggle"]');
  assert((await second.p.locator('.logTurn').last().innerText()).includes('Your turn'),'second seat sees its own turn correctly in combat history');
  assert(await second.p.evaluate(()=>G.history.every((h,i)=>h.side==(NET.G.history[i].side==NET.seat?'p':'e'))),'combat log seat labels are mirrored correctly');

@@ -3,6 +3,16 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.11
+
+Turn changes have a full-width status banner above the battlefield and a brief border highlight, without turn sounds or vibration. The banner stays outside the card and control areas and respects reduced-motion preferences.
+
+The battle header identifies both players by name and avatar, with explicit YOU and FOE labels and a BOT marker for rated bots. Names wrap instead of being truncated.
+
+Both profile panels show larger labelled HP and mana values and remain tappable hero targets. Hand cards use solid green borders and a PLAYABLE label when usable, or dashed borders with a blocked reason (mana, target, deployment space or turn). Combat sounds and attack, hit, healing, spell and summon animations remain available; the visual-only choice applies to turn notifications.
+
+The hand stays anchored across the bottom of the landscape screen, below the battlefield, independently of the profile header and right-side controls.
+
 ## 2.2.10
 
 The Deck list keeps category headings and copy controls clear of card names. Deck cards retain rules, rarity and all six creature stats at compact landscape sizes without overlapping text or artwork. Battle-hand cards show the same printed stats as Deck and Collection; battlefield units continue to show live health and movement. Existing saves and progress are unchanged.

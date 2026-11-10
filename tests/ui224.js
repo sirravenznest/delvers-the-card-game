@@ -86,9 +86,27 @@ async function run(){
   });
   assert.deepEqual(clipping,[],`${w}x${h}: all 122 cards visible`);
   await p.evaluate(()=>{V.v='duel';newGame(0,1);V.intro=null;G.p.hand=['Squire','Archmage','Goblin Skulker','Dagger'].map(n=>mk(BN[n]));render()});
+  const turnBanner=await p.locator('.turn').evaluate(e=>{
+   const r=e.getBoundingClientRect(),board=document.querySelector('.board').getBoundingClientRect(),rail=document.querySelector('.battleRail').getBoundingClientRect();
+   return{text:e.querySelector('.turnState').textContent,width:r.width,bottom:r.bottom,boardTop:board.top,railTop:rail.top,font:parseFloat(getComputedStyle(e.querySelector('.turnState')).fontSize),highlight:document.body.classList.contains('turnHighlight')};
+  });
+  assert(turnBanner.text=='YOUR TURN'&&turnBanner.width>=w-20&&turnBanner.font>=16&&turnBanner.highlight,`${w}x${h}: prominent full-width turn notification`);
+  assert(turnBanner.bottom<=turnBanner.boardTop&&turnBanner.bottom<=turnBanner.railTop,`${w}x${h}: turn banner does not cover battlefield or controls`);
+  const heroLayout=await p.locator('.battleIdentity').evaluateAll(heroes=>heroes.map(hero=>{
+   const r=hero.getBoundingClientRect(),parts=[...hero.querySelectorAll('.portrait,.battleProfile,.heroResources')].map(e=>e.getBoundingClientRect());
+   return{inside:parts.every(x=>x.left>=r.left&&x.right<=r.right+1&&x.top>=r.top&&x.bottom<=r.bottom+1),overlap:parts.some((x,i)=>parts.slice(i+1).some(y=>x.left<y.right-1&&x.right>y.left+1&&x.top<y.bottom-1&&x.bottom>y.top+1)),hpSize:parseFloat(getComputedStyle(hero.querySelector('.heroHp b')).fontSize),hp:hero.querySelector('.heroHp b').textContent};
+  }));
+  assert(heroLayout.every(h=>h.inside&&!h.overlap&&h.hpSize>=17),`${w}x${h}: profile pictures, names, prominent HP and mana do not overlap`);
+  const resourceClipping=await p.evaluate(()=>{
+   const saved=[G.p.mp,G.p.max,G.e.mp,G.e.max];G.p.mp=G.p.max=G.e.mp=G.e.max=10;render();
+   const bad=[...document.querySelectorAll('.heroResources b')].some(e=>{const r=e.getBoundingClientRect(),parent=e.parentElement.getBoundingClientRect();return r.left<parent.left||r.right>parent.right+1||e.scrollWidth>e.clientWidth+1});
+   [G.p.mp,G.p.max,G.e.mp,G.e.max]=saved;render();return bad;
+  });
+  assert(!resourceClipping,`${w}x${h}: maximum mana values fit without clipping`);
   const battle=await p.evaluate(()=>{const app=document.getElementById('app'),hand=document.querySelector('.hand'),end=document.querySelector('[data-a="end"]').getBoundingClientRect(),card=hand.querySelector('.card').getBoundingClientRect(),tray=document.querySelector('.hw').getBoundingClientRect(),board=document.querySelector('.board').getBoundingClientRect();return {overflow:app.scrollHeight>app.clientHeight+1,cardTop:card.top,cardBottom:card.bottom,hand:hand.getBoundingClientRect().bottom,end:end.bottom,vh:innerHeight,trayTop:tray.top,trayBottom:tray.bottom,trayWidth:tray.width,boardBottom:board.bottom,appWidth:app.clientWidth}});
   assert(!battle.overflow&&battle.cardTop>=0&&battle.cardBottom<=h+1&&battle.end<=h+1,`${w}x${h} battle fit: ${JSON.stringify(battle)}`);
   assert(battle.trayTop>=battle.boardBottom&&battle.trayBottom>=h-8,'hand stays below the battlefield at the bottom');
+  assert(Math.abs(battle.trayBottom-(h-(h<=360?4:6)))<=1,`${w}x${h}: hand is anchored to the bottom screen padding`);
   assert(battle.trayWidth>=battle.appWidth-20,'hand spans the combat screen, not a side column');
   const crowded=await p.evaluate(()=>{
    const creatures=ALL.filter(c=>c.t=='c').sort((a,b)=>b.hp-a.hp);
@@ -215,6 +233,55 @@ async function run(){
  await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN.Squire)];render()});
  const battleSquire=await deckPage.locator('.hand .card').first().evaluate(e=>({name:e.querySelector('.cardName').textContent,abilities:e.querySelector('.abilities').textContent.replace(/\s+/g,' ').trim(),stats:[...e.querySelectorAll('.stat')].map(x=>[x.querySelector('b').textContent,x.querySelector('strong').textContent])}));
  assert.deepEqual(deckSquire,battleSquire,'deck and battle show the same creature rules and stats');
+ const handStates=await deckPage.evaluate(()=>{
+  G.p.mp=10;G.p.max=10;render();const ready=document.querySelector('.hand .card');
+  const playable=ready.dataset.playState=='PLAYABLE'&&getComputedStyle(ready).borderTopStyle=='solid'&&ready.getAttribute('aria-disabled')=='false';
+  G.p.mp=0;render();const blocked=document.querySelector('.hand .card');
+  const mana=blocked.dataset.playState.startsWith('Need ')&&getComputedStyle(blocked).borderTopStyle=='dashed'&&blocked.getAttribute('aria-disabled')=='true';
+  G.turn='e';render();const foe=document.querySelector('.hand .card').dataset.playState=='Foe’s turn';
+  G.turn='p';G.p.mp=10;G.b=Array(NT).fill(null);for(const i of BACK)G.b[i]=mk(BN.Squire);render();
+  const full=document.querySelector('.hand .card').dataset.playState=='Back row full';
+  G.b=Array(NT).fill(null);render();return{playable,mana,foe,full};
+ });
+ assert.deepEqual(handStates,{playable:true,mana:true,foe:true,full:true},'hand distinguishes playable cards, insufficient mana, foe turn and full deployment row');
+ const combatFeedback=await deckPage.evaluate(()=>{
+  const sounds=[],old={...SFX};for(const key of Object.keys(SFX))SFX[key]=()=>sounds.push(key);
+  const u=mk(BN.Squire);u.o='p';G.b[16]=u;render();
+  fxOne({k:'atk',f:16,i:-1,s:'e'});const attack=document.querySelector('[data-i="16"]').classList.contains('fx-atk');
+  DelversEngine.dmg('e',null,1);fxRun();
+  fxOne({k:'heal',i:-1,s:'p',n:1});
+  fxOne({k:'spell',i:-1,s:'e'});
+  fxOne({k:'sum',i:16,s:'p'});
+  const heal=document.querySelector('[data-a="phero"]').classList.contains('fx-heal'),spell=document.querySelector('[data-a="ehero"]').classList.contains('fx-spell'),summon=document.querySelector('[data-i="16"]').classList.contains('fx-in');
+  Object.assign(SFX,old);return{attack,heal,spell,summon,sounds};
+ });
+ assert(combatFeedback.attack&&combatFeedback.heal&&combatFeedback.spell&&combatFeedback.summon,'combat animations still target units and new hero panels');
+ assert.deepEqual(combatFeedback.sounds,['heal','spell','sum'],'combat sounds remain enabled independently of visual-only turn announcements');
+ await deckPage.waitForFunction(()=>document.querySelector('[data-a="ehero"]').classList.contains('fx-hit'));
+ assert(await deckPage.locator('.fl.d').count()>0,'engine damage still produces hit animation and floating damage');
+ const turnChecks=await deckPage.evaluate(()=>{
+  const sounds=[],oldTurn=SFX.turn;SFX.turn=()=>sounds.push('turn');
+  const before=DelversPvp.hash(G),arrival=turnNotice.at;
+  render();const sameTurn=turnNotice.at===arrival;
+  turnNotice.at=Date.now()-3000;render();
+  const expired=!document.body.classList.contains('turnHighlight')&&!document.querySelector('.turn').classList.contains('turnArrival');
+  const unchanged=DelversPvp.hash(G)===before;
+  startTurn('e');G.turn='e';render();
+  const foe=document.querySelector('.turnState').textContent=='FOE’S TURN'&&document.body.classList.contains('turnHighlight');
+  startTurn('p');G.turn='p';render();
+  const player=document.querySelector('.turnState').textContent=='YOUR TURN'&&document.querySelector('.turn').classList.contains('turnArrival');
+  V.intro={player:{},opponent:{}};render();const deferred=!document.body.classList.contains('turnHighlight');
+  V.intro=null;render();
+  SFX.turn=oldTurn;
+  return{sameTurn,expired,unchanged,foe,player,deferred,sounds};
+ });
+ assert.deepEqual(turnChecks,{sameTurn:true,expired:true,unchanged:true,foe:true,player:true,deferred:true,sounds:[]},'turn notifications trigger only on new turns without sound or gameplay changes');
+ await deckPage.waitForTimeout(2750);
+ assert(!await deckPage.locator('body').evaluate(e=>e.classList.contains('turnHighlight')),'turn highlight clears automatically');
+ await deckPage.emulateMedia({reducedMotion:'reduce'});
+ await deckPage.evaluate(()=>{startTurn('e');G.turn='e';render()});
+ assert.equal(await deckPage.locator('.turn').evaluate(e=>getComputedStyle(e).animationName),'none','reduced motion keeps turn announcement static');
+ await deckPage.emulateMedia({reducedMotion:'no-preference'});
  await deckPage.evaluate(()=>{G=null;V.v='deck';V.q='Cure Light Wounds';render()});
  const deckSpell=await deckPage.locator('.deckCardGrid .card .effect').textContent();
  await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN['Cure Light Wounds'])];render()});
