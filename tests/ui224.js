@@ -27,7 +27,14 @@ async function run(){
    assert(await p.locator(`[data-v="${tab}"].on`).count(),`${w} ${tab} selected`);
    const dims=await p.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,app:document.getElementById('app').getBoundingClientRect().right>innerWidth+1}));
    assert(!dims.overflow&&!dims.app,`${w}x${h}: ${tab} fits horizontally`);
-   if(tab=='cards'||tab=='deck')assert(await p.locator('.main .card').first().evaluate(e=>e.getBoundingClientRect().top<innerHeight-60),'cards immediately visible beside tools');
+   if(tab=='cards')assert(await p.locator('.main .card').first().evaluate(e=>e.getBoundingClientRect().top<innerHeight-60),'cards immediately visible beside tools');
+   if(tab=='deck'){
+    const layout=await p.evaluate(()=>{const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return{top:r.top,bottom:r.bottom,height:r.height}};return{workspace:box('.deckWorkspace'),status:box('.dkbar'),search:box('#fq'),sort:box('[data-f="so"]'),filters:box('[data-a="fopen"]'),gallery:box('.deckCardGrid'),cards:box('.deckCardGrid .cc'),list:box('.dlist'),overflow:document.getElementById('app').scrollHeight>document.getElementById('app').clientHeight+1}});
+    assert(!layout.overflow,`${w}x${h}: deck workspace fits without page scrolling`);
+    assert(layout.gallery.height>=(h<=340?95:h<=380?135:h<=420?165:340),`${w}x${h}: gallery has usable height: ${JSON.stringify(layout)}`);
+    assert(layout.cards.top>=layout.gallery.top&&layout.cards.bottom<=layout.gallery.bottom+1,`${w}x${h}: first deck card and controls fit in gallery`);
+    assert(['status','search','sort','filters','list'].every(k=>layout[k].height>0&&layout[k].top>=layout.workspace.top&&layout[k].bottom<=h+1),`${w}x${h}: deck controls and list stay visible`);
+   }
    if(tab=='duel')assert(await p.locator('.book').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1}),'open book fits landscape');
   }
   await p.evaluate(()=>{V.v='cards';render()});
@@ -183,6 +190,31 @@ async function run(){
   console.log('PASS menus, all-card template, pack/zoom, battle, scrolling, retry',w,h);
   await context.close();
  }
+ const {page:deckPage,context:deckContext}=await pageFor(844,390);
+ await deckPage.evaluate(()=>{V.v='deck';V.q='';V.fs={};V.fo=false;V.fd=false;V.un=false;V.bo=false;S.deck=[];S.builds=[];render()});
+ await deckPage.fill('#fq','Squire');
+ assert.deepEqual(await deckPage.locator('.deckCardGrid .cardName').allTextContents(),['Squire'],'deck search narrows the card gallery');
+ await deckPage.click('[data-a="fopen"]');
+ assert(await deckPage.locator('.deckFilterPanel').isVisible(),'deck filter panel opens');
+ await deckPage.click('[data-a="ftog"][data-g="t"][data-k="c"]');
+ assert(await deckPage.locator('.deckCardGrid .cardName').count()>0,'deck type filter retains matching cards');
+ assert(await deckPage.locator('.deckCardGrid .cardName').evaluateAll(es=>es.every(e=>ALL.some(c=>c.name==e.textContent&&c.t=='c'))),'deck type filter excludes other card types');
+ await deckPage.click('[data-a="fclr"]');
+ await deckPage.fill('#fq','Squire');
+ await deckPage.locator('.deckCardGrid .stp [data-a="dp"]').click();
+ assert.deepEqual(await deckPage.evaluate(()=>S.deck),['Squire'],'deck card add control adds a card');
+ await deckPage.locator('.dlist [data-a="dm"]').click();
+ assert.deepEqual(await deckPage.evaluate(()=>S.deck),[],'deck list remove control removes a card');
+ await deckPage.locator('.deckCardGrid .stp [data-a="dp"]').click();
+ await deckPage.click('.rules summary');
+ await deckPage.fill('#bn','UI test build');
+ await deckPage.click('[data-a="bsave"]');
+ assert.deepEqual(await deckPage.evaluate(()=>S.builds.map(b=>b.name)),['UI test build'],'saved-build control saves the current deck');
+ await deckPage.click('[data-a="clear"]');
+ assert.deepEqual(await deckPage.evaluate(()=>S.deck),[],'clear deck control clears the current deck');
+ await deckPage.click('.rules [data-a="bload"]');
+ assert.deepEqual(await deckPage.evaluate(()=>S.deck),['Squire'],'saved build restores the deck');
+ await deckContext.close();
  const {page:p,context,errors}=await pageFor(844,390);
  await p.evaluate(()=>startTut());
  const perform=async actions=>{for(const [a,i] of actions){const selector=`[data-a="${a}"]${i==null?'':`[data-i="${i}"]`}`;await p.click(selector,{force:true})}assert(await p.evaluate(()=>G.lesson.done),'lesson action completed');await p.click('[data-a="lessonnext"]')};
