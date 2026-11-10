@@ -577,7 +577,6 @@ async function sendEmote(id){if(!G||G.tut||G.over)return;const e=DelversEmotes.b
 function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:null,un=sel&&sel.m=='unit'?sel.c:null,up=un?G.b.indexOf(un):-1,pl=sel&&sel.m=='place',mine=G.turn=='p'&&!G.over;
  const hl=(side,c)=>sp&&ok(sp.tg,'p',{side,c},sp)?'tgt':'';
  const hh=un&&un.ready&&row(up)<un.rch;
- const eh=`<button class="hero ${hl('e',null)||(hh?'tgt':'')}" data-a="ehero" aria-label="Opponent hero: ${esc(G.opp.n)}. Health ${E.hp}. Mana ${E.mp} of ${E.max}.">${portrait(G.opp.avatar||'undead','portraitSm')}<strong title="${esc(G.opp.n)}"><small class="heroOwner">FOE</small> ${esc(G.opp.n)}</strong>${G.pvp?`<span class="turnClock ${G.opp.seconds<=15?'urgent':''}" aria-label="${G.opp.seconds} seconds remaining">⏱ ${G.opp.seconds}s</span>`:''}<span class="heroStats">${hh?`<b>Hit ${need(un,10)}+</b> · `:''}HP ${E.hp} · MP ${E.mp}/${E.max}<small>Hand ${E.hand.length} · Deck ${E.deck.length}</small></span></button>`;
  const bd=G.b.map((u,i)=>{if(!u){const m=(un&&dist(up,i)<=un.mv)||(pl&&row(i)==ROWS-1),home=row(i)==0?'foeHome':row(i)==ROWS-1?'yourHome':'';
   return `<button class="tile ${home} ${m?'mv':''}" data-a="cell" data-i="${i}" aria-label="Empty tile, row ${row(i)+1}, column ${i%COLS+1}${home?', '+(home=='foeHome'?'opponent':'your')+' deployment row':''}${m?pl?', place here':', move here':''}">${m?(pl?'Place here':'Move here'):home=='foeHome'?'Foe deploy':home=='yourHome'?'Your deploy':''}</button>`}
   const inr=un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch,tg=hl(u.o,u)||(inr?'tgt':'');
@@ -585,10 +584,14 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
   const marks=tagsHTML(u,true)+[u.sP&&'<span class="abilityTag" title="Weapon" aria-label="Weapon">⚔</span>',u.sA&&'<span class="abilityTag" title="Armour" aria-label="Armour">🛡</span>',u.sI&&'<span class="abilityTag" title="Item" aria-label="Item">💍</span>',u.sleep&&'<span class="abilityTag" title="Asleep" aria-label="Asleep">💤</span>'].filter(Boolean).join('');
   return `<button class="tile u ${u.o} ${cl}" style="--k:${CL[u.cls][1]};--rar:${RC[u.rar]}" data-a="cell" data-i="${i}" data-z="${u.name}" aria-label="${u.o=='p'?'Your unit':'Opponent unit'}: ${u.name}. ${CLASS[u.cls]||CL[u.cls][0]}. ${RN[u.rar]}. Attack ${u.atk}, health ${u.hp} of ${u.mhp}, Guard ${u.ac}, Aim ${u.thac0}, movement ${u.mv} of ${u.init}, Save ${u.save}."><span class="tileHeader"><span class="tileOwner">${u.o=='p'?'YOU':'FOE'}</span><b class="tileName">${u.name}</b></span><i class="hit" style="${inr?'':'display:none'}">Hit ${inr?need(un,u.ac):''}+</i>${statsHTML(u)}<span class="ab">${marks}</span></button>`}).join('');
  const pr=G.over?'':G.turn=='e'?'Foe is acting… please wait.':G.msg||(pl?'Tap a glowing tile on your back row (bottom).':sp?`Choose a target for ${sp.name}.`:un?`Tap a yellow tile to move (${un.mv} initiative left)${un.ready?', or a red target to attack':''}.`:'Play a green-bordered hand card, or select one of your blue YOU units.');
- const hd=P.hand.map((c,i)=>{const ok_=mine&&canPlay(c);return card(c,`data-a="hand" data-i="${i}"`,(sel&&sel.c===c?'sel ':'')+(ok_?(sel?'':'can '):'dim ')+(c.cost>P.mp?'no':''),null,true)}).join('');
+ const hd=P.hand.map((c,i)=>{const playable=mine&&!G.busy&&canPlay(c),selected=sel&&sel.c===c;
+  const state=G.over?'Battle over':!mine?'Foe’s turn':G.busy?'Please wait':c.cost>P.mp?`Need ${c.cost-P.mp} mana`:!playable?(c.t=='c'?'Back row full':'No valid target'):selected?'SELECTED':'PLAYABLE';
+  return card(c,`data-a="hand" data-i="${i}" data-play-state="${esc(state)}" aria-label="${esc(c.name+': '+state)}" aria-disabled="${!playable}"`,(selected?'sel ':'')+(playable?'can ':'dim ')+(c.cost>P.mp?'no':''),null,true)}).join('');
  const idle=mine&&!G.busy&&!P.hand.some(canPlay)&&!units('p').some(u=>u.ready);
- const tb=G.over?'<div class="turn over">Battle over</div>':mine?'<div class="turn you">YOUR TURN</div>':'<div class="turn foe">FOE’S TURN</div>';
- return `<div class="${mine?'':'foeturn'}" style="display:contents"><div class="board" role="group" aria-label="Battlefield, 4 columns by 5 rows. Blue solid units are yours; red dashed units belong to your opponent.">${bd}</div><aside class="battleRail" aria-label="Battle status and controls">${eh}${tb}<div class="mid">${G.tut&&!G.lesson?coachHTML():''}<div class="pr">${pr}</div>${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}</div><div class="bar combatActions"><button class="hero ${hl('p',null)}" data-a="phero" aria-label="Your hero. Health ${P.hp}. Mana ${P.mp} of ${P.max}."><strong>YOU</strong><span>HP ${P.hp} · MP ${P.mp}/${P.max}<small>Deck ${P.deck.length}</small></span></button>${!G.pvp&&!G.over?`<button class="btn ${G.auto?'pri':''}" data-a="auto" aria-pressed="${!!G.auto}" aria-label="Auto-play ${G.auto?'on, tap to take over':'off'}">Auto ${G.auto?'on':'off'}</button>`:''}${G.pvp&&!G.over?`<button class="btn" data-a="resign" aria-label="${V.pv&&V.pv.rc?'Tap again to resign':'Resign'}">${V.pv&&V.pv.rc?'Sure?':'Resign'}</button>`:''}<button class="btn pri ${idle?'nudge':''} ${mine?'':'wait'}" data-a="end" ${mine?'':'disabled'}>End turn</button>${!G.pvp?'<button class="btn" data-a="quit">Leave</button>':''}</div></aside><div class="sw x hw"><small class="handLabel">YOUR HAND · ${P.hand.length} cards · Hold a card to read</small>${SB('x','Scroll hand left')}<div class="hand sc" role="group" aria-label="Your hand">${hd||'<p class="emptyHand">Your hand is empty. Draw a card next turn.</p>'}</div>${SA('x','Scroll hand right')}${G.lesson?`<aside class="lessonCoach" aria-label="Lesson instructions">${coachHTML()}</aside>`:''}</div></div>`
+ const playerName=UN()||'Delver',foeName=G.opp.n;
+ const identity=(side,name,avatar,X)=>`<button class="battleIdentity ${side} ${hl(side=='you'?'p':'e',null)||(side=='foe'&&hh?'tgt':'')}" data-a="${side=='you'?'p':'e'}hero" aria-label="${side=='you'?'Your':'Opponent'} hero: ${esc(name)}. Health ${X.hp} of ${X.mx}. Mana ${X.mp} of ${X.max}.">${portrait(avatar,'portraitSm')}<span class="battleProfile"><small>${side=='you'?'YOU':G.pvp&&G.opp.bot?'FOE · BOT':'FOE'}</small><strong class="battlePlayerName">${esc(name)}</strong></span><span class="heroResources"><span class="heroHp"><small>HP</small><b>${X.hp}</b></span><span class="heroMana"><small>MANA</small><b>${X.mp}/${X.max}</b></span></span></button>`;
+ const tb=`<div class="turn ${G.over?'over':mine?'you':'foe'}">${identity('you',playerName,S.avatar||'vanguard',P)}<div class="turnCenter"><strong class="turnState" role="status" aria-live="polite" aria-atomic="true">${G.over?'BATTLE OVER':mine?'YOUR TURN':'FOE’S TURN'}</strong>${G.pvp?`<span class="turnClock ${G.opp.seconds<=15?'urgent':''}" aria-label="${G.opp.seconds} seconds remaining">${G.opp.seconds}s left</span>`:''}${hh?`<small>Hero hit ${need(un,10)}+</small>`:''}</div>${identity('foe',foeName,G.opp.avatar||'undead',E)}</div>`;
+ return `<div class="${mine?'':'foeturn'}" style="display:contents">${tb}<div class="board" role="group" aria-label="Battlefield, 4 columns by 5 rows. Blue solid units are yours; red dashed units belong to your opponent.">${bd}</div><aside class="battleRail" aria-label="Battle status and controls"><small class="battleCounts">Your deck ${P.deck.length} · Foe deck ${E.deck.length} · Foe hand ${E.hand.length}</small><div class="mid">${G.tut&&!G.lesson?coachHTML():''}<div class="pr">${pr}</div>${V.saveMsg?`<div role="alert">${V.saveMsg}</div>`:''}</div><div class="bar combatActions">${!G.pvp&&!G.over?`<button class="btn ${G.auto?'pri':''}" data-a="auto" aria-pressed="${!!G.auto}" aria-label="Auto-play ${G.auto?'on, tap to take over':'off'}">Auto ${G.auto?'on':'off'}</button>`:''}${G.pvp&&!G.over?`<button class="btn" data-a="resign" aria-label="${V.pv&&V.pv.rc?'Tap again to resign':'Resign'}">${V.pv&&V.pv.rc?'Sure?':'Resign'}</button>`:''}<button class="btn pri ${idle?'nudge':''} ${mine?'':'wait'}" data-a="end" ${mine?'':'disabled'}>End turn</button>${!G.pvp?'<button class="btn" data-a="quit">Leave</button>':''}</div></aside><div class="sw x hw"><small class="handLabel">YOUR HAND · ${P.hand.length} cards · Hold a card to read</small>${SB('x','Scroll hand left')}<div class="hand sc" role="group" aria-label="Your hand">${hd||'<p class="emptyHand">Your hand is empty. Draw a card next turn.</p>'}</div>${SA('x','Scroll hand right')}${G.lesson?`<aside class="lessonCoach" aria-label="Lesson instructions">${coachHTML()}</aside>`:''}</div></div>`
  +(G.over?`<div id="ov"><div>${G.res}</div>${!G.pvp&&G.over!='p'?'<button class="btn pri" data-a="retry">Retry battle</button>':''}${!G.pvp&&!G.tut&&G.over=='p'&&G.oi+1<CAMP.length&&G.oi+1<=S.prog?'<button class="btn pri" data-a="nextstory">Next encounter →</button>':''}<button class="btn" data-a="logtoggle" aria-label="Review combat log">Combat log</button><button class="btn" data-a="quit">${!G.pvp&&!G.tut?'Return to Story':'Continue'}</button></div>`:'')
  +(V.intro?matchIntroHTML(V.intro):'')+emoteHTML()+combatLogHTML()}
 const GUIDE=[
@@ -819,6 +822,7 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
  const b=Array(NT).fill(null);g.b.forEach((u,i)=>{if(u)b[mi(i)]=mir?{...u,o:u.o=='p'?'e':'p'}:u});
  const evs=(g.ev||[]).map(x=>({...x,s:x.s==null?x.s:(x.s==s?'p':'e'),i:x.i>=0?mi(x.i):x.i,f:x.f>=0?mi(x.f):x.f}));g.ev=[];
  const v={ev:evs,pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
+ v.turnNo=g.turnNo;
  v.history=(g.history||[]).map(h=>({...h,text:mir&&h.kind=='move'?fl(h.text).replace(/\bR(\d+) C(\d+)/g,(_,r,c)=>`R${ROWS+1-Number(r)} C${c}`):fl(h.text),side:h.side==s?'p':'e',turnSide:h.turnSide==s?'p':'e'}));v.historyDropped=g.historyDropped||0;
  const sec=Math.ceil(T.timeLeft()/1000),mine=g.turn==s;
  v.opp={n:T.opp.name,seconds:sec,avatar:T.opp.avatar||'vanguard',lvl:0,r:T.opp.r,w:T.opp.w,l:T.opp.l,bot:T.opp.bot};
@@ -907,6 +911,7 @@ function render(){
  const emoteFocus=$app.querySelector('#emoteDialog')?.contains(document.activeElement)?{a:document.activeElement.dataset.a,k:document.activeElement.dataset.k}:null;
  const keep=[...$app.querySelectorAll('.sc')].map(e=>[e.scrollLeft,e.scrollTop,e.className]);
  $app.innerHTML=G?gameHTML():menuHTML()+(V.pk?pkHTML():'')+emotePreviewHTML();
+ turnNoticeSync();
  if(G&&!G.over)$app.querySelector('.combatActions').insertAdjacentHTML('beforeend','<button class="btn" data-a="logtoggle" aria-label="Review combat log">Log</button>'+(!G.tut?`<button class="btn" data-a="emotetoggle" aria-label="Battle emotes" aria-haspopup="dialog" aria-expanded="${!!V.emoteOpen}">Emote</button>`:''));
  // Guided fixtures give occupied rows room for all six stats.
  if(G&&G.lesson)$app.querySelector('.board').style.gridTemplateRows=Array.from({length:ROWS},(_,r)=>G.b.slice(r*COLS,(r+1)*COLS).some(Boolean)?'minmax(0,2fr)':'minmax(0,1fr)').join(' ');
@@ -969,12 +974,28 @@ const SONGS={
 function nextBattleTrack(){if(!MUS.bag.length){MUS.bag=DelversMusic.tracks.map((_,i)=>i);for(let i=MUS.bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[MUS.bag[i],MUS.bag[j]]=[MUS.bag[j],MUS.bag[i]]}if(MUS.bag[MUS.bag.length-1]===MUS.track)[MUS.bag[0],MUS.bag[MUS.bag.length-1]]=[MUS.bag[MUS.bag.length-1],MUS.bag[0]]}MUS.track=MUS.bag.pop()}
 function musTick(){const a=AC,S=SONGS[MUS.mode];if(!a||!S||!MB)return;if(a.state!='running'){MUS.nt=a.currentTime+.1;return}if(MUS.nt<a.currentTime)MUS.nt=a.currentTime+.05;while(MUS.nt<a.currentTime+.5){if(MUS.mode=='battle'){if(MUS.st&&MUS.st%256==0)nextBattleTrack();const tr=DelversMusic.tracks[MUS.track];DelversMusic.step(tr,MUS.st,MUS.nt,{note:mn,kick:mk_,noise:mz});MUS.nt+=tr.d}else{S.p(MUS.st,MUS.nt);MUS.nt+=S.d}MUS.st++}}
 function musicSet(m){if(mute||musOff)m=null;const battle=m=='battle'&&G?(G.pvp&&V.pv?V.pv.mid:(G.musicId||(G.musicId=Date.now()+'-'+Math.random()))):null;if(battle&&battle!==MUS.battle){MUS.battle=battle;nextBattleTrack();MUS.st=0}if(MUS.mode===m&&(m==null||MUS.tm))return;clearInterval(MUS.tm);MUS.tm=null;MUS.mode=m;MUS.st=0;if(MB)MB.gain.setValueAtTime(m?.5:0,AC.currentTime);if(!m)return;if(!mbus())return;MUS.nt=AC.currentTime+.1;MUS.tm=setInterval(musTick,150)}
-document.addEventListener('visibilitychange',()=>{if(AC){if(document.hidden)AC.suspend();else AC.resume()}});
+document.addEventListener('visibilitychange',()=>{if(AC){if(document.hidden)AC.suspend();else AC.resume()}turnNoticeSync()});
 document.addEventListener('pointerdown',()=>{if(MUS.mode)actx()},{passive:true});
 // Pack-opening stingers: pitch and size grow with rarity.
 const PKS={tear:()=>{noise(.35,.3,4000);tone(180,.4,'sawtooth',.12,0,700);[0,1,2,3].forEach(i=>tone(660+i*220,.12,'triangle',.08,.15+i*.06))},
  flip:k=>{[[523,659],[523,659,784],[523,659,784,1047],[523,784,1047,1319,1568]][k].forEach((f,i)=>tone(f,.25+k*.15,k?'triangle':'sine',.1+k*.02,i*.07));if(k>=2)noise(.3,.12,5000);if(k==3){tone(130,.8,'sawtooth',.12,0,260);[1047,1319,1568,2093].forEach((f,i)=>tone(f,.5,'sine',.1,.35+i*.1))}}};
-let fxTurn=null,fxOver=false;
+let turnNotice=null,turnNoticeTimer=null,fxOver=false;
+function turnNoticeSync(){
+ clearTimeout(turnNoticeTimer);
+ document.body.classList.remove('turnHighlight');
+ const banner=$app.querySelector('.turn');
+ if(!G){turnNotice=null;return}
+ if(G.over||V.intro||document.hidden){if(banner)banner.classList.remove('turnArrival');return}
+ const match=G.pvp?V.pv.mid:G.p,key=G.turn+':'+(G.turnNo||0);
+ if(!turnNotice||turnNotice.match!==match||turnNotice.key!==key)turnNotice={match,key,at:Date.now()};
+ const elapsed=Date.now()-turnNotice.at;
+ if(!banner||elapsed>=2600)return;
+ banner.classList.add('turnArrival');
+ banner.style.animationDelay=-elapsed+'ms';
+ document.body.classList.add('turnHighlight');
+ document.body.style.setProperty('--turn-color',G.turn=='p'?'#72c6ff':'#f59b89');
+ turnNoticeTimer=setTimeout(()=>{banner.classList.remove('turnArrival');document.body.classList.remove('turnHighlight')},2600-elapsed);
+}
 const tileEl=i=>$app.querySelector(`.tile[data-i="${i}"]`),heroEl=s=>$app.querySelector(s=='e'?'[data-a="ehero"]':'[data-a="phero"]');
 function fl(el,txt,cl){if(!el)return;const r=el.getBoundingClientRect(),n=document.createElement('span');n.className='fl '+cl;n.textContent=txt;n.style.left=(r.left+r.width/2)+'px';n.style.top=(r.top+r.height/2)+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),950)}
 function cls(el,c,ms){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el&&el.classList.remove(c),ms||500)}
@@ -986,8 +1007,7 @@ function fxOne(x){const el=x.i>=0?tileEl(x.i):heroEl(x.s);
  else if(x.k=='die'){cls(el,'fx-die',550);snd('die')}
  else if(x.k=='sum'||x.k=='mov'){cls(el,'fx-in',400);snd(x.k)}
  else if(x.k=='spell'){const t=x.i>=0?tileEl(x.i):x.all?$app.querySelector('.board'):heroEl(x.s);cls(t,'fx-spell',500);snd(x.kind=='gear'||x.kind=='bless'?'gear':'spell')}}
-function fxRun(){if(!G){fxTurn=null;fxOver=false;return}
- if(G.turn=='p'&&!G.over&&fxTurn!='p')snd('turn');fxTurn=G.turn;
+function fxRun(){if(!G){fxOver=false;return}
  if(G.over&&!fxOver){fxOver=true;snd(G.over=='p'?'win':'lose')}else if(!G.over)fxOver=false;
  const e=G.ev;if(!e||!e.length)return;G.ev=[];e.slice(0,16).forEach((x,n)=>setTimeout(()=>fxOne(x),n*230))}
 // ===== Card zoom: hold a card or creature (or right-click) to read it in full =====

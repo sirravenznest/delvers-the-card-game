@@ -10,8 +10,8 @@ android {
         applicationId "com.sirravenznest.delvers"
         minSdk 23
         targetSdk 34
-        versionCode 24
-        versionName "2.2.10"
+        versionCode 25
+        versionName "2.2.11"
     }
 
     // The shared debug-grade key keeps one stable signature (and SHA-1 for Google sign-in) across CI builds.
