@@ -22,6 +22,16 @@ body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;backgro
 .deckCopyRow small{display:block;font:10px/1.2 Arial,sans-serif}
 .packExtras{padding:8px;border:1px solid #6a5638;border-radius:8px}
 .packExtras h3{margin:0 0 4px}.packExtras>.btn{display:block;margin-top:6px}
+#packReview{display:flex;flex-direction:column;width:min(960px,100%);height:min(640px,100%);min-height:0;padding:12px;background:#201b26;border:2px solid #ffe297;border-radius:12px;text-align:left;color:#f1e8d6}
+#packReview header,#packReview footer{flex-shrink:0}
+#packReview h2{margin:0;font:700 20px/1.2 Arial,sans-serif}
+#packReview header p{margin:6px 0}
+.packReviewBody{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,1fr);gap:10px;flex:1;min-height:0;overflow:hidden}
+#packReview .packReviewCards{grid-template-columns:repeat(auto-fill,minmax(var(--card-width),1fr));align-content:start;margin:0}
+.packReviewCards,.packReviewExtras{min-height:0;overflow:auto}
+#packReview footer{padding-top:8px}
+#packReview footer .btn,.packExtras>[data-a="packextrasask"]{width:100%;min-height:44px;white-space:normal}
+#packReview .cosmeticConfirm .btn{min-height:44px}
 .copyShade{position:fixed;inset:0;z-index:45;background:#000d;display:flex;align-items:center;justify-content:center;padding:8px}
 #copyManager{width:min(960px,100%);height:min(640px,100%);display:flex;flex-direction:column;min-height:0;background:#201b26;border:2px solid #91caff;border-radius:12px;padding:8px;color:#f1e8d6}
 #copyManager header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
@@ -46,6 +56,9 @@ body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;backgro
 .packAura{position:absolute;left:50%;top:48%;width:min(70vw,65vh);aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid var(--pack-accent);border-radius:50%;background:repeating-conic-gradient(from 13deg,transparent 0 21deg,#bcecff1a 22deg 23deg,transparent 24deg 30deg);box-shadow:0 0 65px #8acfff28,inset 0 0 70px #8acfff25;pointer-events:none;animation:pack-orbit 18s linear infinite}
 .packReady .packAura{width:min(85vw,85vh);opacity:.6}
 .pkov.packReveal{animation:none}
+.packReveal .pkface{animation:pack-card-settle .3s ease-out both}
+.packReveal .pkback.t2,.packReveal .pkback.t3{animation:pkbob 1.2s ease-in-out infinite}
+@keyframes pack-card-settle{from{transform:translateY(6px) scale(.98)}to{transform:none}}
 .pkov.packReveal::before{opacity:.08}
 .packRare{--pack-accent:#92cfff}.packLegendary{--pack-accent:#ffe297}
 .packLegendary .packAura{border:3px double #ffe297;background:repeating-conic-gradient(from 13deg,transparent 0 21deg,#ffe29722 22deg 23deg,transparent 24deg 30deg);box-shadow:0 0 70px #ffcf6a40,inset 0 0 70px #ffcf6a30}
