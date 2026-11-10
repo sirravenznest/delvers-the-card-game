@@ -295,10 +295,19 @@ async function run(){
   assert(await p.evaluate(()=>S.emotesMuted),'opponent emotes can be muted');
   await p.click('[data-a="emotetoggle"]',{force:true});
   await p.evaluate(()=>startTut());
-  assert(await p.locator('.lessonCoach').evaluate(e=>{
+  assert(await p.locator('#tutorialObjective').evaluate(e=>{
    const r=e.getBoundingClientRect();
-   return r.top>=document.querySelector('.board').getBoundingClientRect().bottom&&r.bottom<=innerHeight+1&&[...e.querySelectorAll('button')].every(b=>{const x=b.getBoundingClientRect();return x.top>=r.top&&x.bottom<=r.bottom});
-  }),'tutorial instructions and navigation fit beside the bottom hand');
+   return r.top>=0&&r.bottom<=innerHeight+1&&r.left>=0&&r.right<=innerWidth+1&&[...e.querySelectorAll('button')].every(b=>{const x=b.getBoundingClientRect();return x.top>=r.top&&x.bottom<=r.bottom});
+  }),'tutorial objective pop-up fits, catches attention, and keeps its controls visible');
+  assert.equal(await p.locator('.lessonCoach').count(),0,'tutorial no longer crowds the practice board with a side panel');
+  assert.equal(await p.locator('#tutorialObjective .btn').first().evaluate(e=>e===document.activeElement),true,'objective pop-up moves keyboard focus to its first action');
+  await p.keyboard.press('Tab');assert.equal(await p.locator('#tutorialObjective').evaluate(e=>e.contains(document.activeElement)),true,'keyboard focus stays inside the objective pop-up');
+  await p.click('#tutorialObjective [data-a="tutpromptclose"]');
+  assert.equal(await p.locator('#tutorialObjective').count(),0,'player can confirm an objective and clear the board');
+  assert.equal(await p.locator('[data-a="tutpromptopen"]').evaluate(e=>e===document.activeElement),true,'closing an objective restores focus to its reopen control');
+  await p.click('[data-a="tutpromptopen"]');
+  assert.equal(await p.locator('#tutorialObjective').count(),1,'objective can be reopened from battle controls');
+  await p.click('#tutorialObjective [data-a="tutpromptclose"]');
   assert.deepEqual(errors,[],`${w}x${h} JS errors`);
   console.log('PASS menus, all-card template, pack/zoom, battle, scrolling, retry',w,h);
   await context.close();
@@ -389,7 +398,7 @@ async function run(){
  await deckContext.close();
  const {page:p,context,errors}=await pageFor(844,390);
  await p.evaluate(()=>startTut());
- const perform=async actions=>{for(const [a,i] of actions){const selector=`[data-a="${a}"]${i==null?'':`[data-i="${i}"]`}`;await p.click(selector,{force:true})}assert(await p.evaluate(()=>G.lesson.done),'lesson action completed');await p.click('[data-a="lessonnext"]')};
+ const perform=async actions=>{if(await p.locator('#tutorialObjective').count())await p.click('#tutorialObjective [data-a="tutpromptclose"]');for(const [a,i] of actions){const selector=`[data-a="${a}"]${i==null?'':`[data-i="${i}"]`}`;await p.click(selector,{force:true})}assert(await p.evaluate(()=>G.lesson.done),'lesson action completed');assert(await p.locator('#tutorialObjective').isVisible(),'completed objective reopens the guidance pop-up');await p.click('#tutorialObjective [data-a="lessonnext"]')};
  await perform([['hand',0],['cell',16]]);
  await perform([['end']]);
  await perform([['cell',16],['cell',12]]);
@@ -399,6 +408,11 @@ async function run(){
  await perform([['hand',0],['cell',16]]);
  await perform([['cell',0],['ehero']]);
  assert(await p.evaluate(()=>G.tut&&!G.lesson),'lessons lead to practice');
+ assert(await p.locator('#tutorialObjective').isVisible(),'practice opens with a prominent objective');
+ await p.click('#tutorialObjective [data-a="tutpromptclose"]');
+ await p.click('[data-a="hand"][data-i="0"]',{force:true});
+ assert.match(await p.locator('#tutorialObjective').innerText(),/glowing tile/,'practice shows the next objective after the player changes state');
+ await p.click('#tutorialObjective [data-a="tutpromptclose"]');
  const beforePractice=await p.evaluate(()=>({gold:S.gold,prog:S.prog,ms:JSON.stringify(S.ms)}));
  await p.evaluate(()=>{G.over='p';render()});
  assert.equal(await p.locator('[data-a="retry"]').count(),0,'no retry after victory');
