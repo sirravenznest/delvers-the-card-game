@@ -29,11 +29,26 @@ async function run(){
    assert(!dims.overflow&&!dims.app,`${w}x${h}: ${tab} fits horizontally`);
    if(tab=='cards')assert(await p.locator('.main .card').first().evaluate(e=>e.getBoundingClientRect().top<innerHeight-60),'cards immediately visible beside tools');
    if(tab=='deck'){
-    const layout=await p.evaluate(()=>{const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return{top:r.top,bottom:r.bottom,height:r.height}};return{workspace:box('.deckWorkspace'),status:box('.dkbar'),search:box('#fq'),sort:box('[data-f="so"]'),filters:box('[data-a="fopen"]'),gallery:box('.deckCardGrid'),cards:box('.deckCardGrid .cc'),list:box('.dlist'),overflow:document.getElementById('app').scrollHeight>document.getElementById('app').clientHeight+1}});
+    const layout=await p.evaluate(()=>{const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return{top:r.top,bottom:r.bottom,width:r.width,height:r.height}};const list=document.querySelector('.dlist');return{workspace:box('.deckWorkspace'),status:box('.dkbar'),search:box('#fq'),sort:box('[data-f="so"]'),filters:box('[data-a="fopen"]'),gallery:box('.deckCardGrid'),cards:box('.deckCardGrid .cc'),controls:box('.deckCardGrid .cc .stp'),list:box('.dlist'),listNames:[...list.querySelectorAll('.dl span')].map(e=>({width:e.clientWidth,scroll:e.scrollWidth})),categoryPosition:getComputedStyle(list.querySelector('h4')).position,overflow:document.getElementById('app').scrollHeight>document.getElementById('app').clientHeight+1}});
     assert(!layout.overflow,`${w}x${h}: deck workspace fits without page scrolling`);
     assert(layout.gallery.height>=(h<=340?95:h<=380?135:h<=420?165:340),`${w}x${h}: gallery has usable height: ${JSON.stringify(layout)}`);
-    assert(layout.cards.top>=layout.gallery.top&&layout.cards.bottom<=layout.gallery.bottom+1,`${w}x${h}: first deck card and controls fit in gallery`);
+    assert(layout.cards.top>=layout.gallery.top&&layout.cards.top<layout.gallery.bottom&&layout.cards.height>=(h<=420?160:190),`${w}x${h}: detailed card is visible and scrollable in gallery`);
+    assert(layout.controls.top>=layout.cards.top&&layout.controls.bottom<=layout.cards.bottom+1,`${w}x${h}: card controls remain attached to their card`);
+    assert(layout.list.width>=160&&layout.categoryPosition!='sticky'&&layout.listNames.every(e=>e.scroll<=e.width+1),`${w}x${h}: deck list has readable names without overlapping sticky category headers`);
     assert(['status','search','sort','filters','list'].every(k=>layout[k].height>0&&layout[k].top>=layout.workspace.top&&layout[k].bottom<=h+1),`${w}x${h}: deck controls and list stay visible`);
+    const cardInfo=await p.locator('.deckCardGrid .card').first().evaluate(e=>({name:e.querySelector('.cardName').textContent,sections:['.art','.identity','.abilities','.stats','.cardFoot'].map(s=>{const el=e.querySelector(s);return el&&getComputedStyle(el).display!='none'}),stats:[...e.querySelectorAll('.stat b')].map(x=>x.textContent)}));
+    assert(cardInfo.sections.every(Boolean),`${w}x${h}: deck card retains its art, identity, rules, stats, and rarity`);
+    assert.deepEqual(cardInfo.stats,['ATK','HP','GRD','AIM','MOVE','SAVE'],`${w}x${h}: deck creature shows every battle stat`);
+    const overlaps=await p.locator('.deckCardGrid .card').evaluateAll(cards=>cards.filter(card=>{
+     const parts=['.cardHead','.art','.identity','.abilities','.stats','.cardFoot'].map(s=>card.querySelector(s)).filter(Boolean).map(e=>e.getBoundingClientRect());
+     const textRects=[],walker=document.createTreeWalker(card,NodeFilter.SHOW_TEXT);
+     while(walker.nextNode()){const node=walker.currentNode;if(!node.textContent.trim())continue;const range=document.createRange();range.selectNode(node);for(const r of range.getClientRects())if(r.width&&r.height)textRects.push(r)}
+     const textOverlap=textRects.some((r,i)=>textRects.slice(i+1).some(q=>r.left<q.right-1&&r.right>q.left+1&&r.top<q.bottom-1&&r.bottom>q.top+1));
+     return textOverlap||parts.some((r,i)=>i>0&&r.top<parts[i-1].bottom-1)||parts.some(r=>r.top<card.getBoundingClientRect().top-1||r.bottom>card.getBoundingClientRect().bottom+1);
+    }).map(card=>card.querySelector('.cardName').textContent));
+    assert.deepEqual(overlaps,[],`${w}x${h}: deck card details do not overlap or escape the card`);
+    const listControlOverlap=await p.locator('.dlist .dlr').evaluateAll(rows=>rows.some(row=>{const name=row.querySelector('.dl').getBoundingClientRect(),controls=row.querySelector('.dlc').getBoundingClientRect();return name.left<controls.right-1&&name.right>controls.left+1&&name.top<controls.bottom-1&&name.bottom>controls.top+1}));
+    assert(!listControlOverlap,`${w}x${h}: deck-list text does not overlap copy controls`);
    }
    if(tab=='duel')assert(await p.locator('.book').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1}),'open book fits landscape');
   }
@@ -154,6 +169,8 @@ async function run(){
   await p.evaluate(()=>{const u=mk(BN['Goblin Skulker']);u.o='p';u.atk+=1;u.mhp+=2;u.hp=1;u.mv=0;u.sP=1;u.k2='tough';G.b[16]=u;render()});
   const tile=p.locator('.tile.u');
   assert.equal(await tile.locator('.stat').count(),6,'all six board stats retained');
+  const liveBoardStats=await p.evaluate(()=>({hp:`${G.b[16].hp}/${G.b[16].mhp}`,move:`${G.b[16].mv}/${G.b[16].init}`}));
+  assert.deepEqual(await tile.evaluate(e=>Object.fromEntries([...e.querySelectorAll('.stat')].filter(s=>['HP','MOVE'].includes(s.querySelector('b').textContent)).map(s=>[s.querySelector('b').textContent,s.querySelector('strong').textContent]))),{HP:liveBoardStats.hp,MOVE:liveBoardStats.move},'battlefield stats continue to show live health and movement');
   const handBefore=await p.evaluate(()=>G.p.hand.length);
   await tile.dispatchEvent('pointerdown',{pointerType:'touch',clientX:30,clientY:200});
   await p.waitForSelector('#zm');
@@ -194,6 +211,15 @@ async function run(){
  await deckPage.evaluate(()=>{V.v='deck';V.q='';V.fs={};V.fo=false;V.fd=false;V.un=false;V.bo=false;S.deck=[];S.builds=[];render()});
  await deckPage.fill('#fq','Squire');
  assert.deepEqual(await deckPage.locator('.deckCardGrid .cardName').allTextContents(),['Squire'],'deck search narrows the card gallery');
+ const deckSquire=await deckPage.locator('.deckCardGrid .card').evaluate(e=>({name:e.querySelector('.cardName').textContent,abilities:e.querySelector('.abilities').textContent.replace(/\s+/g,' ').trim(),stats:[...e.querySelectorAll('.stat')].map(x=>[x.querySelector('b').textContent,x.querySelector('strong').textContent])}));
+ await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN.Squire)];render()});
+ const battleSquire=await deckPage.locator('.hand .card').first().evaluate(e=>({name:e.querySelector('.cardName').textContent,abilities:e.querySelector('.abilities').textContent.replace(/\s+/g,' ').trim(),stats:[...e.querySelectorAll('.stat')].map(x=>[x.querySelector('b').textContent,x.querySelector('strong').textContent])}));
+ assert.deepEqual(deckSquire,battleSquire,'deck and battle show the same creature rules and stats');
+ await deckPage.evaluate(()=>{G=null;V.v='deck';V.q='Cure Light Wounds';render()});
+ const deckSpell=await deckPage.locator('.deckCardGrid .card .effect').textContent();
+ await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN['Cure Light Wounds'])];render()});
+ assert.equal((await deckPage.locator('.hand .card .effect').textContent()).trim(),deckSpell.trim(),'deck and battle show identical spell rules');
+ await deckPage.evaluate(()=>{G=null;V.v='deck';V.q='Squire';render()});
  await deckPage.click('[data-a="fopen"]');
  assert(await deckPage.locator('.deckFilterPanel').isVisible(),'deck filter panel opens');
  await deckPage.click('[data-a="ftog"][data-g="t"][data-k="c"]');
