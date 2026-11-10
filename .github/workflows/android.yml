@@ -3,6 +3,10 @@ name: Android build
 on:
   workflow_dispatch:
     inputs:
+      setup_signing:
+        description: One-time signing key setup (requires setup token and backup password secrets)
+        type: boolean
+        default: false
       verify_release:
         description: Build and verify a signed APK without publishing a release
         type: boolean
@@ -17,7 +21,89 @@ permissions:
   contents: write
 
 jobs:
+  setup-signing:
+    if: github.event_name == 'workflow_dispatch' && inputs.setup_signing
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: android-release-signing-setup
+      cancel-in-progress: false
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Validate setup and generate encrypted signing backup
+        env:
+          GH_TOKEN: ${{ secrets.ANDROID_SIGNING_SETUP_TOKEN }}
+          BACKUP_PASSWORD: ${{ secrets.ANDROID_SIGNING_BACKUP_PASSWORD }}
+          VERIFY_RELEASE: ${{ inputs.verify_release }}
+        run: |
+          set -euo pipefail
+          test "$VERIFY_RELEASE" != true || { echo "Select setup_signing or verify_release, not both." >&2; exit 1; }
+          test -n "$GH_TOKEN" || { echo "Missing ANDROID_SIGNING_SETUP_TOKEN secret." >&2; exit 1; }
+          test "${#BACKUP_PASSWORD}" -ge 20 || { echo "Set ANDROID_SIGNING_BACKUP_PASSWORD to a strong password of at least 20 characters and keep it in your password manager." >&2; exit 1; }
+          names=$(gh secret list --repo "$GITHUB_REPOSITORY" --json name --jq '.[].name')
+          for name in ANDROID_SIGNING_KEYSTORE_BASE64 ANDROID_SIGNING_STORE_PASSWORD ANDROID_SIGNING_KEY_ALIAS ANDROID_SIGNING_KEY_PASSWORD; do
+            if grep -Fxq "$name" <<< "$names"; then
+              echo "Signing secret $name already exists. Refusing to replace an existing signing identity." >&2
+              exit 1
+            fi
+          done
+          umask 077
+          work="$RUNNER_TEMP/delvers-signing-setup"
+          mkdir -p "$work"
+          export KEY_PASSWORD
+          KEY_PASSWORD=$(openssl rand -hex 32)
+          echo "::add-mask::$KEY_PASSWORD"
+          printf '%s' "$KEY_PASSWORD" > "$work/signing-password.txt"
+          keytool -genkeypair -keystore "$work/delvers-release.jks" -storetype PKCS12 \
+            -alias delvers-release -keyalg RSA -keysize 3072 -validity 10000 \
+            -storepass:env KEY_PASSWORD -keypass:env KEY_PASSWORD \
+            -dname "CN=Delvers Android Release, O=Delvers"
+          tar -cf "$work/signing-backup.tar" -C "$work" delvers-release.jks signing-password.txt
+          mkdir -p "$work/gnupg"
+          printf '%s' "$BACKUP_PASSWORD" | gpg --homedir "$work/gnupg" \
+            --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 \
+            --output "$RUNNER_TEMP/delvers-signing-backup.tar.gpg" "$work/signing-backup.tar"
+          keytool -list -v -keystore "$work/delvers-release.jks" -alias delvers-release -storepass:env KEY_PASSWORD
+      - name: Save encrypted backup before installing secrets
+        uses: actions/upload-artifact@v4
+        with:
+          name: delvers-signing-backup-encrypted
+          path: ${{ runner.temp }}/delvers-signing-backup.tar.gpg
+          if-no-files-found: error
+          retention-days: 90
+      - name: Install release signing secrets
+        env:
+          GH_TOKEN: ${{ secrets.ANDROID_SIGNING_SETUP_TOKEN }}
+        run: |
+          set -euo pipefail
+          names=$(gh secret list --repo "$GITHUB_REPOSITORY" --json name --jq '.[].name')
+          for name in ANDROID_SIGNING_KEYSTORE_BASE64 ANDROID_SIGNING_STORE_PASSWORD ANDROID_SIGNING_KEY_ALIAS ANDROID_SIGNING_KEY_PASSWORD; do
+            if grep -Fxq "$name" <<< "$names"; then
+              echo "Signing secret $name appeared during setup. Refusing to overwrite it." >&2
+              exit 1
+            fi
+          done
+          work="$RUNNER_TEMP/delvers-signing-setup"
+          password=$(cat "$work/signing-password.txt")
+          echo "::add-mask::$password"
+          printf '%s' "$password" | gh secret set ANDROID_SIGNING_STORE_PASSWORD --repo "$GITHUB_REPOSITORY"
+          printf '%s' "$password" | gh secret set ANDROID_SIGNING_KEY_PASSWORD --repo "$GITHUB_REPOSITORY"
+          printf '%s' delvers-release | gh secret set ANDROID_SIGNING_KEY_ALIAS --repo "$GITHUB_REPOSITORY"
+          base64 --wrap=0 "$work/delvers-release.jks" | gh secret set ANDROID_SIGNING_KEYSTORE_BASE64 --repo "$GITHUB_REPOSITORY"
+          echo "Signing secrets installed. Download the encrypted backup, register the SHA-1 in Firebase, then run verify_release." >> "$GITHUB_STEP_SUMMARY"
+          echo "Revoke the temporary token and delete ANDROID_SIGNING_SETUP_TOKEN after setup. Never rerun setup to fix a partially installed key; recover from the encrypted backup instead." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          rm -rf -- "$RUNNER_TEMP/delvers-signing-setup"
+          rm -f -- "$RUNNER_TEMP/delvers-signing-backup.tar.gpg"
   build:
+    if: ${{ !inputs.setup_signing }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
