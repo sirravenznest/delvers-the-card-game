@@ -8,6 +8,7 @@ let browser;
  p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{localStorage.delvers_mute='1';localStorage.delvers_consent='2026-11-09'});
  await p.goto(process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html');
+ await p.locator('.titleActions .pri').click();
  await p.evaluate(()=>{const timeout=window.setTimeout.bind(window);window.setTimeout=(fn,ms,...a)=>timeout(fn,Math.min(ms,2),...a);S.sp='done';S.deck=STARTERS[0].list.slice();for(const n of S.deck)S.col[n]=Math.max(3,S.col[n]||0)});
  for(const [oi,tier] of [[0,1],[2,1],[29,3],[59,1]]){
   const before=await p.evaluate(({oi,tier})=>{S.prog=oi;S.stars[oi]=tier-1;newGame(oi,tier);V.intro=null;render();return{gold:S.gold,win:rew(CAMP[oi],oi,tier),loss:Math.round(lossG(CAMP[oi])*TM[tier])}},{oi,tier});

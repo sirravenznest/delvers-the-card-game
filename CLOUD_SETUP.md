@@ -13,12 +13,40 @@
      }
    }
    ```
-4. **Project settings → Your apps → Add Android app:** package `com.sirravenznest.delvers`, SHA-1 `F2:57:2E:6B:48:F6:92:99:13:DC:B3:FF:C7:2D:36:D9:D2:88:E5:A2` (SHA-256 `3E:C5:1E:23:66:5B:9D:93:DE:3F:62:6F:F3:4D:B5:F8:5A:C7:63:DD:4C:65:11:05:30:F0:30:E3:D8:17:F5:92`).
+4. **Project settings → Your apps → Android app:** package `com.sirravenznest.delvers`. Add the release signing key's SHA-1 fingerprint as described below. Keep the previous fingerprint registered until users have migrated.
 5. Collect three values:
    - `apiKey`: Project settings → General → Web API Key.
    - `projectId`: Project settings → General.
    - `webClientId`: Authentication → Google provider → Web SDK configuration → Web client ID (or Google Cloud → Credentials → "Web client (auto created by Google Service)").
 6. Put them in the `CLOUD` constant in `app/src/main/assets/index.html` and merge. CI builds the APK. These are public identifiers, not secrets.
+
+## Release signing key migration (2.2.14)
+
+The previously committed signing key is compromised and must not be used for new releases. Releases from 2.2.14 use a new signing key. Existing installations cannot update across this certificate change: sync progress with Cloud Save, uninstall the old app, and then install the new APK. Uninstalling deletes local-only progress because Android backup is disabled. Installations signed with the new key can update normally from later releases.
+
+Create a new key on a trusted machine and keep an encrypted offline backup. Do not commit the keystore or passwords:
+
+```sh
+keytool -genkeypair -v -keystore delvers-release.jks -alias delvers-release -keyalg RSA -keysize 3072 -validity 10000
+keytool -list -v -keystore delvers-release.jks -alias delvers-release
+```
+
+In the repository's **Settings → Secrets and variables → Actions**, add these repository secrets:
+
+- `ANDROID_SIGNING_KEYSTORE_BASE64`: the base64-encoded keystore file.
+- `ANDROID_SIGNING_STORE_PASSWORD`: the keystore password.
+- `ANDROID_SIGNING_KEY_ALIAS`: `delvers-release` (or the alias chosen when creating the key).
+- `ANDROID_SIGNING_KEY_PASSWORD`: the private-key password.
+
+On Linux or macOS with GitHub CLI authenticated, stream the keystore directly into the repository secret without printing its contents:
+
+```sh
+base64 delvers-release.jks | tr -d '\n' | gh secret set ANDROID_SIGNING_KEYSTORE_BASE64 --repo sirravenznest/delvers-the-card-game
+```
+
+Set the three password/alias secrets through the same repository settings page.
+
+Register the new key's SHA-1 fingerprint with the Firebase Android app and Google OAuth Android client before publishing; retain the old fingerprint temporarily so users can sync from the previous release. Remove the old fingerprint after migration. Pull-request builds use a temporary debug key and never need release-signing secrets. Main-branch release builds fail explicitly until all four secrets are configured.
 
 ## Online play (ranked, friends, private games)
 

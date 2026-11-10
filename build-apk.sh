@@ -6,7 +6,7 @@ BUILD="$ROOT/build/apk"
 ANDROID_JAR="${ANDROID_JAR:-/usr/lib/android-sdk/platforms/android-23/android.jar}"
 PACKAGE="com.sirravenznest.delvers"
 
-for tool in aapt apksigner keytool smali zip zipalign; do
+for tool in aapt apksigner smali zip zipalign; do
     command -v "$tool" >/dev/null 2>&1 || { echo "Missing required tool: $tool" >&2; exit 1; }
 done
 test -f "$ANDROID_JAR" || { echo "Android platform jar not found: $ANDROID_JAR" >&2; exit 1; }
@@ -17,8 +17,8 @@ sed 's/<manifest /<manifest package="com.sirravenznest.delvers" /' \
 aapt package -f \
     --min-sdk-version 23 \
     --target-sdk-version 28 \
-    --version-code 8 \
-    --version-name 1.7 \
+    --version-code 28 \
+    --version-name 2.2.14 \
     --rename-manifest-package "$PACKAGE" \
     -M "$BUILD/AndroidManifest.xml" \
     -I "$ANDROID_JAR" \
@@ -29,27 +29,19 @@ smali assemble --api 23 "$ROOT/apk-fallback/MainActivity.smali" -o "$BUILD/class
 zip -q -j "$BUILD/unsigned.apk" "$BUILD/classes.dex"
 zipalign -f -p 4 "$BUILD/unsigned.apk" "$BUILD/aligned.apk"
 
-KEYSTORE="${DEBUG_KEYSTORE:-$HOME/.android/debug.keystore}"
-if [[ ! -f "$KEYSTORE" ]]; then
-    mkdir -p "$(dirname "$KEYSTORE")"
-    keytool -genkeypair -noprompt \
-        -keystore "$KEYSTORE" \
-        -storepass android \
-        -alias androiddebugkey \
-        -keypass android \
-        -keyalg RSA \
-        -keysize 2048 \
-        -validity 10000 \
-        -dname "CN=Android Debug,O=Android,C=US"
-fi
+KEYSTORE="${ANDROID_SIGNING_KEYSTORE:-}"
+test -n "$KEYSTORE" && test -f "$KEYSTORE" || { echo "Set ANDROID_SIGNING_KEYSTORE to your protected release keystore." >&2; exit 1; }
+: "${ANDROID_SIGNING_STORE_PASSWORD:?Set ANDROID_SIGNING_STORE_PASSWORD}"
+: "${ANDROID_SIGNING_KEY_ALIAS:?Set ANDROID_SIGNING_KEY_ALIAS}"
+: "${ANDROID_SIGNING_KEY_PASSWORD:?Set ANDROID_SIGNING_KEY_PASSWORD}"
 
 APK="$ROOT/app/build/outputs/apk/debug/app-debug.apk"
 mkdir -p "$(dirname "$APK")"
 apksigner sign \
     --ks "$KEYSTORE" \
-    --ks-pass pass:android \
-    --key-pass pass:android \
-    --ks-key-alias androiddebugkey \
+    --ks-pass env:ANDROID_SIGNING_STORE_PASSWORD \
+    --key-pass env:ANDROID_SIGNING_KEY_PASSWORD \
+    --ks-key-alias "$ANDROID_SIGNING_KEY_ALIAS" \
     --out "$APK" \
     "$BUILD/aligned.apk"
 apksigner verify --verbose "$APK"

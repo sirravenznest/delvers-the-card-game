@@ -3,10 +3,10 @@ name: Android build
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['app/**', 'build.gradle', 'settings.gradle', 'android-signing/**', '.github/workflows/android.yml']
+    paths: ['app/**', 'build.gradle', 'settings.gradle', '.github/workflows/android.yml']
   push:
     branches: [main]
-    paths: ['app/**', 'build.gradle', 'settings.gradle', 'android-signing/**', '.github/workflows/android.yml']
+    paths: ['app/**', 'build.gradle', 'settings.gradle', '.github/workflows/android.yml']
 
 permissions:
   contents: write
@@ -23,24 +23,57 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10.2
-      - name: Build signed APK
+      - name: Build debug APK for pull requests
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Check release signing secrets and prepare keystore
+        if: github.ref == 'refs/heads/main'
+        env:
+          ANDROID_SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_SIGNING_KEYSTORE_BASE64" || { echo "Missing ANDROID_SIGNING_KEYSTORE_BASE64 repository secret." >&2; exit 1; }
+          test -n "$ANDROID_SIGNING_STORE_PASSWORD" || { echo "Missing ANDROID_SIGNING_STORE_PASSWORD repository secret." >&2; exit 1; }
+          test -n "$ANDROID_SIGNING_KEY_ALIAS" || { echo "Missing ANDROID_SIGNING_KEY_ALIAS repository secret." >&2; exit 1; }
+          test -n "$ANDROID_SIGNING_KEY_PASSWORD" || { echo "Missing ANDROID_SIGNING_KEY_PASSWORD repository secret." >&2; exit 1; }
+          printf '%s' "$ANDROID_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/delvers-release.jks"
+          chmod 600 "$RUNNER_TEMP/delvers-release.jks"
+          echo "ANDROID_SIGNING_KEYSTORE=$RUNNER_TEMP/delvers-release.jks" >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        if: github.ref == 'refs/heads/main'
+        env:
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: gradle --no-daemon :app:assembleRelease
-      - name: Name the APK
+      - name: Name and verify release APK
+        if: github.ref == 'refs/heads/main'
         id: apk
         run: |
           V=$(grep -oP 'versionName "\K[^"]+' app/build.gradle)
           cp app/build/outputs/apk/release/app-release.apk "Delvers-$V.apk"
           echo "name=Delvers-$V.apk" >> "$GITHUB_OUTPUT"
           $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --print-certs "Delvers-$V.apk" | head -3
-      - uses: actions/upload-artifact@v4
+      - name: Upload release APK artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
         with:
           name: Delvers-android-apk
           path: ${{ steps.apk.outputs.name }}
+      - name: Upload pull request debug APK artifact
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+        uses: actions/upload-artifact@v4
+        with:
+          name: Delvers-android-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publish to the android-latest release
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Delvers for Android (latest)" --notes "Latest Android build of the main branch. Download the APK and install it (allow installs from this source)."
+          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Delvers for Android (latest)" --notes "Android signing key changed in 2.2.14. Back up progress to Cloud Save before upgrading. The new APK cannot update an older install: uninstall the old app (this deletes local-only progress), then install this APK. Future releases will update normally."
           for f in $(gh release view android-latest --json assets -q '.assets[].name'); do gh release delete-asset android-latest "$f" -y; done
+          gh release edit android-latest --notes "Android signing key changed in 2.2.14. Back up progress to Cloud Save before upgrading. The new APK cannot update an older install: uninstall the old app (this deletes local-only progress), then install this APK. Future releases will update normally."
           gh release upload android-latest "${{ steps.apk.outputs.name }}" --clobber

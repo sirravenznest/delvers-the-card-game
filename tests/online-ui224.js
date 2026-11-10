@@ -16,6 +16,7 @@ async function player(uid,name){
  });
  await context.route(/googleapis\.com/,route=>route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'{}'}));
  const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(url);
+ await p.click('[data-a="titlecontinue"]');
  await p.evaluate(({uid})=>{
   const n=uid=='landBob'?29:20;
   S.deck=[...ALL.filter(c=>c.rar==0).slice(0,10).flatMap(c=>Array(3).fill(c.name)).slice(0,n-6),...Array(3).fill(ALL.find(c=>c.rar==2).name),...Array(3).fill(ALL.find(c=>c.rar==3).name)];
@@ -98,7 +99,7 @@ async function run(){
  await C.p.waitForFunction(()=>G.over&&NET.rec&&NET.rec.l==1,{timeout:15000});
  const record=await C.p.evaluate(()=>({r:NET.rec.r,l:NET.rec.l}));
  assert(record.r<1000&&record.l==1,'rated bot loss persisted');
- await C.p.reload();await C.p.evaluate(()=>{V.v='ranked';render()});
+ await C.p.reload();await C.p.click('[data-a="titlecontinue"]');await C.p.evaluate(()=>{V.v='ranked';render()});
  await C.p.waitForFunction(()=>NET&&NET.rec&&NET.rec.l==1,{timeout:15000});
  assert.deepEqual(C.errors,[]);
  await C.context.close();console.log('PASS automatic 20-second rated bot, AI turn, loss rating and reload');

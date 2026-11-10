@@ -21,6 +21,7 @@ async function run(){
   const p=await context.newPage(),errors=[];
   p.on('pageerror',e=>errors.push(e.message));
   await p.goto(url);
+  await p.locator('.titleActions .pri').click();
   assert.equal(await p.locator('[data-v="emotes"]').count(),0,'no separate emote menu destination');
   assert.equal(await p.evaluate(()=>S.cosmetics.emotes.length),6,'new players start with all six text phrases');
   await p.click('.hubTile[data-v="store"]');
@@ -56,7 +57,7 @@ async function run(){
   assert(await p.locator('[data-a="emoteunlock"][data-k="heart"]').isDisabled(),'insufficient gold blocks graphics');
   assert((await p.locator('[data-emote="heart"]').innerText()).includes('Need 300 more gold'));
   await p.evaluate(()=>{S.cosmetics.emotes=['hello','goodgame','ember'];sv()});
-  await p.reload();
+  await p.reload();await p.click('[data-a="titlecontinue"]');
   assert.deepEqual(await p.evaluate(()=>({gold:S.gold,owned:S.cosmetics.emotes.includes('ember'),text:DelversEmotes.defaults.every(id=>S.cosmetics.emotes.includes(id))})),{gold:50,owned:true,text:true},'existing saves retain graphics and gain all text emotes without spending gold');
   await p.click('.hubTile[data-v="profile"]');
   assert.equal(await p.locator('.emoteProduct,[data-a="emotemute"],[data-v="emotes"]').count(),0,'Profile has no redundant emote section');
@@ -95,7 +96,7 @@ async function run(){
   await p.click('#ov [data-a="logtoggle"]');
   assert(await p.locator('#battleLog').isVisible(),'results retain combat review');
   await p.keyboard.press('Escape');
-  await p.reload();
+  await p.reload();await p.click('[data-a="titlecontinue"]');
   assert(await p.evaluate(()=>S.emotesMuted),'mute preference persists without a duplicate menu control');
   assert.deepEqual(errors,[]);
   console.log('PASS default text, Store graphics, previews, saves, combat-only picker and clean results',width,height);
