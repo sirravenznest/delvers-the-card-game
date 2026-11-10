@@ -323,7 +323,8 @@ body.lesson [data-a="auto"]{display:none}
 .storyToolbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;flex:none}
 .storyToolbar>.btn{font-size:12px;padding:5px 8px;min-height:30px}
 .storyToolbar .storyContinue{font-size:12px;padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0}
-.chapterControls{display:flex;align-items:center;gap:8px;font-size:12px}.chapterControls .btn{padding:3px 9px;min-height:30px}
+.chapterControls{display:flex;align-items:center;gap:5px;font-size:12px}.chapterControls .btn{padding:3px 6px;min-height:30px;font-size:10px;white-space:nowrap}.chapterControls b{white-space:nowrap}
+.storyProgress{display:flex;align-items:center;gap:8px;min-height:15px;font:10px Arial,sans-serif;color:#d9c9a7}.storyProgress>span:first-child{flex:none}.storyProgressTrack{display:block;flex:1;height:6px;overflow:hidden;border:1px solid #6a5638;border-radius:4px;background:#111625}.storyProgressTrack i{display:block;height:100%;background:#e0884a}
 body[data-view="duel"] #app{gap:5px}
 body[data-view="duel"] #app>.navbar,body[data-view="duel"] #app>.navbar+.sw{display:none}
 .book{position:relative;isolation:isolate;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1;min-height:178px;margin:6px 3px 9px;border:8px solid #55301e;border-bottom-width:12px;border-radius:12px 12px 17px 17px;outline:1px solid #bc9559;background:#e8d4a9;box-shadow:0 2px 0 #ad8b59,0 5px 0 #e7ce9e,0 7px 0 #68503c,0 9px 0 #d9c092,0 13px 0 #352018,0 17px 22px #000b}
@@ -346,7 +347,7 @@ body[data-view="duel"] #app>.navbar,body[data-view="duel"] #app>.navbar+.sw{disp
 .bookPages .btn{font:12px Georgia,serif;background:transparent;color:#543823;border:1px solid #9a774e;padding:5px 8px;min-height:28px}
 .bookPages .btn.pri{background:#e2c893;color:#432a1c;box-shadow:inset 0 0 0 1px #f8edcb}
 .pageFolio{display:flex;justify-content:space-between;align-items:center;flex:none;height:30px;margin-top:3px;border-top:1px solid #98794d66;color:#79603e;font:11px Georgia,serif}
-.pageFolio .btn{min-height:24px;padding:0 8px;border:0;font-size:20px}
+.pageFolio .btn{min-height:24px;padding:0 8px;border:0;font-size:20px}.bookNav .btn{min-height:24px;padding:0 5px;font-size:10px;white-space:nowrap}.bookNav>span{font-size:10px;text-align:center;white-space:nowrap}
 .bookHint{font:italic 11px/1.3 Georgia,serif;display:block;margin:7px 0;color:#6b563b}
 .bookmark{position:absolute;z-index:3;top:-8px;right:26px;width:18px;height:40px;background:linear-gradient(90deg,#783425,#b75239,#783425);clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);box-shadow:2px 2px 3px #0006;pointer-events:none}
 .bookArt{position:relative}.journeyMap{width:100%;height:100%;background:#14151b4d}
@@ -433,5 +434,7 @@ body.battle .emoteBubble.p{top:auto;bottom:calc(var(--battle-card-height) + 32px
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}}
 
 body.menu.hubbg{background:linear-gradient(#0b0f1ae6,#0b0f1a00 38%) center/cover no-repeat fixed,var(--bgh) center bottom/cover no-repeat fixed,var(--bg)}
+
+body.battle{background-color:var(--bg);background-image:linear-gradient(180deg,#0b0f1acc,#10141b99 45%,#0b0f1ae6),var(--bgb);background-position:center,center;background-size:cover,cover;background-repeat:no-repeat,no-repeat;background-attachment:fixed,fixed}
 
 body.hubbg .welcome{background:#2a2118e6}
