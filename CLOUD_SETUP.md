@@ -48,6 +48,8 @@ Set the three password/alias secrets through the same repository settings page.
 
 Register the new key's SHA-1 fingerprint with the Firebase Android app and Google OAuth Android client before publishing; retain the old fingerprint temporarily so users can sync from the previous release. Remove the old fingerprint after migration. Pull-request builds use a temporary debug key and never need release-signing secrets. Main-branch release builds fail explicitly until all four secrets are configured.
 
+To verify signing before merging, run **Actions → Android build → Run workflow**, select the feature branch, and enable **Build and verify a signed APK without publishing a release**. This checks that the secrets exist, builds a release APK, verifies its signature and reports the public certificate fingerprints. It uploads an APK artifact but never publishes or replaces the public release. Secret values are not printed.
+
 ## Online play (ranked, friends, private games)
 
 1. In the Firebase console enable **Realtime Database** (free Spark plan, no billing).

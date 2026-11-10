@@ -2,6 +2,11 @@ name: Android build
 
 on:
   workflow_dispatch:
+    inputs:
+      verify_release:
+        description: Build and verify a signed APK without publishing a release
+        type: boolean
+        default: false
   pull_request:
     paths: ['app/**', 'build.gradle', 'settings.gradle', '.github/workflows/android.yml']
   push:
@@ -24,10 +29,10 @@ jobs:
         with:
           gradle-version: 8.10.2
       - name: Build debug APK for pull requests
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && !inputs.verify_release)
         run: gradle --no-daemon :app:assembleDebug
       - name: Check release signing secrets and prepare keystore
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.verify_release)
         env:
           ANDROID_SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
@@ -42,14 +47,14 @@ jobs:
           chmod 600 "$RUNNER_TEMP/delvers-release.jks"
           echo "ANDROID_SIGNING_KEYSTORE=$RUNNER_TEMP/delvers-release.jks" >> "$GITHUB_ENV"
       - name: Build signed release APK
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.verify_release)
         env:
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: gradle --no-daemon :app:assembleRelease
       - name: Name and verify release APK
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.verify_release)
         id: apk
         run: |
           V=$(grep -oP 'versionName "\K[^"]+' app/build.gradle)
@@ -57,19 +62,19 @@ jobs:
           echo "name=Delvers-$V.apk" >> "$GITHUB_OUTPUT"
           $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner verify --print-certs "Delvers-$V.apk" | head -3
       - name: Upload release APK artifact
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.verify_release)
         uses: actions/upload-artifact@v4
         with:
           name: Delvers-android-apk
           path: ${{ steps.apk.outputs.name }}
       - name: Upload pull request debug APK artifact
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && !inputs.verify_release)
         uses: actions/upload-artifact@v4
         with:
           name: Delvers-android-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Publish to the android-latest release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && !inputs.verify_release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
