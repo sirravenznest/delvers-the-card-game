@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.12
+
+Ranked and friendly battle intros stay mounted during network refreshes, preventing the entrance animation from restarting and preserving button focus and scroll position.
+
+Castable hand cards use their green border and background highlight without visible status strips. Unavailable cards retain muted dashed borders, and screen-reader labels retain availability and blocked reasons.
+
 ## 2.2.11
 
 Turn changes have a full-width status banner above the battlefield and a brief border highlight, without turn sounds or vibration. The banner stays outside the card and control areas and respects reduced-motion preferences.

@@ -235,12 +235,13 @@ async function run(){
  assert.deepEqual(deckSquire,battleSquire,'deck and battle show the same creature rules and stats');
  const handStates=await deckPage.evaluate(()=>{
   G.p.mp=10;G.p.max=10;render();const ready=document.querySelector('.hand .card');
-  const playable=ready.dataset.playState=='PLAYABLE'&&getComputedStyle(ready).borderTopStyle=='solid'&&ready.getAttribute('aria-disabled')=='false';
+  const noStatusText=card=>['none','normal','""'].includes(getComputedStyle(card,'::after').content)&&!card.textContent.includes(card.dataset.playState);
+  const playable=ready.dataset.playState=='PLAYABLE'&&getComputedStyle(ready).borderTopStyle=='solid'&&getComputedStyle(ready).borderTopColor=='rgb(142, 228, 176)'&&ready.getAttribute('aria-disabled')=='false'&&noStatusText(ready);
   G.p.mp=0;render();const blocked=document.querySelector('.hand .card');
-  const mana=blocked.dataset.playState.startsWith('Need ')&&getComputedStyle(blocked).borderTopStyle=='dashed'&&blocked.getAttribute('aria-disabled')=='true';
-  G.turn='e';render();const foe=document.querySelector('.hand .card').dataset.playState=='Foe’s turn';
+  const mana=blocked.dataset.playState.startsWith('Need ')&&getComputedStyle(blocked).borderTopStyle=='dashed'&&blocked.getAttribute('aria-disabled')=='true'&&noStatusText(blocked);
+  G.turn='e';render();const foe=document.querySelector('.hand .card').dataset.playState=='Foe’s turn'&&noStatusText(document.querySelector('.hand .card'));
   G.turn='p';G.p.mp=10;G.b=Array(NT).fill(null);for(const i of BACK)G.b[i]=mk(BN.Squire);render();
-  const full=document.querySelector('.hand .card').dataset.playState=='Back row full';
+  const full=document.querySelector('.hand .card').dataset.playState=='Back row full'&&noStatusText(document.querySelector('.hand .card'));
   G.b=Array(NT).fill(null);render();return{playable,mana,foe,full};
  });
  assert.deepEqual(handStates,{playable:true,mana:true,foe:true,full:true},'hand distinguishes playable cards, insufficient mana, foe turn and full deployment row');

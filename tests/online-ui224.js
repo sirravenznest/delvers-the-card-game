@@ -25,7 +25,17 @@ async function player(uid,name){
  assert(!(await p.locator('#app').innerText()).includes('Needs exactly 30 cards'));
  return {p,context,errors};
 }
-async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
+async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);
+ await p.waitForTimeout(650);
+ const stableIntro=await p.evaluate(()=>{
+  const intro=document.querySelector('#intro'),box=intro.querySelector('.introBox'),button=intro.querySelector('[data-a="battleintro"]');
+  button.focus();box.scrollTop=5;
+  const scroll=box.scrollTop,animations=box.getAnimations(),time=animations[0]?.currentTime;
+  for(let i=0;i<3;i++)pvSync();
+  return{same:intro===document.querySelector('#intro'),focus:document.activeElement===button,scroll:box.scrollTop===scroll,animation:box.getAnimations()[0]===animations[0]&&box.getAnimations()[0]?.currentTime===time,count:document.querySelectorAll('#intro').length};
+ });
+ assert.deepEqual(stableIntro,{same:true,focus:true,scroll:true,animation:true,count:1},'ranked polling preserves intro node, completed animation, focus and scroll without flicker');
+ const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert.equal(await p.locator('#intro').count(),0,'Begin battle dismisses preserved intro');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
  assert(await p.evaluate(()=>document.querySelector('.hw').getBoundingClientRect().top>=document.querySelector('.board').getBoundingClientRect().bottom),'online hand is below the board');
  assert.equal(await p.locator('.combatActions [data-a="quit"]').count(),0,'online combat has Resign, not a redundant inactive Quit');
  assert.equal(await p.locator('.turn .turnState').textContent(),await p.evaluate(()=>G.turn=='p'?'YOUR TURN':'FOE’S TURN'),'turn banner is relative to the online viewer');

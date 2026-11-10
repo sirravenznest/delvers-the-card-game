@@ -899,6 +899,7 @@ const SB=(ax,l)=>ax=='x'?`<button class="sar b x" data-a="sar" data-d="-1" aria-
 // Shows scroll arrows only in the directions a scroller can still move.
 function sarUpdate(){$app.querySelectorAll('.sc').forEach(sc=>{const v=sc.classList.contains('v'),sw=v?sc:sc.parentNode,p=v?sc.scrollTop:sc.scrollLeft,sz=v?sc.clientHeight:sc.clientWidth,tot=v?sc.scrollHeight:sc.scrollWidth;
  sw.querySelectorAll('.sar').forEach(b=>{b.hidden=b.classList.contains('b')?p<4:p+sz>=tot-4})})}
+let renderedIntro=null;
 function render(){
  musicSet(G?(G.over?null:'battle'):V.pk?'pack':V.v=='hub'&&!V.priv&&V.brief==null&&!V.pick?'hub':'menu');
  document.documentElement.style.setProperty('--bgb',G?sceneFor(G.pvp&&V.pv?String(V.pv.mid):G.oi):BGB);
@@ -910,7 +911,16 @@ function render(){
  const logFocus=$app.querySelector('#battleLog')?.contains(document.activeElement)?{a:document.activeElement.dataset.a,k:document.activeElement.dataset.k,entries:document.activeElement.classList.contains('logEntries')}:null;
  const emoteFocus=$app.querySelector('#emoteDialog')?.contains(document.activeElement)?{a:document.activeElement.dataset.a,k:document.activeElement.dataset.k}:null;
  const keep=[...$app.querySelectorAll('.sc')].map(e=>[e.scrollLeft,e.scrollTop,e.className]);
- $app.innerHTML=G?gameHTML():menuHTML()+(V.pk?pkHTML():'')+emotePreviewHTML();
+ const html=G?gameHTML():menuHTML()+(V.pk?pkHTML():'')+emotePreviewHTML();
+ const intro=G&&V.intro&&V.intro===renderedIntro?$app.querySelector('#intro'):null;
+ if(intro){
+  const next=document.createElement('template');next.innerHTML=html;
+  next.content.querySelector('#intro').remove();
+  // Keep the intro attached so polling cannot restart its animation or lose focus.
+  [...$app.childNodes].filter(node=>node!==intro).forEach(node=>node.remove());
+  $app.insertBefore(next.content,intro);
+ }else $app.innerHTML=html;
+ renderedIntro=G?V.intro:null;
  turnNoticeSync();
  if(G&&!G.over)$app.querySelector('.combatActions').insertAdjacentHTML('beforeend','<button class="btn" data-a="logtoggle" aria-label="Review combat log">Log</button>'+(!G.tut?`<button class="btn" data-a="emotetoggle" aria-label="Battle emotes" aria-haspopup="dialog" aria-expanded="${!!V.emoteOpen}">Emote</button>`:''));
  // Guided fixtures give occupied rows room for all six stats.
