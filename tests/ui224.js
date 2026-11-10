@@ -11,7 +11,9 @@ async function pageFor(w,h){
  await context.addInitScript(()=>{localStorage.setItem('delvers_mute','1');if(!localStorage.getItem('delvers_consent'))localStorage.setItem('delvers_consent','2026-11-09')});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(URL);await page.locator('.titleActions .pri').click();await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
+ await page.goto(URL);await page.locator('.titleActions .pri').click();
+ assert(await page.locator('[aria-labelledby="welcomeName"]').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1&&e.scrollWidth<=e.clientWidth+1}),'tutorial welcome fits landscape');
+ await page.click('[data-a="tutskipmenu"]');await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
  return {page,context,errors};
 }
 async function run(){
@@ -32,7 +34,13 @@ async function run(){
  assert.equal(await intro.locator('.titleScreen').count(),1,'accepting privacy returns to the title screen');
  assert(await intro.evaluate(()=>agreed()),'online consent is recorded');
  await intro.click('[data-a="titleoffline"]');
- assert.equal(await intro.locator('.hubTile').count(),11,'offline play starts without a Google account');
+ assert.equal(await intro.locator('#welcomeName').count(),1,'new players get the tutorial choice after the title');
+ assert.equal(await intro.locator('.hubTile').count(),0,'welcome comes before the full hub');
+ await intro.click('[data-a="tutstart"]');
+ assert(await intro.evaluate(()=>G.tut&&G.lesson.step===0),'Learn to play starts the first guided lesson');
+ await intro.click('[data-a="tutskip"]');
+ assert.equal(await intro.locator('.hubTile').count(),11,'skipping the lesson enters the hub without an account');
+ assert.equal(await intro.evaluate(()=>S.sp),'none','skip is saved for future launches');
  const returning=await intro.evaluate(()=>{S.gold=731;S.prog=4;sv();return S});
  await intro.evaluate(()=>{localStorage.setItem('delvers_mute','1');localStorage.setItem('delvers_mus','1');localStorage.setItem('delvers_title_seen','1')});
  await intro.reload();
@@ -45,6 +53,10 @@ async function run(){
  assert.equal(await intro.locator('.hubTile').count(),11,'Continue immediately enters the hub without waiting for animation');
  await intro.locator('.hubTile[data-v="deck"]').click();
  assert.equal(await intro.locator('.titleScreen').count(),0,'normal menu navigation does not replay the title');
+ await intro.evaluate(()=>{S.sp='done';sv()});await intro.reload();await intro.click('[data-a="titlecontinue"]');
+ assert.equal(await intro.locator('#welcomeName').count(),0,'completed tutorials are not prompted again');
+ await intro.evaluate(()=>{S.sp='ptut';sv()});await intro.reload();await intro.click('[data-a="titlecontinue"]');
+ assert.equal(await intro.locator('[data-a="openpick"]').count(),1,'earned starter-deck choice is not replaced by onboarding');
  await firstRun.close();
  for(const [w,h] of sizes){
   const {page:p,context,errors}=await pageFor(w,h);
@@ -55,6 +67,7 @@ async function run(){
   for(const tab of tabs){
    await p.evaluate(tab=>{V.v=tab;V.fo=false;render()},tab);
    assert(await p.locator(`[data-v="${tab}"].on`).count(),`${w} ${tab} selected`);
+   assert.equal(await p.locator('small.set').count(),['cards','deck','packs'].includes(tab)?1:0,`${tab}: set text is limited to card-related screens`);
    const dims=await p.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,app:document.getElementById('app').getBoundingClientRect().right>innerWidth+1}));
    assert(!dims.overflow&&!dims.app,`${w}x${h}: ${tab} fits horizontally`);
    if(tab=='cards')assert(await p.locator('.main .card').first().evaluate(e=>e.getBoundingClientRect().top<innerHeight-60),'cards immediately visible beside tools');
