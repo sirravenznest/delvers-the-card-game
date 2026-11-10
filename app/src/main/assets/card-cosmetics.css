@@ -1,4 +1,9 @@
 .dustBalance{display:block;color:#bcecff;font:10px/1 Arial,sans-serif;white-space:nowrap}
+.tutorialMenus{flex-shrink:0;gap:8px;padding:8px;border:2px solid #91caff;max-height:120px}
+.tutorialMenus>div{min-width:0;overflow:auto;max-height:96px}
+.tutorialMenus p{margin:4px 0;font:13px/1.3 Arial,sans-serif}
+.tutorialMenus .btn{flex-shrink:0;min-height:44px;max-width:145px;white-space:normal}
+@media(max-height:420px){.tutorialMenus{max-height:88px;padding:5px}.tutorialMenus>div{max-height:70px}.tutorialMenus p{font-size:12px}}
 .card[class*="cc-"],.tile[class*="cc-"]{isolation:isolate}
 .card.rar2::after,.card.rar3::after{content:none}
 .cc-frame-silver{--cf-frame:#dce4ef}.cc-frame-red{--cf-frame:#ff8c90}.cc-frame-blue{--cf-frame:#91caff}.cc-frame-gold{--cf-frame:#ffe297}

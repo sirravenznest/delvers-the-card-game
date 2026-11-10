@@ -1,0 +1,131 @@
+// Local browser fixtures only; never contacts production services.
+const assert=require('node:assert/strict');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
+const url=process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html';
+let browser;
+async function player(save,failGrant=false){
+ const context=await browser.newContext({viewport:{width:568,height:320},hasTouch:true});
+ await context.route(/googleapis\.com|firebaseio\.com/,route=>route.abort());
+ await context.addInitScript(save=>{
+  localStorage.delvers_mute='1';localStorage.delvers_mus='1';localStorage.delvers_consent='2026-11-09';
+  if(save&&!localStorage.initialized){localStorage.delvers2=JSON.stringify(save);localStorage.initialized='1'}
+ },save);
+ const page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(url);if(failGrant)await failStorage(page);await page.locator('.titleActions .pri').click();
+ return{context,page,errors};
+}
+async function reload(page){
+ await page.reload();await page.locator('.titleActions .pri').click();
+}
+async function failStorage(page){
+ await page.evaluate(()=>{
+  window.originalSetItem=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,value){if(key===SAVE_KEY)throw new DOMException('Storage full','QuotaExceededError');return originalSetItem.call(this,key,value)};
+ });
+}
+async function restoreStorage(page){await page.evaluate(()=>{Storage.prototype.setItem=window.originalSetItem})}
+(async()=>{
+ browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});
+ const x=await player(),p=x.page;
+ await p.click('[data-a="tutskipmenu"]');
+ assert.equal(await p.evaluate(()=>S.packs.std),0,'skipping never awards the completion pack');
+ await p.evaluate(()=>{startPractice();G.over='e';render()});
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'locked','losing does not unlock the reward');
+ await p.click('#ov [data-a="quit"]',{force:true});
+ await p.evaluate(()=>{startPractice();G.over='p';render()});
+ assert.equal(await p.evaluate(()=>S.packs.std),1,'winning awards the free pack even before choosing the starter');
+ await p.click('#ov [data-a="quit"]',{force:true});
+ const beforePick=await p.evaluate(()=>({gold:S.gold,count:Object.values(S.col).reduce((a,b)=>a+b,0)}));
+ await failStorage(p);
+ await p.click('[data-a="pickst"][data-id="iron"]');
+ assert.equal(await p.evaluate(()=>S.packs.std),1,'failed starter save does not duplicate the completion pack');
+ assert.equal(await p.evaluate(()=>S.sp),'ptut','failed reward save preserves the starter choice');
+ assert.match(await p.locator('[role="alert"]').innerText(),/could not be saved/i,'failed starter selection shows a visible error');
+ await restoreStorage(p);
+ await p.click('[data-a="pickst"][data-id="iron"]');
+ assert.equal(await p.evaluate(()=>V.v),'packs','starter selection leads into the pack section');
+ assert.deepEqual(await p.evaluate(()=>({gold:S.gold,count:Object.values(S.col).reduce((a,b)=>a+b,0)})),{gold:beforePick.gold,count:beforePick.count+30});
+ assert.equal(await p.evaluate(()=>S.packs.std),1,'completion gives exactly one free Standard pack');
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'pack');
+ const starter=await p.evaluate(()=>S.deck.slice());
+ await reload(p);
+ assert.equal(await p.evaluate(()=>S.packs.std),1,'reload never grants another completion pack');
+ await p.evaluate(()=>{S.packs.t3=2;sv()});
+ await failStorage(p);
+ await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'pack','failed pack save rolls the lesson and rewards back');
+ assert.equal(await p.evaluate(()=>S.packs.std),1);
+ assert.equal(await p.locator('.pkov').count(),0,'failed acquisition never starts a success-shaped reveal');
+ await restoreStorage(p);
+ await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.evaluate(()=>S.packs.std),0);
+ assert.equal(await p.evaluate(()=>S.packs.t3),2,'tutorial consumes Standard, not an existing higher-tier pack');
+ const obtained=await p.evaluate(()=>S.tutorialMenus.cards);
+ assert.equal(obtained.length,5,'free pack uses real five-card acquisition');
+ await reload(p);
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'review','closing during opening resumes at the saved review');
+ await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.locator('#packReview .card').count(),5);
+ assert.match(await p.locator('#packReview').innerText(),/TUTORIAL|gold and Arcane Dust/);
+ await failStorage(p);
+ await p.click('[data-a="packreviewclose"]');
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'review','failed lesson save cannot skip the saved review');
+ assert.match(await p.locator('#packReview').innerText(),/could not be saved/i);
+ await restoreStorage(p);
+ await p.click('[data-a="packreviewclose"]');
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'currencies');
+ assert.match(await p.locator('#tutorialMenus').innerText(),/Gold & Arcane Dust/);
+ assert.equal(await p.locator('#packReview,.packReviewCards').count(),0,'currency section does not retain pack results in the menu');
+ await reload(p);
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'currencies','currency progress survives reload');
+ await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.evaluate(()=>V.v),'deck','currency section leads into the real deck builder');
+ assert(await p.locator('#tutorialMenus [data-a="tutorialmenus"]').isDisabled(),'deck lesson requires a real quantity change');
+ for(const [width,height] of [[568,320],[844,390],[1280,720]]){
+  await p.setViewportSize({width,height});
+  assert(await p.locator('#tutorialMenus').evaluate(e=>{
+   const r=e.getBoundingClientRect(),button=e.querySelector('button').getBoundingClientRect();
+   return r.top>=0&&r.right<=innerWidth+1&&button.bottom<=innerHeight;
+  }),'guided deck controls fit '+width+'x'+height);
+  assert(await p.locator('.deckCardGrid').evaluate(e=>e.clientHeight>=70),'deck remains usable during guidance');
+ }
+ const index=await p.locator('.dlist [data-a="dm"]').first().getAttribute('data-i');
+ await p.click(`.dlist [data-a="dm"][data-i="${index}"]`);
+ assert.equal(await p.evaluate(()=>S.deck.length),29);
+ assert(!(await p.locator('#tutorialMenus [data-a="tutorialmenus"]').isDisabled()),'quantity interaction completes the hands-on task');
+ await p.click(`.dlist [data-a="dp"][data-i="${index}"]`);
+ assert.deepEqual((await p.evaluate(()=>S.deck)).sort(),starter.slice().sort(),'player may restore their starter unchanged');
+ await reload(p);await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.evaluate(()=>V.v),'deck','resume returns to deck before finishing');
+ await p.click('[data-a="tutorialmenus"]');
+ assert.equal(await p.evaluate(()=>S.tutorialMenus.stage),'done');
+ assert.equal(await p.locator('#tutorialMenus').count(),0);
+ const completed=await p.evaluate(()=>({packs:S.packs,col:S.col,sd:S.sd}));
+ await p.evaluate(()=>{startPractice();G.over='p';render()});
+ await p.click('#ov [data-a="quit"]',{force:true});await reload(p);
+ assert.deepEqual(await p.evaluate(()=>({packs:S.packs,col:S.col,sd:S.sd})),completed,'replay and reload never duplicate a starter or pack');
+ const legacy=await p.evaluate(()=>{const s=JSON.parse(JSON.stringify(S));delete s.tutorialMenus;return s});
+ const failed=await player(legacy,true);
+ assert.equal(await failed.page.evaluate(()=>S.packs.std),legacy.packs.std,'failed retroactive reward save does not leave an unsaved free pack');
+ assert.match(await failed.page.locator('[role="alert"]').innerText(),/could not be saved/i);
+ await restoreStorage(failed.page);
+ await failed.page.click('[data-a="tutorialmenus"]');
+ assert.equal(await failed.page.evaluate(()=>S.packs.std),legacy.packs.std+1,'retroactive reward can be retried safely');
+ await reload(failed.page);
+ assert.equal(await failed.page.evaluate(()=>S.packs.std),legacy.packs.std+1,'successful retry is never paid twice');
+ const y=await player(legacy);
+ assert.deepEqual(await y.page.evaluate(()=>S.deck),await p.evaluate(()=>S.deck),'existing players retain their exact deck');
+ assert.deepEqual(await y.page.evaluate(()=>S.col),legacy.col,'existing players do not receive another starter');
+ assert.deepEqual(await y.page.evaluate(()=>S.sd),legacy.sd);
+ assert.equal(await y.page.evaluate(()=>S.packs.std),legacy.packs.std+1,'completed legacy players receive their missing pack');
+ await reload(y.page);
+ assert.equal(await y.page.evaluate(()=>S.packs.std),legacy.packs.std+1,'retroactive reward is once only');
+ const migrated=await y.page.evaluate(()=>clean(JSON.parse(JSON.stringify(S))));
+ assert.equal(migrated.tutorialMenus.stage,'pack','cloud/save sanitizer retains the reward marker');
+ const z=await player(migrated);
+ assert.equal(await z.page.evaluate(()=>S.packs.std),migrated.packs.std,'restoring to another device does not grant again');
+ assert.deepEqual([...x.errors,...y.errors,...z.errors,...failed.errors],[]);
+ await x.context.close();await y.context.close();await z.context.close();await failed.context.close();
+ console.log('PASS tutorial starter + one-time pack, legacy grants, real opening/review/currencies/deck, resume, replay and save failures');
+})().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{if(browser)await browser.close()});
