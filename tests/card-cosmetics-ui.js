@@ -245,6 +245,7 @@ let browser;
  await p.emulateMedia({reducedMotion:'reduce'});
  await p.evaluate(()=>{V.pk={c:[{...BN.Squire,look:{foil:'foil'}}],i:0,ph:0,sh:0,n:1};render()});
  assert.equal(await p.locator('.packSkip').count(),1,'initial pack can always be skipped');
+ assert.equal(await p.locator('.packSkip').innerText(),'Open all','quick reveal is labelled Open all, not Skip');
  await p.click('.pkpack',{force:true});
  await p.waitForSelector('.pkback');
  await p.click('.pkback',{force:true});

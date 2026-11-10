@@ -358,8 +358,53 @@ function clean(data){
    packs:{std:Math.max(0,Math.floor(Number(data.packs&&data.packs.std)||0))+Math.max(0,Math.floor(Number(data.packs&&data.packs.pre)||0)),t2:Math.max(0,Math.floor(Number(data.packs&&data.packs.t2)||0)),t3:Math.max(0,Math.floor(Number(data.packs&&data.packs.t3)||0))},
    avatar:av&&(!av.price||cosmetics.avatars.includes(av.id))?av.id:'vanguard',
    cosmetics,emotesMuted:!!data.emotesMuted,lastOnlineMatch:typeof data.lastOnlineMatch=='string'?data.lastOnlineMatch.slice(0,80):'',sp:['tut','none','ptut','pacct','done'].includes(data.sp)?data.sp:'pacct',sd:(Array.isArray(data.sd)?data.sd:[]).filter(x=>STARTERS.some(d=>d.id==x)),ms:cleanM(data.ms),
-   cardCosmeticsVersion:data.cardCosmeticsVersion,dust:data.dust,copies:data.copies,nextCopy:data.nextCopy,deckCopies:data.deckCopies,lastPack:data.lastPack
+   cardCosmeticsVersion:data.cardCosmeticsVersion,dust:data.dust,copies:data.copies,nextCopy:data.nextCopy,deckCopies:data.deckCopies,lastPack:data.lastPack,
+   tutorialMenus:cleanTutorialMenus(data.tutorialMenus,data.sp)
   });
+}
+function cleanTutorialMenus(value,starter){
+ const stages=['locked','claim','pack','review','currencies','deck','done'];
+ const stage=stages.includes(value?.stage)?value.stage:starter==='done'?'claim':'locked';
+ const cards=(Array.isArray(value?.cards)?value.cards:[]).slice(0,PACK_SIZE).filter(c=>BN[c?.name]&&typeof c.copyId==='string').map(c=>({...BN[c.name],copyId:c.copyId,look:CF.cleanLook(c.look)}));
+ return{stage,cards,deckEdited:!!value?.deckEdited};
+}
+function grantTutorialPack(){
+ const t=S.tutorialMenus,waiting='Sync your cloud save before receiving the tutorial pack, so it is only awarded once.';
+ if(!['ptut','done'].includes(S.sp)||!['locked','claim'].includes(t.stage)){if(V.saveMsg===waiting)V.saveMsg='';return true}
+ if(AU&&agreed()&&cloudOn()&&(!V.cloud.ready||V.cloud.conf)){V.saveMsg=waiting;return false}
+ const before=JSON.stringify(S);
+ S.packs.std++;t.stage='pack';
+ if(sv())return true;
+ S=JSON.parse(before);return false;
+}
+function tutorialMenusHTML(){
+ const stage=S.sp==='done'&&S.tutorialMenus.stage==='locked'?'claim':S.tutorialMenus.stage;
+ if(!['hub','packs','deck'].includes(V.v)||S.sp!=='done'||['locked','done'].includes(stage))return '';
+ const copy={
+  claim:['Your free tutorial pack','Your starter deck is already yours. Receive one free Standard pack, then learn packs, currencies and deck building.','Receive free pack'],
+  pack:['1/3 · Open your free pack','One Standard pack was awarded once. Open it to see five cards, their rarities and any cosmetic finishes.','Open free pack'],
+  review:['1/3 · Review your pack','See every card you received. Plain extras beyond three copies can give gold and Arcane Dust, only after confirmation. Cosmetic copies need separate review.','Review obtained cards'],
+  currencies:['2/3 · Gold & Arcane Dust',`You have ${S.gold} gold and ${S.dust} Arcane Dust. Gold buys packs, starters and profile cosmetics; Dust unlocks finishes on individual card copies. Both are earned in-game, not bought with real money. Spare breakdown pays both; keep at least three copies per card name. No spending is required for this lesson.`,'Try deck building'],
+  deck:['3/3 · Build your deck','Use + / − below to change a card quantity, then finish with 20–30 cards and at most three of each name. You can restore the original quantity before finishing. Search or filter cards; hold a card to inspect it. Copies & cosmetics selects the exact copy; Saved builds keeps a named deck.',V.v!=='deck'?'Open deck builder':S.tutorialMenus.deckEdited?'Finish tutorial':'Try + / − below']
+ }[stage];
+ const blocked=stage==='deck'&&V.v==='deck'&&(!S.tutorialMenus.deckEdited||S.deck.length<20||S.deck.length>30);
+ return `<section id="tutorialMenus" class="op tutorialMenus" aria-labelledby="tutorialMenusTitle"><div><b id="tutorialMenusTitle">${copy[0]}</b><p>${copy[1]}</p></div><button class="btn pri" data-a="tutorialmenus" ${blocked?'disabled':''}>${copy[2]}</button></section>`;
+}
+function continueTutorialMenus(){
+ const t=S.tutorialMenus;
+ if(t.stage==='claim'||t.stage==='locked'){if(!grantTutorialPack())return;V.v='packs'}
+ else if(t.stage==='pack'){V.v='packs';openPacks(1,true)}
+ else if(t.stage==='review'){
+  V.v='packs';V.rev=t.cards.slice();V.packReview=true;V.packQuote=null;
+ }else if(t.stage==='currencies'){
+  const before=JSON.stringify(S);t.stage='deck';
+  if(!sv()){S=JSON.parse(before);return}V.v='deck';
+ }else if(t.stage==='deck'){
+  if(V.v!=='deck'){V.v='deck';return}
+  if(!t.deckEdited||S.deck.length<20||S.deck.length>30)return;
+  const before=JSON.stringify(S);t.stage='done';t.cards=[];
+  if(!sv()){S=JSON.parse(before);return}
+ }
 }
 const cleanCosmetics=x=>{const avatars=AVATARS.filter(a=>a.price&&Array.isArray(x&&x.avatars)&&x.avatars.includes(a.id)).map(a=>a.id),backgrounds=BG_SKIN_DEFS.filter(a=>a.price&&Array.isArray(x&&x.backgrounds)&&x.backgrounds.includes(a.id)).map(a=>a.id),scene=x&&x.scene;
  return{avatars,backgrounds,scene:scene=='story'||backgrounds.includes(scene)?scene:'story',emotes:DelversEmotes.clean(x&&x.emotes)}};
@@ -379,7 +424,7 @@ const CLOUD={apiKey:'AIzaSyAG1SVkMdRVLsqTHTiLfL8TT80GKGgmsEU',projectId:'delvers
 const cloudOn=()=>!!(CLOUD.apiKey&&CLOUD.projectId&&CLOUD.webClientId),AUTH_KEY='delvers_auth';
 let AU=null;try{AU=JSON.parse(localStorage.getItem(AUTH_KEY)||'null')}catch(e){}
 V.cloud={st:'idle',msg:'',conf:null,ready:false,at:0};
-const cSet=(st,msg)=>{V.cloud.st=st;V.cloud.msg=msg||'';if(!G&&typeof $app!='undefined')render()};
+const cSet=(st,msg)=>{V.cloud.st=st;V.cloud.msg=msg||'';if(st==='ok'&&!G&&!V.title&&V.cloud.ready&&!V.cloud.conf)grantTutorialPack();if(!G&&typeof $app!='undefined')render()};
 const saveAuth=()=>{try{AU?localStorage.setItem(AUTH_KEY,JSON.stringify(AU)):localStorage.removeItem(AUTH_KEY)}catch(e){}};
 async function jf(url,opt){const r=await fetch(url,opt);let j=null;try{j=await r.json()}catch(e){}
  if(!r.ok)throw Object.assign(new Error((j&&j.error&&(j.error.message||j.error))||'HTTP '+r.status),{status:r.status});return j}
@@ -463,7 +508,7 @@ function auto(save=S){const d=[],add=(c,lim)=>{for(let i=0;i<Math.min(3,save.col
  srt.filter(c=>c.t=='c').forEach(c=>add(c,18));srt.filter(c=>c.t!='c').forEach(c=>add(c,30));srt.forEach(c=>add(c,30));return d}
 S=loadSave();
 const newSave=!S;
-function freshSave(){const save={saveEpoch:SAVE_EPOCH,gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,stars:{},builds:[],packs:{std:0,t2:0,t3:0},avatar:'vanguard',cosmetics:cleanCosmetics(null),emotesMuted:false,lastOnlineMatch:'',sp:'tut',sd:[],ms:cleanM(null),ts:0};save.deck=auto(save);return CF.normalize(save)}
+function freshSave(){const save={saveEpoch:SAVE_EPOCH,gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,stars:{},builds:[],packs:{std:0,t2:0,t3:0},avatar:'vanguard',cosmetics:cleanCosmetics(null),emotesMuted:false,lastOnlineMatch:'',sp:'tut',sd:[],ms:cleanM(null),ts:0,tutorialMenus:cleanTutorialMenus(null,'tut')};save.deck=auto(save);return CF.normalize(save)}
 if(!S)S=freshSave();
 const {d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,AREA,hits}=DelversEngine,play=(...a)=>{const r=DelversEngine.play(...a);if(a[0]=='p'&&G&&!G.tut)msnAdd('play',1);return r},sl=ms=>new Promise(r=>setTimeout(r,ms));
 function newGame(oi,t){t=Math.max(1,Math.min(3,t|0||1));const o=CAMP[oi].slice(),mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
@@ -521,7 +566,7 @@ async function endTurn(){if(G.over||G.busy||G.turn!='p')return;const tutorialKey
  await aiPlay('e',L);
  if(!G)return;
  if(!G.over){startTurn('p');G.turn='p'}G.busy=false;if(tutorialKey&&tutorialKey!=tutorialGuide()?.key)showPracticeObjective();render();if(G.auto&&!G.over&&!G.tut)setTimeout(autoTurn,600)}
-function finish(){G.fin=1;if(G.tut){if(G.over=='p'){if(S.sp=='tut'||S.sp=='none')S.sp='ptut';G.res='Tutorial complete! '+(S.sp=='ptut'?'Now choose your free starter deck.':'Well done.')}else G.res='Defeated. That is fine: start the tutorial again from the Duel tab or the Guide.';sv();return}if(G.over=='p'){const t=G.tier||1,first=firstClear(G.oi,t),o=CAMP[G.oi],g=rew(o,G.oi,t);S.gold+=g;if(first){if(t==1&&G.oi==S.prog)S.prog++;S.stars=S.stars||{};S.stars[G.oi]=t;if(o[12])S.packs[t>1?'t'+t:'std']++}G.res=`Victory! +🪙${g}`+(t>1?' '+SVGS(t,t,16):'')+(first&&o[12]?' and a free '+(t>1?['','','★★ Veteran','★★★ Legendary'][t]:'Standard')+' Pack!':'')+(first&&t<3?`<br><small>${SVGS(t+1,t+1,14)} difficulty unlocked for this fight.</small>`:'')+`<br><small>${o[10]}</small>`}else{const lg=Math.round(lossG(CAMP[G.oi])*TM[G.tier||1]);S.gold+=lg;G.res='Defeated. +🪙'+lg+' for the effort.<br><small>'+CAMP[G.oi][11]+'</small>'}sv()}
+function finish(){G.fin=1;if(G.tut){if(G.over=='p'){if(S.sp=='tut'||S.sp=='none')S.sp='ptut';if(S.tutorialMenus.stage==='locked')S.tutorialMenus.stage='claim';grantTutorialPack();G.res='Tutorial complete! '+(S.sp=='ptut'?'Now choose your free starter deck, then open your free pack.':'Well done.')}else G.res='Defeated. That is fine: start the tutorial again from the Duel tab or the Guide.';sv();return}if(G.over=='p'){const t=G.tier||1,first=firstClear(G.oi,t),o=CAMP[G.oi],g=rew(o,G.oi,t);S.gold+=g;if(first){if(t==1&&G.oi==S.prog)S.prog++;S.stars=S.stars||{};S.stars[G.oi]=t;if(o[12])S.packs[t>1?'t'+t:'std']++}G.res=`Victory! +🪙${g}`+(t>1?' '+SVGS(t,t,16):'')+(first&&o[12]?' and a free '+(t>1?['','','★★ Veteran','★★★ Legendary'][t]:'Standard')+' Pack!':'')+(first&&t<3?`<br><small>${SVGS(t+1,t+1,14)} difficulty unlocked for this fight.</small>`:'')+`<br><small>${o[10]}</small>`}else{const lg=Math.round(lossG(CAMP[G.oi])*TM[G.tier||1]);S.gold+=lg;G.res='Defeated. +🪙'+lg+' for the effort.<br><small>'+CAMP[G.oi][11]+'</small>'}sv()}
 const GL={F:'⚔️',W:'🧙',C:'✨',T:'🗡️',R:'🏹',B:'🐺',U:'💀',G:'🪨',D:'🐉',E:'🔥',K:'⚙️',P:'🗡️',A:'🛡️',I:'💍'};
 const GO=[[/Rat/,'🐀'],[/Spider/,'🕷️'],[/Bat/,'🦇'],[/Snake|Serpent|Wyrm|Basilisk/,'🐍'],[/Bear|Owlbear/,'🐻'],[/Boar/,'🐗'],[/Eagle|Hawk|Griffon|Roc/,'🦅'],[/Golem|Gargoyle/,'🗿'],[/Skeleton|Zombie|Wight|Lich|Wraith|Ghoul|Vampire|Death/,'💀'],[/Ghost|Spectre|Shade/,'👻'],[/Ogre|Troll|Giant|Titan/,'👹'],[/Goblin|Kobold|Tusk/,'👺'],[/Dragon|Drake|Wyvern/,'🐉'],[/Wolf|Hound|Jackal/,'🐺'],[/Elemental|Salamander/,'🔥'],[/Archer|Bow|Ranger/,'🏹'],[/Mage|Wizard|Apprentice|Sorcerer/,'🧙'],[/Priest|Cleric|Acolyte|Monk/,'🙏'],[/Knight|Squire|Paladin|Guard/,'🛡️'],[/Rogue|Thief|Assassin|Skulker|Cutpurse/,'🗡️'],[/Potion/,'🧪'],[/Wand|Rod|Staff/,'🪄'],[/Ring/,'💍'],[/Boots/,'👢'],[/Cloak/,'🧥'],[/Shield/,'🛡️'],[/Armor|Mail|Plate|Shirt/,'🛡️'],[/Amulet/,'📿'],[/Gauntlet|Bracer/,'🧤'],[/Orb/,'🔮'],[/Hammer|Club/,'🔨'],[/Axe|Halberd/,'🪓'],[/Spear/,'🔱'],[/Sword|Blade|Dagger|Rapier|Tongue/,'🗡️'],[/Missile|Lightning|Bolt/,'⚡'],[/Fire|Flame|Burning|Meteor/,'🔥'],[/Cold|Frost/,'❄️'],[/Cure|Heal|Regenerat/,'💚'],[/Sleep|Hold/,'💤'],[/Bless/,'🙏'],[/Smite/,'☀️']];
 const hsh=t=>{let h=7;for(const ch of t)h=(h*31+ch.charCodeAt(0))>>>0;return h};
@@ -634,7 +679,7 @@ const GUIDE=[
 ['Spells, potions and magic items',`<p>Spells and potions are used once and then go away. Some need a target (tap the glowing one) and some (like Meteor Swarm) simply go off when you play them. Damage spells ignore Guard: they never miss.</p><p><b>Area spells</b> hit several foes. 🔥 <b>Burning Hands</b>: the target and every creature touching it. 💥 <b>Fireball</b>: the target and everything within 1 tile, diagonals too. ⚡ <b>Lightning Bolt</b>: the target's whole column. ❄️ <b>Cone of Cold</b>: its whole row. ⛓️ <b>Chain Lightning</b>: leaps to the nearest foe, losing 2 damage each jump. Splash and chain damage is lower than the main hit, and each foe gets its own save.</p><p><b>Sound:</b> 🔊 turns all sound on or off and 🎵 turns just the music off. Four original battle tracks shuffle without immediate repeats. Music is generated in the app, so there is nothing to download.</p>`],
 ['Weapons, armour and gear',`<p>Gear cards are played on one of <b>your creatures</b> and stay for the rest of the duel. Each creature may carry <b>one weapon, one armour and one magic item</b>. Gear can grant abilities such as Tough, Thorns, Lifelink or Poison on top of the creature's own. A creature that falls takes its gear with it. If a creature already has that kind of gear you cannot add another.</p><p>Gear boosts a stat: more Attack, lower Aim, lower Guard, extra Health, Initiative, Reach or Save.</p>`],
 ['Collection &amp; Deck tabs',`<p><b>Collection</b> lists every card you own. Hover over any card (press and hold on a touchscreen) to read it in full: class, creature type, stats and abilities. Tools and spare-card breakdown are on the left; cards scroll independently beside them.</p><p><b>Deck</b> is the builder. The counter shows how full your deck is and turns green at 20 cards. Hover over a card (or press and hold) to read it, then tap it or use its − / + buttons to change quantities. The list on the right groups your deck by type and lets you choose each slot's exact copy and appearance. <b>Saved builds</b> retain these copy selections.</p><p><b>Filters:</b> search by name or ability, then open Filters. In each group you can pick several chips at once: a card must match at least one chip in every group you use. Tap a chip again, or its ✕ under the search bar, to remove it.</p><p><b>Plain spare breakdown:</b> keep at least 3 copies per card name. Eligible plain extras give both gold (${DelversCards.SELL.join(' / ')}) and Arcane Dust (${CF.DUST.join(' / ')}) by rarity. Purchased cosmetics are protected; pack cosmetics are excluded from bulk breakdown and require separate confirmation in Copies &amp; cosmetics.</p>`],
-['Tutorial, starter decks &amp; missions',`<p>The <b>Learn to Play</b> button on the Hub and replay button here offer eight hands-on lessons: mana and summoning, readiness, movement, Aim/Guard combat and Saves, targeted spells, equipment, Haste, and attacking the hero. Perform each action to unlock Next, then try a full practice fight. Lessons and practice do not spend your campaign progress or pay repeat gold or mission rewards. You may skip or replay them.</p><p>Win practice to pick one free <b>starter deck</b>: Ironwall Vanguard (tough fighters), Emberlight Mages (spells) or Shadow Hunt (fast strikers). Eligible existing accounts retain their free pick. The same decks are in the <b>Store</b> for 🪙400 each.</p><p><b>Missions</b> have daily and weekly goals that pay gold and packs. Claim rewards yourself; they reset by your device clock.</p>`],
+['Tutorial, starter decks &amp; missions',`<p>The <b>Learn to Play</b> button on the Hub and replay button here offer eight hands-on lessons: mana and summoning, readiness, movement, Aim/Guard combat and Saves, targeted spells, equipment, Haste, and attacking the hero. Perform each action to unlock Next, then try a full practice fight. Lessons and practice do not spend your campaign progress or pay repeat gold or mission rewards. You may skip or replay them.</p><p>Win practice to earn <b>one free Standard pack</b> and pick one free <b>starter deck</b>: Ironwall Vanguard (tough fighters), Emberlight Mages (spells) or Shadow Hunt (fast strikers). Then continue the tutorial through <b>pack opening, currencies and deck building</b>. Open all during the reveal shows every obtained card; optional extra-copy breakdown always needs confirmation. Learn gold and Arcane Dust, then change a quantity in the real Deck UI and finish with 20–30 cards. You can restore the original quantity; spending and breakdown are not required.</p><p>Completed existing players receive their missing free pack without another starter. Rewards are once only, including on replay. The Hub resumes unfinished menu lessons; closing during opening resumes the card summary. Eligible existing accounts retain their free starter pick. The same decks are in the <b>Store</b> for 🪙400 each.</p><p><b>Missions</b> have daily and weekly goals that pay gold and packs. Claim rewards yourself; they reset by your device clock.</p>`],
 ['Ranked players and rated bots',`<p>Ranked uses the normal deck rules: 20–30 cards and up to 3 copies of any card, regardless of rarity. Compatible human players have priority. After <b>20 seconds</b> without a match, a clearly labelled <b>BOT</b> joins automatically. Its themed deck and strategy reflect your displayed rank; unranked players start against Bronze bots.</p><p>Bot matches are <b>rated</b>: wins, losses and resigning count, and a loss is reserved when a ranked match begins so leaving cannot avoid it. Bots are synthetic opponents, not fake player accounts; they do not appear on the leaderboard. Human ranked matches work the same way as before. Friend invitations stay unranked and never fall back to bots.</p>`],
 ['Building your deck',`<ul><li>Build your deck in the <b>Deck</b> tab. A deck holds <b>up to 30 cards</b>. You need <b>at least 20</b> to fight.</li><li>You may include up to <b>3 copies</b> of a card, if you own that many.</li><li>You draw 3 cards at the start (and the foe 4) and 1 more each turn. Your hand holds <b>7</b>; extra draws are lost.</li><li>If you try to draw from an empty deck you take <b>2 damage</b> instead (fatigue).</li><li>"Auto" builds a balanced deck for you: mostly cheap creatures, then spells and gear.</li></ul>`],
 ['Campaign, rewards and packs',`<p>Story has 60 encounters across 9 chapters: 40 <b>skirmishes</b> and 20 <b>bosses</b>. Beat each in order to unlock the next. First clears pay at least 🪙30 at ★; early successful battles fund roughly one 🪙100 pack per three wins, with faster rewards later. Replays pay 15% of base gold (at least 🪙3), and losses pay 5% (at least 🪙2), before difficulty bonuses and rounding.</p><p><b>Star tiers:</b> beat ★ to unlock ★★, then beat ★★ to unlock ★★★. Foes get more health, smarter AI and rarer cards. Rewards multiply by <b>1 / 1.35 / 1.75</b> at ★ / ★★ / ★★★. Each boss's first clear on each tier gives a Standard / Veteran / Legendary pack respectively. ★★★ guarantees a Rare or better in the final slot.</p><p><b>Pull rates:</b> Packs → Pull rates shows exact odds for every pack type. In the Store, packs cost 🪙100 each and contain 5 cards with at least 1 Uncommon or better. Expected spare-card sell-back value is below the pack price, but a lucky pack may sell for more. Your collection, gold, decks and campaign progress save automatically on this device.</p>`],
@@ -679,7 +724,7 @@ function packExtrasHTML(){
 function packReviewHTML(){
  if(!V.packReview||V.copyName)return '';
  const cards=V.rev.map(c=>{const exists=CF.find(S,c.copyId);return `<div class="cc">${card(exists?CF.styled(S,c.name,c.copyId):c,'','',own(c.name))}${exists?`<button class="btn copyButton" data-a="copies" data-k="${c.name}" data-copy="${c.copyId}">This copy &amp; cosmetics</button>`:'<small>Broken down</small>'}</div>`}).join('');
- return `<div class="copyShade"><section id="packReview" role="dialog" aria-modal="true" aria-labelledby="packReviewTitle"><header><h2 id="packReviewTitle">Pack opening complete · ${V.rev.length} cards found</h2><p>Your cards have been added to your collection. Review them or break down eligible extras below.</p></header><div class="packReviewBody"><div class="grid packReviewCards sc v" aria-label="Cards obtained">${cards}</div><div class="packReviewExtras sc v">${packExtrasHTML()}</div></div><footer><button class="btn" data-a="packreviewclose">Keep remaining cards &amp; close</button></footer></section></div>`;
+ return `<div class="copyShade"><section id="packReview" role="dialog" aria-modal="true" aria-labelledby="packReviewTitle"><header><h2 id="packReviewTitle">Pack opening complete · ${V.rev.length} cards found</h2><p>Your cards have been added to your collection. Review them or break down eligible extras below.</p>${S.tutorialMenus.stage==='review'?'<small>TUTORIAL · Rarity badges identify card rarity. Extras can earn gold and Arcane Dust; breakdown is optional and always confirmed.</small>':''}</header><div class="packReviewBody"><div class="grid packReviewCards sc v" aria-label="Cards obtained">${cards}</div><div class="packReviewExtras sc v">${packExtrasHTML()}</div></div><footer><button class="btn" data-a="packreviewclose">${S.tutorialMenus.stage==='review'?'Keep remaining cards &amp; learn currencies':'Keep remaining cards &amp; close'}</button></footer></section></div>`;
 }
 function finishPack(){if(V.pk)V.rev=[...V.pk.c];V.pk=null;V.packReview=true;V.packQuote=null;clearTimeout(zHoverTimer);clearTimeout(zt);document.getElementById('zm')?.remove()}
 const fgroups=()=>[['t','Type',[['c','Creature'],['s','Spell'],['i','Gear']]],['r','Rarity',RN.map((x,i)=>[String(i),x])],['c','Cost',[['0','0–1'],['1','2–3'],['2','4–5'],['3','6+']]],['k','Class',Object.keys(CLASS).map(k=>[k,CLASS[k]])],['y','Creature type',[...new Set(Object.values(CTYPE))].map(x=>[x,x])],['a','Ability',Object.keys(KN).map(k=>[k,KN[k]])]];
@@ -774,8 +819,8 @@ function lessonAction(a,i){
 }
 function lessonNext(){if(!G.lesson.done)return;const next=G.lesson.step+1;if(next>=LESSONS.length)startPractice();else setupLesson(next)}
 function tutBanner(){const q=S.sp;
- if(q=='tut')return `<div class="op welcome"><div><b>New to Delvers?</b><small>Learn the rules and earn a free starter deck.</small></div><div class="bar"><button class="btn pri" data-a="tutstart">Learn to play</button><button class="btn" data-a="tutskipmenu">Skip</button></div></div>`;
- if(q=='none')return `<div class="op welcome"><div><b>Learn to play</b><small>Finish practice to earn a free starter deck.</small></div><button class="btn" data-a="tutstart">Start tutorial</button></div>`;
+ if(q=='tut')return `<div class="op welcome"><div><b>New to Delvers?</b><small>Learn battles, packs, currencies and deck building. Earn a free starter deck and one free pack.</small></div><div class="bar"><button class="btn pri" data-a="tutstart">Learn to play</button><button class="btn" data-a="tutskipmenu">Skip</button></div></div>`;
+ if(q=='none')return `<div class="op welcome"><div><b>Learn to play</b><small>Finish practice to earn a free starter deck and one free pack, then learn the menus.</small></div><button class="btn" data-a="tutstart">Start tutorial</button></div>`;
  if(q=='ptut'||q=='pacct')return `<div class="op welcome"><div><b>Free starter deck</b><small>Choose one of three themed decks.</small></div><button class="btn pri" data-a="openpick">Choose</button></div>`;
  return ''}
 function tutorialGuide(){if(!G||!G.tut||G.over)return null;if(G.lesson){const L=G.lesson,[title,text]=LESSONS[L.step],done=L.done;return{key:`lesson-${L.step}-${done}`,title:`${L.step+1}/${LESSONS.length} · ${title}`,text:done?'Objective complete. '+(L.step==3||L.step==7?'An attack can hit or miss; the combat log records the roll.':'You performed the action correctly.'):text,done,next:L.step==7?'Start practice fight':'Next lesson'}}const P=G.p,mine=G.turn=='p',sel=G.sel;let key,t;
@@ -793,7 +838,7 @@ function tutorialObjectiveButton(){const guide=tutorialGuide();return guide?`<bu
 function tutorialObjectiveHTML(){const guide=tutorialGuide();if(!guide||!V.tutPrompt)return'';return `<div class="tutorialShade"><section id="tutorialObjective" role="dialog" aria-modal="true" aria-labelledby="tutorialObjectiveTitle"><small>GUIDED OBJECTIVE</small><h2 id="tutorialObjectiveTitle">${guide.title}</h2><p>${guide.text}</p><div class="bar"><button class="btn pri" data-a="${guide.done?'lessonnext':'tutpromptclose'}">${guide.done?guide.next:'Got it'}</button><button class="btn" data-a="tutskip">Skip tutorial</button></div><small>You can reopen this objective at any time from the battle controls.</small></section></div>`}
 function pickHTML(){const acct=S.sp=='pacct';
  return `<div class="navbar"><span class="gold">🎁 Starter deck</span></div><small>${acct?'A free starter deck for your account. The cards go to your Collection.':'Your reward for finishing the tutorial. It becomes your deck.'} Hover or hold a card name to read it.</small>`+STARTERS.map(d=>`<div class="op" style="display:block"><b>${d.icon} ${d.name}</b> <small>${stStats(d)}</small><br><small>${d.tag}</small>${stChips(d)}<div class="bar" style="margin-top:6px">${acct?`<button class="btn pri" style="flex:1" data-a="pickst" data-id="${d.id}" data-u="1">Take and use</button><button class="btn" data-a="pickst" data-id="${d.id}" data-u="0">Take, keep my deck</button>`:`<button class="btn pri" style="flex:1" data-a="pickst" data-id="${d.id}" data-u="1">Choose this deck</button>`}</div></div>`).join('')+`<div class="bar"><button class="btn" data-a="pickback">Decide later</button></div>`}
-function pickStarter(id,use){const d=STARTERS.find(x=>x.id==id);if(!d||!(S.sp=='ptut'||S.sp=='pacct'))return;const was=S.sp;addCards(d);if(use||was=='ptut')S.deck=d.list.slice();S.sp='done';V.pick=false;V.v=use||was=='ptut'?'deck':'cards';V.msg='';sv()}
+function pickStarter(id,use){const d=STARTERS.find(x=>x.id==id);if(!d||!(S.sp=='ptut'||S.sp=='pacct'))return;const before=JSON.stringify(S),was=S.sp;addCards(d);if(use||was=='ptut')S.deck=d.list.slice();S.sp='done';if(!sv()){S=JSON.parse(before);return}grantTutorialPack();V.pick=false;V.v='packs';V.msg=''}
 function buyStarter(id){const d=STARTERS.find(x=>x.id==id);V.stMsg='';if(!d)return;if((S.sd||[]).includes(id)){V.stMsg='You already own that deck.';return}if(S.gold<STARTER_PRICE){V.stMsg='Not enough gold.';return}S.gold-=STARTER_PRICE;addCards(d);V.stMsg=d.name+' added to your Collection. Load it from the Deck tab.';sv()}
 function startersStoreHTML(){return `<h3>Starter decks</h3><small>Ready-made 30-card decks, 🪙 ${STARTER_PRICE} each, one purchase per deck. The cards go to your Collection.</small>${V.stMsg?`<div role="alert" class="mid">${V.stMsg}</div>`:''}`+STARTERS.map(d=>{const o=(S.sd||[]).includes(d.id);return `<div class="op" style="display:block"><b>${d.icon} ${d.name}</b> <small>${stStats(d)}</small><br><small>${d.tag}</small><details><summary>View cards</summary>${stChips(d)}</details><div class="bar" style="margin-top:6px"><button class="btn pri" style="flex:1" data-a="bst" data-id="${d.id}" ${o||S.gold<STARTER_PRICE?'disabled':''}>${o?'Owned':'Buy · 🪙 '+STARTER_PRICE}</button></div></div>`}).join('')}
 
@@ -815,7 +860,7 @@ function missionsHTML(){const M=msnSync(),sec=(w,t,l,note)=>{const X=M[w],all=l.
  return `<small>Battles in every mode count (practice fights do not). Missions reset by your device clock.</small>`+sec('d','Daily missions',MD,'Resets at midnight, your local time.')+sec('w','Weekly missions',MW,'Resets every Monday.')}
 
 const DESTINATIONS=[['duel','Story','Your adventure in Vaelmark'],['ranked','Ranked','Players and rated bots'],['cards','Collection','Browse your cards'],['deck','Deck','Build and save decks'],['store','Store','Packs and cosmetics'],['packs','Packs','Open packs and odds'],['missions','Missions','Daily and weekly goals'],['friends','Social','Friends and private duels'],['profile','Profile','Cloud save and settings'],['lore','Lore','World of Vaelmark'],['guide','Guide','Rules and lessons']];
-function welcomeHTML(){return `<main class="titleScreen"><section class="titlePanel" aria-labelledby="welcomeName"><small class="titleEyebrow">WELCOME TO VAELMARK</small><h2 id="welcomeName">Your first adventure</h2><p class="titleStory">Learn to summon creatures, move across the battlefield and cast spells. Finish the practice fight to choose a free starter deck.</p><div class="titleActions"><button class="btn pri" data-a="tutstart">Learn to play</button><button class="btn" data-a="tutskipmenu">Skip for now</button></div><small class="titlePrivacy">No account needed. You can start or replay the tutorial from the Guide.</small></section></main>`}
+function welcomeHTML(){return `<main class="titleScreen"><section class="titlePanel" aria-labelledby="welcomeName"><small class="titleEyebrow">WELCOME TO VAELMARK</small><h2 id="welcomeName">Your first adventure</h2><p class="titleStory">Learn battles, then earn a free starter deck and one free pack. Open your pack, learn gold and Arcane Dust, and try the deck builder.</p><div class="titleActions"><button class="btn pri" data-a="tutstart">Learn to play</button><button class="btn" data-a="tutskipmenu">Skip for now</button></div><small class="titlePrivacy">No account needed. You can start or replay the tutorial from the Guide.</small></section></main>`}
 function hubHTML(){return `${tutBanner()}<div class="hubGrid">${DESTINATIONS.map(([v,n,d])=>`<button class="hubTile" data-a="nav" data-v="${v}"><strong>${n}${v=='missions'&&msnReady()?' ●':''}</strong><small>${d}</small></button>`).join('')}</div>`}
 function titleHTML(){const art=DelversArt.hubScene(),sparks=Array.from({length:7},(_,i)=>`<i class="titleSpark s${i+1}" aria-hidden="true"></i>`).join('');
  return `<main class="titleScreen" style="--title-art:${art}"><section class="titlePanel" aria-labelledby="titleName">
@@ -840,8 +885,9 @@ function storyHTML(){const chapters=[...new Set(CAMP.map(o=>o[8]))],current=CAMP
  <div class="bookPages"><div class="pageContent sc v"><small class="runningTitle">The road ahead</small><h3>A trail through ${name.split(' · ')[1]}</h3><span class="bookOrnament" aria-hidden="true">— ◆ —</span>${encounters}<small class="bookHint">${V.msg||'Follow the clues. Each victory opens the next stretch of your adventure.'}</small></div>
  <footer class="pageFolio bookNav"><button class="btn" data-a="bookleaf" data-i="${spread-1}" ${spread==0?'disabled':''} aria-label="Previous encounter page">Previous</button><span>Encounters ${page+1} of ${pages}</span><button class="btn" data-a="bookleaf" data-i="${spread+1}" ${spread>=OP.length-1?'disabled':''} aria-label="Next encounter page">Next</button></footer></div></section>`}
 function menuHeaderHTML(){const hub=V.v=='hub';return `<header class="navbar ${hub?'hubHeader':''}">${hub?`<div class="hubBrand"><h1>Delvers: The Card Game</h1><small>First Adventures · ${ALL.length} cards · v2.2.8</small></div>`:'<button class="btn homeLink" data-a="nav" data-v="hub">‹ Hub</button>'}<span class="gold">🪙 ${S.gold}<small class="dustBalance">${S.dust} Arcane Dust</small></span><span class="navtools">${hub?`<button class="mute profileShortcut" data-a="nav" data-v="profile" aria-label="Open profile">${portrait(S.avatar)}</button>`:''}<button class="mute" data-a="snd" aria-label="Sound ${mute?'off':'on'}">${mute?'🔇':'🔊'}</button><button class="mute" data-a="mus" aria-label="Music ${musOff?'off':'on'}" style="${musOff||mute?'opacity:.45':''}">🎵</button></span></header>`}
-function menuHTML(){if(V.priv)return privHTML();if(V.title)return titleHTML();if(V.welcome&&S.sp=='tut'&&S.prog==0)return welcomeHTML();if(V.brief!=null)return briefHTML();if(V.pick&&(S.sp=='ptut'||S.sp=='pacct'))return pickHTML();const T=[...(V.v=='hub'?[['hub','Main menu']]:[]),...DESTINATIONS.map(x=>[x[0],x[1]])];
+function menuHTML(){if(V.priv)return privHTML();if(V.title)return titleHTML();if(V.welcome&&S.sp=='tut'&&S.prog==0)return welcomeHTML();if(V.brief!=null)return briefHTML();if(V.pick&&(S.sp=='ptut'||S.sp=='pacct'))return (V.saveMsg?`<p role="alert">${esc(V.saveMsg)}</p>`:'')+pickHTML();const T=[...(V.v=='hub'?[['hub','Main menu']]:[]),...DESTINATIONS.map(x=>[x[0],x[1]])];
  let h=menuHeaderHTML()+`<div class="sw x">${SB('x','Scroll tabs left')}<div class="nav sc" role="tablist">${T.map(t=>`<button data-a="nav" data-v="${t[0]}" role="tab" aria-selected="${V.v==t[0]}" class="${V.v==t[0]?'on':''}">${t[1]}${t[0]=='missions'&&msnReady()?' <span class="dot" aria-label="reward ready">●</span>':''}</button>`).join('')}</div>${SA('x','Scroll tabs right')}</div>${SOC&&SOC.invites.length&&V.v!='friends'?`<div class="mid" role="alert"><b>📨 ${esc(SOC.invites[0].name)} invited you to a game</b> <button class="btn pri" data-a="nav" data-v="friends" style="padding:2px 10px">View</button></div>`:''}${privBanner()}${['cards','deck','packs'].includes(V.v)?`<small class="set"><b>${SET.name}</b> · Set 1 · ${ALL.length} cards</small>`:''}${V.saveMsg?`<div role="alert" class="mid">${V.saveMsg}</div>`:''}`;
+ h+=tutorialMenusHTML();
  if(V.v=='hub')h+=hubHTML();
  else if(V.v=='duel')h+=storyHTML();
  else if(V.v=='missions')h+=missionsHTML();
@@ -861,7 +907,7 @@ function menuHTML(){if(V.priv)return privHTML();if(V.title)return titleHTML();if
   else{const PR=PACK_PRICE,mx=Math.max(1,Math.floor(S.gold/PR)),q=Math.min(Math.max(1,V.qty||1),mx);V.qty=q;
    h+=`<div class="op" style="display:block"><b>${SET.name} Pack</b><br><small>${PACK_SIZE} cards, the last is Uncommon or better. 🪙 ${PR} each. <button class="lnk" data-a="nav" data-v="packs">See pull rates</button></small><div class="bar" style="margin-top:8px;align-items:center"><button class="btn" data-a="qm" ${q<=1?'disabled':''}>−</button><b style="min-width:2.5em;text-align:center;font-size:18px">${q}</b><button class="btn" data-a="qp" ${q>=mx||S.gold<PR*(q+1)?'disabled':''}>+</button><button class="btn" data-a="qmax" ${S.gold<PR?'disabled':''}>Max</button><button class="btn pri" style="flex:1" data-a="buy" ${S.gold<PR*q?'disabled':''}>Buy ${q} · 🪙 ${PR*q}</button></div></div><small>You own ${PN()} unopened. <button class="lnk" data-a="nav" data-v="packs">Open your packs</button></small>`}
   h+='</div>'}
- else{h+=`<div class="op"><b>Packs: ${PN()}</b>${S.packs.t2||S.packs.t3?`<small> (${S.packs.t3?S.packs.t3+' ★★★, ':''}${S.packs.t2?S.packs.t2+' ★★, ':''}${S.packs.std} standard)</small>`:''}<span><button class="btn pri" data-a="open" ${PN()?'':'disabled'}>Open 1</button> <button class="btn" data-a="openall" ${PN()>1?'':'disabled'}>Open all</button></span></div>`+`<button class="btn" style="width:100%;margin:6px 0" data-a="rates" aria-expanded="${!!V.rates}">📊 Pull rates ${V.rates?'▲':'▼'}</button>${V.rates?ratesHTML():''}<small>Win boss battles or visit the Store to get packs. Cards and extra-copy breakdown are reviewed at the end of each pack opening.</small>`}
+ else{h+=`<div class="op"><b>Packs: ${PN()}</b>${S.packs.t2||S.packs.t3?`<small> (${S.packs.t3?S.packs.t3+' ★★★, ':''}${S.packs.t2?S.packs.t2+' ★★, ':''}${S.packs.std} standard)</small>`:''}<span><button class="btn pri" data-a="open" ${PN()&&S.tutorialMenus.stage!=='review'?'':'disabled'}>Open 1</button> <button class="btn" data-a="openall" ${PN()>1&&!['pack','review'].includes(S.tutorialMenus.stage)?'':'disabled'}>Open all</button></span></div>`+`<button class="btn" style="width:100%;margin:6px 0" data-a="rates" aria-expanded="${!!V.rates}">📊 Pull rates ${V.rates?'▲':'▼'}</button>${V.rates?ratesHTML():''}<small>Win boss battles or visit the Store to get packs. Cards and extra-copy breakdown are reviewed at the end of each pack opening.</small>`}
  return h}
 // ---- Online play: ranked matches, friends and private games (Realtime Database REST, no game server) ----
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
@@ -1017,7 +1063,7 @@ const pkBits=(n,col,seed)=>Array.from({length:n},(_,i)=>{const a=(i*360/n+seed*1
 function pkHTML(){const k=V.pk,c=k.c[k.i];
  const seal='<span class="packSeal" aria-hidden="true">D</span><small class="packBrand">DELVERS</small>';
  const back=`<div class="pkpack">${seal}<span class="packSeam"></span></div>`;
- const skip='<button class="btn packSkip" data-a="pks">Skip all</button>';
+ const skip='<button class="btn packSkip" data-a="pks" aria-label="Open all cards and show results">Open all</button>';
  if(k.ph==0)return `<div class="pkov packReady" data-a="pkt" role="dialog" aria-label="Open pack"><div class="pkgl"></div><div class="packAura" aria-hidden="true"></div>${back}<b>Tap to tear open ${k.n>1?k.n+' packs':'the pack'}</b><small>Your next discovery awaits</small>${skip}</div>`;
  if(k.ph==1)return `<div class="pkov tearing" data-a="pkt" role="dialog" aria-label="Opening pack"><div class="pkhalf l">${seal}</div><div class="pkhalf r">${seal}</div><div class="pkbits">${pkBits(28,'#ffd23f',3)}</div><b class="packOpening">Breaking the seal...</b>${skip}</div>`;
  const dots=k.c.map((x,j)=>`<u style="background:${j<k.i||(j==k.i&&k.sh)?RC[x.rar]:'#445'}"></u>`).join(''),r=k.sh?c.rar:9,col=RC[c.rar];
@@ -1027,6 +1073,24 @@ function pkHTML(){const k=V.pk,c=k.c[k.i];
  return `<div class="pkov packReveal r${r}${classes}" data-a="pkt" role="dialog" aria-label="Pack cards"><small class="packIndex">CARD ${k.i+1} / ${k.c.length}</small>${fx}${k.sh?`<div class="pkface">${card(c,'','zoom',own(c.name))}</div><div class="pkn" style="color:${col}" role="status">${c.rar==3?'★ ':''}${RN[c.rar].toUpperCase()}${c.rar==3?' ★':''}${own(c.name)==1?' · NEW!':''}${cosmetic?`<strong class="pkCosmeticLabel">COSMETIC DISCOVERY</strong><small class="pkFinish">${copyLabel({look:c.look})}</small>`:''}<small class="packNext">${k.i<k.c.length-1?'Tap for next card':'Tap to finish'}</small></div>`:`<div class="pkback t${c.rar}">${seal}</div><div class="pkn">Tap to reveal</div>`}<div class="pkd">${dots}</div>${skip}</div>`}
 const PN=()=>S.packs.std+S.packs.t2+S.packs.t3;
 const takePack=()=>{for(const t of [3,2,1]){const k=t>1?'t'+t:'std';if(S.packs[k]>0){S.packs[k]--;return t}}return 1};
+function openPacks(n,tutorial=false){
+ const before=JSON.stringify(S),cards=[];
+ try{
+  if(S.tutorialMenus.stage==='review')throw new Error('Review your tutorial pack before opening another pack.');
+  if(tutorial&&(S.tutorialMenus.stage!=='pack'||S.packs.std<1))throw new Error('The free tutorial pack is unavailable. Check your saved progress.');
+  if(!Number.isInteger(n)||n<1||n>PN())throw new Error('Not enough unopened packs.');
+  for(let j=0;j<n;j++){
+   const tier=tutorial?1:takePack(),ids=[];
+   if(tutorial)S.packs.std--;
+   packRoll(tier).forEach(c=>{const id=CF.add(S,c.name)[0];ids.push(id);CF.grantPack(S,id,tier);cards.push(CF.styled(S,c.name,id))});
+   S.lastPack={ids};
+  }
+  if(tutorial){S.tutorialMenus.stage='review';S.tutorialMenus.cards=cards.slice()}
+  if(!sv()){S=JSON.parse(before);return false}
+ }catch(error){S=JSON.parse(before);V.saveMsg=error.message;return false}
+ V.rev=cards;V.packQuote=null;V.packMessage='';V.pk={c:[...cards].sort((x,y)=>x.rar-y.rar),i:0,ph:0,sh:0,n};
+ msnAdd('open',n);return true;
+}
 function packRoll(t){t=t||1;return packSlots(t).map(w=>{let r=Math.random()*100,k=0;for(;k<3;k++){if(r<w[k])break;r-=w[k]}return pick(ALL.filter(c=>c.rar==k))})}
 const $app=document.getElementById('app');
 // ===== Sound effects (synthesised, no audio files) and battle animations =====
@@ -1122,10 +1186,18 @@ $app.addEventListener('contextmenu',e=>{const z=zT(e);if(z){e.preventDefault();z
 
 $app.addEventListener('input',e=>{if(e.target.id=='fq'){V.q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('fq');if(n){n.focus();n.setSelectionRange(p,p)}}});
 function closeCopyManager(){const id=V.copyId;V.copyName=null;V.lookDraft=null;V.lookPurchase=null;V.salvageQuote=null;render();$app.querySelector(`${V.packReview?'#packReview ':''}[data-a="copies"][data-copy="${id}"]`)?.focus()}
-function closePackReview(){V.packReview=false;V.packQuote=null;V.rev=[];render();$app.querySelector('[data-a="open"]:not(:disabled),[data-a="rates"]')?.focus({preventScroll:true})}
+function closePackReview(){
+ if(S.tutorialMenus.stage==='review'){
+  const before=JSON.stringify(S);S.tutorialMenus.stage='currencies';
+  if(!sv()){S=JSON.parse(before);V.packMessage=V.saveMsg;render();return}
+  V.v='packs';
+ }
+ V.packReview=false;V.packQuote=null;V.rev=[];render();$app.querySelector('[data-a="tutorialmenus"],[data-a="open"]:not(:disabled),[data-a="rates"]')?.focus({preventScroll:true});
+}
 $app.addEventListener('change',e=>{const f=e.target.dataset&&e.target.dataset.f;if(f){V[f]=e.target.value;if(f==='copyId'){V.lookDraft=null;V.lookPurchase=null;V.salvageQuote=null;V.copyMessage=''}render();if(f==='copyId')$app.querySelector('#copySelect')?.focus({preventScroll:true})}});
 $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,i=+b.dataset.i,k=b.dataset.k;
  if(a==='packreviewclose'){closePackReview();return}
+ if(a==='tutorialmenus'){continueTutorialMenus();render();return}
  if(Date.now()-zAt<500&&zT(e))return;
  if(!G&&['copies','copyclose','copydeck','lookpreview','lookdefault','lookbuy','lookcancel','salvageask','salvageconfirm','salvagecancel','packextrasask','packextrasconfirm','packextrascancel'].includes(a)){
   if(a==='copyclose'){closeCopyManager();return}
@@ -1223,14 +1295,14 @@ $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)ret
  else if(a=='sell'){const c=ALL[i],id=c&&CF.extras(S).find(id=>CF.find(S,id).name===c.name);if(id){const q=CF.breakdown(S,[id]);V.sold=`Received ${q.gold} gold and ${q.dust} Arcane Dust.`}}
  else if(a=='sellask')V.cs=true;else if(a=='sellno')V.cs=false;
  else if(a=='sellall'){const ids=CF.extras(S);if(ids.length){const q=CF.breakdown(S,ids);V.sold=`Received ${q.gold} gold and ${q.dust} Arcane Dust.`}V.cs=false}
- else if(a=='dp'){const n=ALL[i].name;if(S.deck.length<30&&S.deck.filter(x=>x==n).length<Math.min(3,own(n)))S.deck.push(n)}
- else if(a=='dm'){const j=S.deck.indexOf(ALL[i].name);if(j>=0){S.deck.splice(j,1);S.deckCopies.splice(j,1)}}
+ else if(a=='dp'){const n=ALL[i].name;if(S.deck.length<30&&S.deck.filter(x=>x==n).length<Math.min(3,own(n))){S.deck.push(n);if(S.tutorialMenus.stage==='deck')S.tutorialMenus.deckEdited=true}}
+ else if(a=='dm'){const j=S.deck.indexOf(ALL[i].name);if(j>=0){S.deck.splice(j,1);S.deckCopies.splice(j,1);if(S.tutorialMenus.stage==='deck')S.tutorialMenus.deckEdited=true}}
  else if(a=='qm')V.qty=Math.max(1,(V.qty||1)-1);else if(a=='qp')V.qty=(V.qty||1)+1;else if(a=='qmax')V.qty=Math.max(1,Math.floor(S.gold/100));
- else if(a=='titleoffline'||a=='titlecontinue'){V.title=false;V.v='hub';V.welcome=S.sp=='tut'&&S.prog==0}
+ else if(a=='titleoffline'||a=='titlecontinue'){V.title=false;V.v='hub';V.welcome=S.sp=='tut'&&S.prog==0;grantTutorialPack()}
  else if(a=='titlesign'){gSignIn();return}
  else if(a=='privopen')V.priv=true;else if(a=='privback')V.priv=false;else if(a=='agree')doAgree();else if(a=='withdraw'){try{localStorage.removeItem('delvers_consent')}catch(e){}V.priv=false}else if(a=='tutstart')startTut();else if(a=='tutskipmenu'){V.welcome=false;S.sp='none';sv()}else if(a=='openpick')V.pick=true;else if(a=='pickback')V.pick=false;else if(a=='pickst')pickStarter(b.dataset.id,b.dataset.u=='1');else if(a=='bst')buyStarter(b.dataset.id);else if(a=='mclaim')mClaim(b.dataset.w,b.dataset.id);
  else if(a=='buy'){const n=Math.min(V.qty||1,Math.floor(S.gold/PACK_PRICE));if(n>0){S.gold-=PACK_PRICE*n;S.packs.std+=n;V.qty=1}}
- else if((a=='open'||a=='openall')&&PN()){const n=a=='open'?1:PN();V.rev=[];V.packQuote=null;V.packMessage='';for(let j=0;j<n;j++){const tier=takePack(),ids=[];packRoll(tier).forEach(c=>{const id=CF.add(S,c.name)[0];ids.push(id);CF.grantPack(S,id,tier);V.rev.push(CF.styled(S,c.name,id))});S.lastPack={ids}}V.pk={c:[...V.rev].sort((x,y)=>x.rar-y.rar),i:0,ph:0,sh:0,n};msnAdd('open',n)}
+ else if((a=='open'||a=='openall')&&PN()){const tutorial=S.tutorialMenus.stage==='pack';openPacks(tutorial||a==='open'?1:PN(),tutorial);render();return}
  else if(a=='pkt'&&V.pk){const k=V.pk,c=k.c[k.i];if(k.ph==0){k.ph=1;psnd('tear');buzz([30]);setTimeout(()=>{if(V.pk===k&&k.ph==1){k.ph=2;render()}},matchMedia('(prefers-reduced-motion: reduce)').matches?0:750)}else if(k.ph==1){k.ph=2}else if(!k.sh){k.sh=1;psnd('flip',c.rar);if(Object.keys(CF.cleanLook(c.look)).length)psnd('cosmetic');buzz(c.rar==3?[60,40,120]:c.rar==2?[50]:[])}else if(k.i<k.c.length-1){k.i++;k.sh=0}else finishPack()}
  else if(a=='pks')finishPack();else if(a=='rates')V.rates=!V.rates
  sv();render()});

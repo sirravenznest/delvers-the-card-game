@@ -3,6 +3,16 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## Tutorial pack and menu lessons
+
+Winning practice awards **one free Standard pack**, alongside the existing free starter choice. After selecting the starter, the tutorial continues through real pack opening, the full card-results/optional breakdown summary, gold and Arcane Dust, and the Deck UI. The deck lesson requires changing a card quantity and finishing with 20–30 cards; players may restore their original quantities. No currency spending or breakdown is required.
+
+Existing players who already earned their starter receive the missing pack when continuing from the title, without another starter or changes to their deck. The saved `tutorialMenus` reward/progress marker prevents repeat grants on reload, tutorial replay or restore from a current cloud save. Unfinished menu lessons can be resumed from the Hub. Closing during pack opening resumes its saved card summary rather than granting or opening another pack. Save failures roll pack acquisition and reward grants back with a visible error.
+
+During pack reveals, **Open all** immediately shows every obtained card in the summary; it does not discard cards. The separate Packs-menu **Open all** opens all unopened packs outside the guided free-pack lesson.
+
+Run `tests/tutorial-menus-ui.js` with the local-server/Playwright setup below to cover tutorial rewards, existing-player grants, save failures, resumable real-menu lessons and replay protection. Cloud UI checks also cover delayed sync and restored one-time reward markers.
+
 ## Card cosmetics & Arcane Dust (development)
 
 Collection, Deck and pack results have **Copies & cosmetics** controls. Each individual copy can combine a metallic frame, metallic title lettering, holographic background and foil shine. Previewing is free; a confirmed purchase permanently unlocks the treatment on that copy, and switching unlocked treatments is free. Deck slots and saved builds retain the exact chosen copies. Existing collections migrate to plain copies without changing quantities, gold or decks.
@@ -28,6 +38,10 @@ Pack openings have an original Delvers seal, tear effects, rarity-specific halos
 Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
 
 Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+
+## 2.2.20
+
+Adds a one-time free Standard pack after tutorial completion, with guided pack-opening, currency and hands-on deck-building sections. Existing tutorial graduates receive the pack if missing, without another starter; saved progress prevents repeat grants and resumes unfinished lessons.
 
 ## 2.2.19
 

@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 const url=process.env.DELVERS_URL||'http://127.0.0.1:8765/app/src/main/assets/index.html';
 const clone=x=>JSON.parse(JSON.stringify(x));
 let browser,baseline;
-async function player({local,cloud,signed=true,failWrite=false,raceSave=null}={}){
+async function player({local,cloud,signed=true,failWrite=false,raceSave=null,continueBeforeSync=false}={}){
  const context=await browser.newContext({viewport:{width:844,height:390}});
  await context.addInitScript(({local,signed})=>{
   if(localStorage.getItem('test_initialized'))return;
@@ -15,6 +15,8 @@ async function player({local,cloud,signed=true,failWrite=false,raceSave=null}={}
   if(signed)localStorage.setItem('delvers_auth',JSON.stringify({uid:'tester',idToken:'fake-token',refresh:'fake-refresh',exp:Date.now()+1e10,base:0}));
  },{local,signed});
  const state={doc:cloud?clone(cloud):null,writes:[],reads:0,failWrite,raceSave,otherRequests:[]};
+ let releaseRead;
+ const readGate=continueBeforeSync?new Promise(resolve=>{releaseRead=resolve}):null;
  await context.route(/googleapis\.com|firebaseio\.com/,async route=>{
   const request=route.request(),address=new URL(request.url()),method=request.method();
   const respond=(status,body)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
@@ -22,7 +24,7 @@ async function player({local,cloud,signed=true,failWrite=false,raceSave=null}={}
    state.otherRequests.push(request.url());return respond(404,{});
   }
   assert(address.pathname.endsWith('/documents/users/tester'),'only own save document is accessed');
-  if(method==='GET'){state.reads++;return respond(state.doc?200:404,state.doc||{})}
+  if(method==='GET'){state.reads++;if(readGate)await readGate;return respond(state.doc?200:404,state.doc||{})}
   assert.equal(method,'PATCH');
   const fields=request.postDataJSON().fields,version=address.searchParams.get('currentDocument.updateTime');
   if(state.raceSave){state.doc=documentFor(state.raceSave,true);state.doc.updateTime='2026-11-10T16:00:00.000001Z';state.raceSave=null}
@@ -35,6 +37,11 @@ async function player({local,cloud,signed=true,failWrite=false,raceSave=null}={}
  });
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url);
+ if(continueBeforeSync){
+  await page.click('[data-a="titlecontinue"]');
+  state.beforeSync=await page.evaluate(()=>({packs:S.packs,tutorialMenus:S.tutorialMenus}));
+  releaseRead();
+ }
  if(signed)await page.waitForFunction(()=>['ok','err','conf'].includes(V.cloud.st));
  return{context,page,state,errors};
 }
@@ -69,6 +76,7 @@ async function run(){
  await checkReset(x);
  await x.page.evaluate(async()=>{
   S.gold=400;buyStarter('iron');S.gold=321;S.prog=1;S.sp='done';
+  grantTutorialPack();
   S.dust=1000;CF.unlock(S,S.deckCopies[0],'foil','foil');CF.unlock(S,S.deckCopies[0],'frame','gold');
   const [id]=CF.add(S,'Squire');CF.grantPack(S,id,1,()=>0);S.lastPack={ids:[id]};
   S.builds.push({name:'Finished deck',deck:S.deck.slice(),copyIds:S.deckCopies.slice()});
@@ -76,6 +84,8 @@ async function run(){
  });
  const earned=await x.page.evaluate(()=>S),writes=x.state.writes.length;
  assert.deepEqual(earned.sd,['iron'],'starter decks can be bought again after reset');
+ assert.equal(earned.tutorialMenus.stage,'pack','the one-time tutorial pack marker uploads with the reward');
+ assert.equal(earned.packs.std,1,'the completed account receives one tutorial pack');
  assert.equal(earned.dust,625,'cosmetic purchases deduct Dust before cloud upload');
  assert(earned.copies[earned.deck[0]].find(c=>c.id===earned.deckCopies[0]).purchased,'purchased-copy protection is saved');
  assert.equal(earned.lastPack.ids.length,1,'last pack receipt is saved');
@@ -84,8 +94,26 @@ async function run(){
  assert.equal(x.state.writes.length,writes,'reset is not repeated on relaunch');
  const otherDevice=await player({local:legacy,cloud:x.state.doc});
  assert.deepEqual(await otherDevice.page.evaluate(()=>S),earned,'a second device restores Dust, exact deck copies, purchases, pack provenance, receipt and saved builds');
+ await otherDevice.page.evaluate(()=>grantTutorialPack());
+ assert.equal(await otherDevice.page.evaluate(()=>S.packs.std),1,'another device cannot reclaim the synced tutorial reward');
  assert.equal(otherDevice.state.writes.length,0,'second device does not repeat the reset or upload old progress');
  await otherDevice.context.close();
+ const pendingPack={...clone(earned),tutorialMenus:undefined,ts:earned.ts};
+ pendingPack.ms=await x.page.evaluate(()=>({d:{k:dayK(),p:{},c:{}},w:{k:weekK(),p:{},c:{}}}));
+ const waiting=await player({local:pendingPack,cloud:documentFor(pendingPack,true),continueBeforeSync:true});
+ assert.equal(waiting.state.beforeSync.packs.std,earned.packs.std,'the reward waits for the account save before granting');
+ assert.equal(waiting.state.beforeSync.tutorialMenus.stage,'claim');
+ assert.equal(await waiting.page.evaluate(()=>S.packs.std),earned.packs.std+1,'an accepted legacy account receives the missing pack after sync');
+ await waiting.page.evaluate(()=>cloudPush());
+ const restored=await player({local:pendingPack,cloud:waiting.state.doc,continueBeforeSync:true});
+ assert.equal(restored.state.beforeSync.packs.std,pendingPack.packs.std,'a stale device does not grant before reading the reward marker');
+ // Simulate resolving the existing timestamp conflict in favour of the current account save.
+ if(await restored.page.evaluate(()=>!!V.cloud.conf)){
+  await restored.page.evaluate(()=>{V.v='profile';render()});
+  await restored.page.click('[data-a="cuse"]');
+ }
+ assert.equal(await restored.page.evaluate(()=>S.packs.std),earned.packs.std+1,'restoring the account marker cannot duplicate its tutorial pack');
+ await restored.context.close();await waiting.context.close();
  x.state.doc.fields.save.stringValue=JSON.stringify(legacy);
  await x.page.evaluate(()=>cloudSync());
  assert.equal(await x.page.evaluate(()=>V.cloud.st),'err');

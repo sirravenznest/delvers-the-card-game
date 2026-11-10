@@ -8,13 +8,13 @@ Delvers: The Card Game ("the game") is a hobby project by the GitHub user `sirra
 The app shows this policy in-game. Google sign-in, cloud save, ranked and friends stay switched off until you tap **I agree**. You can read the policy again and **withdraw your agreement** from the Profile tab; online features then switch off again. Playing offline needs no agreement. If this policy changes materially, the app asks you to agree again.
 
 ## Playing without an account
-By default, all progress (collection, individual card copies, decks, gold, Arcane Dust, campaign progress, missions, tutorial and starter-deck status, cosmetic/emote unlocks, selected card treatments, pack receipts and emote-mute preference) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers. Story dialogue is displayed as text; it does not use a microphone or speech service.
+By default, all progress (collection, individual card copies, decks, gold, Arcane Dust, campaign progress, missions, tutorial and starter-deck status, one-time tutorial pack reward and menu-lesson progress, cosmetic/emote unlocks, selected card treatments, pack receipts and emote-mute preference) is stored **only on your Android device** in WebView `localStorage`. We do not receive it, and the game contains no ads, analytics, or trackers. Story dialogue is displayed as text; it does not use a microphone or speech service.
 
 ## Signing in with Google (Android, optional)
 If you choose **Sign in with Google**, the game uses Google Sign-In and Google Firebase (Authentication and Cloud Firestore) to provide cloud save. When you sign in we process:
 
 - Your Google account's unique ID, email address, and display name (provided by Google).
-- Your game save data (including collection, decks, gold, Arcane Dust, progress, per-copy cosmetic unlocks and selections, and the latest pack receipt), stored in Firestore under your account.
+- Your game save data (including collection, decks, gold, Arcane Dust, progress, tutorial rewards and menu lessons, per-copy cosmetic unlocks and selections, and the latest pack receipt), stored in Firestore under your account.
 - Authentication tokens, stored on your device so you stay signed in.
 
 We use this data only to sign you in and sync your save between your devices. We do not sell or share it, and we do not use it for advertising. Data is processed by Google under [Google's Privacy Policy](https://policies.google.com/privacy) and the [Firebase terms](https://firebase.google.com/terms).
