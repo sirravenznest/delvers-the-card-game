@@ -24,7 +24,7 @@ function create(o){
  const srv=()=>now()+(T.off||0);
  const emotePrefix=id=>'emote_'+id+'_';
  T.sendEmote=async id=>{
-  if((T.st!='match'&&T.st!='over')||!T.mid)throw new Error('No active match.');
+  if(T.st!='match'||!T.mid)throw new Error('No active match.');
   if(!EM.byId[id])throw new Error('Unknown emote.');
   if(now()-T.lastEmoteAt<EM.COOLDOWN_MS)throw new Error('Please wait 3 seconds between emotes.');
   const at=now(),previous=T.lastEmoteAt,key=emotePrefix(uid())+String(at).padStart(16,'0')+'_'+Math.random().toString(36).slice(2,8);
@@ -294,7 +294,6 @@ function create(o){
     if(inv&&inv.m){const mid=inv.m;try{await rq('DELETE',`invites/${T.inviteTo.uid}/${uid()}`)}catch(e){}await begin(mid)}
     else if(!inv||now()-T.inviteAt>120000){T.st='idle';T.err=inv?'The invite expired.':'The invite was declined.';try{await rq('DELETE',`invites/${T.inviteTo.uid}/${uid()}`)}catch(e){}}
    }else if(T.st=='match')await matchTick();
-   else if(T.st=='over'&&T.G&&T.opp)await readEmote();
    T.err=T.err&&T.err.startsWith('Connection')?'':T.err
   }catch(e){T.err='Connection problem, retrying...'}
   finally{T.busy=false;changed()}};

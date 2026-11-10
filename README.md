@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.8
+
+Combat restores a full-width hand along the bottom, with compact readable cards and full details on hold/hover/right-click. The 4×5 battlefield stays above it, with status and controls on the right. Every unit has a persistent YOU (blue solid) or FOE (red dashed) marker that follows ownership across rows and online seat mirroring, independent of class, rarity, readiness or targeting.
+
+Emotes are for active combat only: there is no separate menu destination, Profile section or result-screen emote button. All six base text phrases are included automatically for new and existing saves; optional graphic emotes remain 350 gold each. The Store shows one category at a time: card packs, starter decks, graphic emotes, or avatars/backgrounds. Existing purchases and progress are preserved.
+
 ## 2.2.7
 
 Ranked now uses the normal deck rules: 20–30 cards and up to 3 copies of any card, regardless of rarity. Both human matches and rated bots accept these decks. Online opponents must update to this version because older clients enforce the removed restrictions. Existing saved decks and collections are unchanged.
