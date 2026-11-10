@@ -71,20 +71,20 @@ button{cursor:pointer}button:disabled{cursor:default}
 .deckWorkspace .deckActiveFilters .fact{margin:0;gap:3px}
 .deckWorkspace .deckActiveFilters .chip{min-height:22px;padding:2px 6px;font-size:10px}
 .deckWorkspace .deckHint{grid-area:hint;font-size:10px;line-height:1.2}
-.deckWorkspace .split{display:grid;grid-template-columns:minmax(0,1fr) clamp(138px,20vw,215px);gap:6px;width:100%;height:auto}
+.deckWorkspace .split{display:grid;grid-template-columns:minmax(0,1fr) clamp(165px,24vw,240px);gap:6px;width:100%;height:auto}
 .deckWorkspace .main,.deckWorkspace .dlist{min-width:0}
 .deckWorkspace .deckCardGrid{padding:0 4px}
 .deckWorkspace .deckCardGrid>.z0,.deckWorkspace .dlist>.z0{display:none}
 .deckWorkspace .dlist{width:auto;flex:none;padding:5px}
 .deckWorkspace .dlist h3{position:sticky;top:0;z-index:2;padding:3px 0;background:#1b150f}
-.deckWorkspace .dlist h4{position:sticky;top:22px;z-index:1;margin:2px 0 0;padding-top:3px;background:#1b150f}
+.deckWorkspace .dlist h4{margin:2px 0 0;padding-top:3px}
 .deckWorkspace .dlr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px;padding:2px}
 .deckWorkspace .dlr .dl{min-width:0;font-size:10px}
 .deckWorkspace .dlc{gap:2px}
 .deckWorkspace .dlc b{min-width:20px;text-align:center;font-size:10px}
 .deckWorkspace .dlb{flex:none;width:25px;min-height:24px;font-size:15px}
 .deckWorkspace .dlist .hint{font-size:9px}
-.deckWorkspace .deckCardGrid .card{height:clamp(148px,28vh,224px);min-height:0;flex-basis:auto;padding:3px;gap:2px}
+.deckWorkspace .deckCardGrid .card{height:clamp(180px,28vh,224px);min-height:0;flex-basis:auto;padding:3px;gap:2px}
 .deckWorkspace .deckCardGrid .card .cardHead{min-height:23px}
 .deckWorkspace .deckCardGrid .card .art{height:30px;min-height:30px}
 .deckWorkspace .deckCardGrid .card .identity{min-height:22px;font-size:10px}
@@ -98,6 +98,11 @@ button{cursor:pointer}button:disabled{cursor:default}
 .deckWorkspace .deckCardGrid .cc{gap:2px}
 .deckWorkspace .deckCardGrid .stp{font-size:10px;padding:1px}
 .deckWorkspace .deckCardGrid .stp button{width:26px;height:24px;font-size:15px}
+@media(max-width:900px){
+ .deckWorkspace .dlr{display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:3px}
+ .deckWorkspace .dlr .dl{width:100%;font-size:10px}
+ .deckWorkspace .dlc{width:100%}
+}
 @media(max-height:420px){
  .deckWorkspace .deckTools{grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr);gap:3px}
  .deckWorkspace .dkbar{gap:2px 5px;padding:3px 5px}
@@ -108,22 +113,19 @@ button{cursor:pointer}button:disabled{cursor:default}
  .deckWorkspace .deckTools>.rules[open]{max-height:90px}
  .deckWorkspace .deckFilterBar>*{min-height:27px}
  .deckWorkspace .deckHint{display:none}
- .deckWorkspace .deckCardGrid .card{height:140px}
- .deckWorkspace .deckCardGrid .card .art{height:24px;min-height:24px}
- .deckWorkspace .deckCardGrid .card .abilities,.deckWorkspace .deckCardGrid .card .cardFoot{display:none}
-}
-@media(max-height:380px){
- .deckWorkspace .deckCardGrid .card{height:110px}
- .deckWorkspace .deckCardGrid .card .stats{display:none}
+ .deckWorkspace .deckCardGrid .card{height:150px;padding:2px;gap:1px}
  .deckWorkspace .deckCardGrid .card .cardHead{min-height:20px}
- .deckWorkspace .deckCardGrid .card .art{height:21px;min-height:21px}
- .deckWorkspace .deckCardGrid .card .identity{min-height:19px}
-}
-@media(max-height:340px){
- .deckWorkspace .deckCardGrid .card{height:98px}
- .deckWorkspace .deckCardGrid .cc{position:relative}
- .deckWorkspace .deckCardGrid .stp{position:absolute;right:3px;bottom:3px;left:3px;z-index:2;background:#090d16}
- .deckWorkspace .deckCardGrid .card .effect{display:none}
+ .deckWorkspace .deckCardGrid .card .art{height:24px;min-height:24px}
+ .deckWorkspace .deckCardGrid .card .identity{min-height:18px;padding:1px 3px;font-size:9px}
+ .deckWorkspace .deckCardGrid .card .identity small{font-size:8px}
+ .deckWorkspace .deckCardGrid .card .abilities{min-height:14px;gap:1px}
+ .deckWorkspace .deckCardGrid .card .abilityTag{font-size:8px;line-height:1;padding:1px 2px}
+ .deckWorkspace .deckCardGrid .card .effect{font-size:9px;line-height:1.05}
+ .deckWorkspace .deckCardGrid .card .stats{gap:1px}
+ .deckWorkspace .deckCardGrid .card .stat{min-height:16px;padding:0}
+ .deckWorkspace .deckCardGrid .card .stat b{font-size:7px}
+ .deckWorkspace .deckCardGrid .card .stat strong{font-size:9px;line-height:1}
+ .deckWorkspace .deckCardGrid .card .cardFoot{min-height:11px;font-size:9px}
 }
 .rar2,.rar3{animation:none}
 #zm,#zm.hover{inset:0;transform:none;width:auto;height:100dvh;max-height:none;left:0;top:0;padding:12px;background:#070b13f5;border:0;border-radius:0;pointer-events:auto;overflow:auto;justify-content:flex-start;z-index:80}
