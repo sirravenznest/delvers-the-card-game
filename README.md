@@ -100,6 +100,8 @@ Google sign-in uses Android Credential Manager, then Firebase Auth and Firestore
 
 Every app launch opens the original pixel-art Delvers title scene with its own synthesized theme and ember chime. Begin offline or Continue is immediately available, without waiting for the animation. Returning players keep their progress, privacy consent and audio preferences. Google sign-in is optional, and privacy consent is required before online features.
 
+After the title, new players without story progress get a dedicated Learn to play / Skip welcome screen. Completing or skipping the tutorial keeps it from interrupting later launches; it remains replayable from Guide. Set details appear only on Collection, Deck and Packs.
+
 ## Regression checks
 
 Run Node suites with `for f in tests/*.test.js; do node "$f" || exit; done`.

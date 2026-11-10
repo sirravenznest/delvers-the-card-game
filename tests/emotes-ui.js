@@ -22,6 +22,7 @@ async function run(){
   p.on('pageerror',e=>errors.push(e.message));
   await p.goto(url);
   await p.locator('.titleActions .pri').click();
+  await p.click('[data-a="tutskipmenu"]');
   assert.equal(await p.locator('[data-v="emotes"]').count(),0,'no separate emote menu destination');
   assert.equal(await p.evaluate(()=>S.cosmetics.emotes.length),6,'new players start with all six text phrases');
   await p.click('.hubTile[data-v="store"]');
