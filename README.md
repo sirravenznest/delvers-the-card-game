@@ -17,7 +17,7 @@ Collection, Deck and pack results have **Copies & cosmetics** controls. Each ind
 
 Plain spare breakdown keeps at least **three total copies per card name** and pays the existing gold reward plus **5 / 15 / 50 / 150 Arcane Dust** for Common / Uncommon / Rare / Legendary. Purchased-cosmetic copies cannot be broken down, even with their default appearance selected. Pack-only cosmetic spares require a separate confirmation and pay normal gold and rarity Dust plus **6% of their granted treatment's price, rounded down** (1 / 4 / 18 / 36 / 72 bonus Dust for basic colours / gold / foil / holographic / gold holographic). Bulk breakdown never includes cosmetic copies. Purchasing any additional treatment permanently protects an originally pack-granted copy too.
 
-**Packs → Break down extras** lists the exact plain spare copies and both rewards before confirmation. It considers only the last individual pack opened, never older collection copies. **Open all** uses only its final individual pack for this action. The receipt persists across reloads, and consumed copies cannot pay twice.
+The **end-of-opening summary** shows every card obtained and offers **Review & break down extras**, listing the exact plain spare copies and both rewards before confirmation. It considers only the last individual pack opened, never older collection copies. **Open all** displays all cards but uses only its final individual pack for breakdown. Closing the summary keeps remaining cards; obtained-card review and pack-extra breakdown are not shown in the Packs menu. The receipt persists across reloads to prevent consumed copies paying twice.
 
 Every packed card independently has a **0.25% / 0.75% / 1.5%** cosmetic chance in Standard / Veteran / Legendary packs, without changing card-rarity odds. A cosmetic drop unlocks and equips one treatment for free. Basic foil and silver/red/blue treatments are possible even on Common cards in Standard packs. Gold treatments require at least Uncommon, holographic requires Rare or Legendary, and gold holographic requires Legendary. Higher card rarity improves the treatment mix; higher pack tiers weight gold, foil and holographic treatments more heavily. Exact conditional treatment odds are shown under Pull rates.
 
@@ -25,7 +25,13 @@ Finishes use original procedural CSS, not third-party game assets. They appear i
 
 Pack openings have an original Delvers seal, tear effects, rarity-specific halos and particles, and a distinct shimmer celebration and label for cosmetic discoveries. Muting still controls all generated sounds; reduced motion removes animated effects, and Skip stays reachable during every stage. Reveal effects never change the already-granted pack contents or rewards.
 
+Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
+
 Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+
+## 2.2.19
+
+Smooths pack reveals without the opening flash or animation restarts. Finishing or skipping shows all obtained cards and confirmed extra-copy breakdown together; the Packs menu no longer retains results or breakdown controls.
 
 ## 2.2.18
 
