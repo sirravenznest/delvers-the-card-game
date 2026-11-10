@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.17
+
+Practice is manual-only, without Auto-play. Each practice objective opens automatically only once per fight, even when selecting cards, deselecting units or changing turns returns to an earlier objective. The Objective button still allows manual review; starting a new practice fight resets these reminders.
+
 ## 2.2.16
 
 Tutorial lessons and practice objectives are focused pop-ups, replacing the cramped side panel. Confirm an objective to clear the battle screen, and reopen it at any time using the Objective button in battle controls. Completing a guided action opens the next objective automatically.
@@ -115,7 +119,7 @@ After the title, new players without story progress get a dedicated Learn to pla
 ## Regression checks
 
 Run Node suites with `for f in tests/*.test.js; do node "$f" || exit; done`.
-For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Campaign checks play real turns with shortened presentation delays; cloud-reset and online checks use simulated services, not production Firebase.
+For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/practice-ui.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Practice checks cover one-time objectives, manual review and replay. Campaign checks play real turns with shortened presentation delays; cloud-reset and online checks use simulated services, not production Firebase.
 
 ## Legal & privacy
 See [PRIVACY.md](PRIVACY.md) and [LEGAL.md](LEGAL.md) (IP notes, SRD 5.1 attribution).
