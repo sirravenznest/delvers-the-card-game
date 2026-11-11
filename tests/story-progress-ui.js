@@ -56,7 +56,7 @@ let browser;
   if(tier===2)assert((await p.locator('[data-a="tier"][data-i="3"]').getAttribute('aria-label')).includes('next challenge'));
   await p.click(`[data-a="tier"][data-i="${tier}"]`,{force:true});
   assert.equal(await p.locator(`[data-a="tier"][data-i="${tier}"]`).getAttribute('aria-pressed'),'true');
-  assert((await p.locator('.storyBrief').textContent()).includes(tier===2?'×1.35':'×1.75'),'tier text matches reward multipliers');
+  assert((await p.locator('.storyBriefLayout').textContent()).includes(tier===2?'×1.35':'×1.75'),'tier text matches reward multipliers');
   await p.click('[data-a="begin"]',{force:true});await p.evaluate(()=>{V.intro=null;G.over='p';render()});
   assert.deepEqual(await p.evaluate(()=>({...S.packs})),packs,'repeating a cleared tier never awards another boss pack');
   await p.click('#ov [data-a="quit"]');

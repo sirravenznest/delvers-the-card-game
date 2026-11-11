@@ -9,6 +9,7 @@ let browser;
  p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{localStorage.delvers_mute='1';localStorage.delvers_consent='2026-11-09'});
  await p.goto(url);await p.locator('.titleActions .pri').click();await p.click('[data-a="tutskipmenu"]');
+ await p.addStyleTag({content:'.finishPixelTest .finishSurface,.finishPixelTest::before{animation:none!important;background-position:var(--finish-test-position,50%) var(--finish-test-position,50%)!important}.finishPixelOff .finishSurface{visibility:hidden!important}.finishPixelOff::before{opacity:0!important}'});
  await p.evaluate(()=>{newGame(0,1);V.intro=null;G.ev=[];G.p.hand=[];render()});
  for(const [width,height] of [[568,320],[640,360],[844,390],[1024,600],[1280,720]]){
   await p.setViewportSize({width,height});
@@ -42,9 +43,37 @@ let browser;
    return [...new Set(issues)];
   });
   assert.deepEqual(issues,[],'stable battlefield names and finish layers '+width+'x'+height);
+  for(const look of [{foil:'foil'},{background:'holographic'},{background:'gold-holographic'},{background:'holographic',foil:'foil'}]){
+   await p.evaluate(look=>{
+    G.b=Array(NT).fill(null);const u=mk(BN['Town Guard']);u.o='p';u.ready=true;u.mv=u.init;
+    G.b[16]=u;G.fx=false;DelversEngine.use(G);
+    for(const name of ['Dagger','Shield','Amulet of Health','Bless'])DelversEngine.cast('p',BN[name],{side:'p',c:u});
+    u.look={...look,lettering:'gold'};render();
+    document.querySelector('.tile.u').classList.add('finishPixelTest');
+   },look);
+   const tile=p.locator('.tile.u');
+   assert.equal(await tile.locator('.stat').count(),6);
+   assert.deepEqual(await tile.locator('.stat strong').allTextContents(),['4','7/7','4','19','1/1','15'],'real gear and Bless retain all six live stats');
+   assert.equal(await tile.locator('.stat.changed').count(),3,'ATK, HP and Guard buff markers remain');
+   assert.equal(await tile.locator('.tileGear>span').count(),3);assert.equal(await tile.locator('.ab [aria-label^="Tough"]').count(),1);
+   for(const phase of ['0%','50%','100%']){
+   await tile.evaluate((e,phase)=>{e.classList.remove('finishPixelOff');e.style.setProperty('--finish-test-position',phase)},phase);
+   const visible=(await tile.screenshot()).toString('base64');
+   await tile.evaluate(e=>e.classList.add('finishPixelOff'));
+   const hidden=(await tile.screenshot()).toString('base64');
+   const difference=await p.evaluate(async({visible,hidden})=>{
+    async function pixels(data){const image=new Image();image.src='data:image/png;base64,'+data;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return ctx.getImageData(0,0,canvas.width,canvas.height).data}
+    const a=await pixels(visible),b=await pixels(hidden);let changed=0,total=0;
+    for(let i=0;i<a.length;i+=4){const delta=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);if(delta>=24)changed++;total++}
+    return changed/total;
+   },{visible,hidden});
+   assert(difference>=.15,'finish must visibly affect at least 15% of actual unit pixels, not merely exist behind opaque panels: '+JSON.stringify({width,height,look,phase,difference}));
+   }
+   await tile.evaluate(e=>{e.classList.remove('finishPixelTest','finishPixelOff');e.style.removeProperty('--finish-test-position')});
+  }
  }
  await p.emulateMedia({reducedMotion:'reduce'});
  assert(await p.locator('.tile.u').first().evaluate(e=>e.querySelector('.finishSurface').getAnimations().length===0&&getComputedStyle(e,'::before').animationName==='none'),'reduced motion stops battlefield finishes');
  assert.deepEqual(errors,[]);
- console.log('PASS preserved metallic lettering, stable name nodes, opaque backing and nonoverlapping finish layers across five sizes');
+ console.log('PASS actual foil/holo pixels at three shimmer phases, all six buffed stats, gear, abilities, metallic lettering and stable name layers across five sizes');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{if(browser)await browser.close()});

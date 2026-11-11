@@ -41,7 +41,9 @@ async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});as
   return{same:intro===document.querySelector('#intro'),focus:document.activeElement===button,scroll:box.scrollTop===scroll,animation:box.getAnimations()[0]===animations[0]&&box.getAnimations()[0]?.currentTime===time,count:document.querySelectorAll('#intro').length};
  });
  assert.deepEqual(stableIntro,{same:true,focus:true,scroll:true,animation:true,count:1},'ranked polling preserves intro node, completed animation, focus and scroll without flicker');
- const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');
+ assert(await p.locator('.introBox').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1&&e.scrollHeight<=e.clientHeight+1&&e.scrollWidth<=e.clientWidth+1}),'ranked/friendly/bot intro needs no scrolling');
+ assert.equal(await p.locator('.introPlayer .rankBadge').count(),2,'both player ranks remain visible');
+ assert.deepEqual(await p.locator('.introPlayer .rankBadge').evaluateAll(nodes=>nodes.map(e=>e.getAttribute('aria-label'))),await p.evaluate(()=>[rankFor(V.intro.player.r,V.intro.player.w,V.intro.player.l).name,rankFor(V.intro.opponent.r,V.intro.opponent.w,V.intro.opponent.l,V.intro.opponent.bot).name].map(x=>x+' rank')),'intro shows the correct player and opponent rank');
  assert(await p.locator('[data-a="battleintro"]').isDisabled(),'cannot begin before rolling');
  await p.click('[data-a="diceroll"]');
  await p.waitForFunction(()=>G.opening.rolled.p&&G.opening.rolled.e);

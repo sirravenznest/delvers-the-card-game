@@ -19,8 +19,11 @@ body.battle .hand .card .finishSurface,body.battle .tile.u .finishSurface{inset:
 .card[class*="cc-lettering-"] .cardName,.card.zoom[class*="cc-lettering-"] .cardName,body.battle .hand .card[class*="cc-lettering-"] .cardName,body.battle .tile.u[class*="cc-lettering-"] .tileName{color:var(--cf-lettering);background:linear-gradient(175deg,#fff 5%,var(--cf-lettering) 25%,var(--cf-lettering) 45%,#fff 49%,var(--cf-lettering) 55%,var(--cf-lettering) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(0 1px 1px #000)}
 body.battle .tile.u .tileHeader{background:#111625}
 body.battle .tile.u[class*="cc-lettering-"] .tileName{filter:none}
+body.battle .tile.u .finishSurface{inset:1px;opacity:.85}
+body.battle .tile.u[class*="cc-background-"] .stat,body.battle .tile.u.cc-foil-foil .stat{background:#11162580}
 .card.cc-foil-foil::before,.tile.cc-foil-foil::before,.card.cc-foil-foil .artFrame::after{content:"";position:absolute;inset:5px;pointer-events:none;z-index:0;opacity:.24;background:repeating-linear-gradient(115deg,transparent 0 20%,#8fdaff 26%,#fff1c4 29%,#efb5ff 32%,transparent 40% 60%);background-size:300% 100%;animation:card-foil 7s ease-in-out infinite;animation-delay:var(--cf-foil-delay,0ms)}
 .card.cc-foil-foil::before,.tile.cc-foil-foil::before{z-index:1}
+body.battle .tile.u.cc-foil-foil::before{inset:1px;opacity:.55;background-image:repeating-linear-gradient(115deg,#8fdaff12 0 12%,#8fdaff88 20%,#fff1c4bb 26%,#efb5ff88 32%,#8fdaff12 42% 54%);background-size:180% 100%}
 .card.cc-foil-foil>.cardHead,.card.cc-foil-foil>.identity,.card.cc-foil-foil>.abilities,.card.cc-foil-foil>.stats,.card.cc-foil-foil>.cardFoot,.tile.cc-foil-foil>.tileHeader,.tile.cc-foil-foil>.stats,.tile.cc-foil-foil>.ab,.tile>.tileGear{position:relative;z-index:2}
 .card.cc-foil-foil .artFrame::after{z-index:1}
 body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;background:none;-webkit-text-fill-color:currentColor;filter:none}

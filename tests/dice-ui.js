@@ -60,7 +60,7 @@ let browser;
    await p.emulateMedia({reducedMotion:'reduce'});
    assert.equal(await p.locator('.d20Rolling').first().evaluate(e=>getComputedStyle(e).animationName),'none');
    await p.emulateMedia({reducedMotion:'no-preference'});
-   assert(await p.locator('.introBox').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1&&e.scrollWidth<=e.clientWidth+1}),'intro fits the viewport without horizontal clipping');
+   assert(await p.locator('.introBox').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1&&e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1}),'intro fits the viewport without scrolling');
    await p.click('[data-a="battleintro"]');
    await p.waitForFunction(()=>G&&!G.busy&&G.turn==='p',{timeout:15000});
    assert.equal(await p.evaluate(()=>G.turnNo),winner==='p'?1:2,'foe-first runs exactly one initial foe turn');
