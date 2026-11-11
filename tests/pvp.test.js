@@ -65,8 +65,8 @@ for (let seed = 1; seed <= 60; seed++) {
 }
 
 const G = P.newMatch(1, randDeck(lcg(1)), randDeck(lcg(2)));
-assert(!P.act(G, 'e', { a: 'end' }).ok, 'out-of-turn must fail');
-assert(!P.act(G, 'p', { a: 'summon', h: 0, pos: 0 }).ok, 'summon on foe row must fail');
+assert(!P.act(G, G.turn==='p'?'e':'p', { a: 'end' }).ok, 'out-of-turn must fail');
+assert(!P.act(G, G.turn, { a: 'summon', h: 0, pos: P.HOME[G.turn==='p'?'e':'p'][0] }).ok, 'summon on foe row must fail');
 assert(!P.act(G, 'p', null).ok);
 assert(!P.act(G, 'p', { a: 'nope' }).ok);
 assert(!P.validDeck(Array(30).fill('Squire')), '4+ copies invalid');

@@ -26,6 +26,7 @@ const tick=async(...clients)=>{clk.t+=1000;for(const t of clients)await t.tick()
   assert.equal(a.G[b.seat].deck.concat(a.G[b.seat].hand).filter(c=>c.look.foil).length,0);
   const resumed=client(db,'uA');
   await resumed.resume(a.mid);assert.deepEqual(signature(resumed.G),signature(a.G),'reconnect restores appearances');
+  await Promise.all([a.roll(),b.roll()]);await tick(a,b);
   let active,h;
   for(let turn=0;turn<10;turn++){
    active=a.G.turn===a.seat?a:b;

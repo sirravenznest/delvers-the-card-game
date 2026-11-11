@@ -12,6 +12,16 @@ const mk=d=>d.t=='c'?{...d,mhp:d.hp,mv:0,ready:false,sleep:0}:{...d};
 const units=s=>G.b.filter(u=>u&&u.o==s);
 const LOG_LIMIT=2000;
 const log=(m,kind='info',side)=>{G.log.unshift(m);G.log=G.log.slice(0,3);const history=G.history||(G.history=[]);history.push({id:G.historySeq=(G.historySeq||0)+1,text:m,kind,side:side||G.activeTurn||G.turn||'p',turnSide:G.activeTurn||G.turn||'p',turn:G.turnNo||1});if(history.length>LOG_LIMIT){history.shift();G.historyDropped=(G.historyDropped||0)+1}};
+function rollFirst(){
+ const rounds=[];let p,e;
+ do{p=d20();e=d20();rounds.push({p,e});
+  log(`Opening d20: ${p}${p===e?' (tie; reroll).':'.'}`,'roll','p');
+  log(`Opening d20: ${e}${p===e?' (tie; reroll).':'.'}`,'roll','e');
+ }while(p===e);
+ const winner=p>e?'p':'e';
+ log('Wins the opening roll and goes first.','info',winner);
+ return{rounds,winner,rolled:{p:false,e:false}};
+}
 function draw(s){const X=G[s];if(!X.deck.length){X.hp-=2;log('Hero takes 2 fatigue damage (empty deck).','damage',s);if(X.hp<=0)G.over=opp(s);return}const c=X.deck.pop();if(X.hand.length<7)X.hand.push(c)}
 function startTurn(s){const X=G[s];G.turnNo=(G.turnNo||0)+1;G.activeTurn=s;X.max=Math.min(X.cap||10,X.max+1);X.mp=X.max;log(`Turn ${G.turnNo}: ${X.mp}/${X.max} mana, hero ${X.hp}/${X.mx} HP.`,'turn',s);draw(s);units(s).forEach(c=>{if(has(c,'regen')){const n=Math.min(2,c.mhp-c.hp);c.hp+=n;if(n)log(`${c.name} regenerates ${n} HP (${c.hp}/${c.mhp}).`,'heal',s)}if(has(c,'heal')){const n=Math.min(1,X.mx-X.hp);X.hp+=n;if(n)log(`${c.name} heals the hero for ${n} (${X.hp}/${X.mx} HP).`,'heal',s)}c.fresh=0;c.u2=0;if(c.sleep>0){c.sleep--;c.mv=0;c.ready=false;log(`${c.name} cannot act this turn (${c.sleep} turns of sleep remaining).`,'status',s)}else{c.mv=c.init;c.ready=true}})}
 function dmg(s,c,n,cr){if(c){if(n>1&&has(c,'tough')&&G.hit)n--;ev({k:'dmg',i:ix(c),s,n,cr});c.hp-=n;log(`${c.name} takes ${n} damage (${Math.max(0,c.hp)}/${c.mhp} HP).`,'damage',s);if(c.hp<=0){ev({k:'die',i:ix(c),s});G.b[G.b.indexOf(c)]=null;log(c.name+' falls.','status',s)}}else{ev({k:'dmg',i:-1,s,n,cr});G[s].hp-=n;log(`Hero takes ${n} damage (${Math.max(0,G[s].hp)}/${G[s].mx} HP).`,'damage',s);if(G[s].hp<=0)G.over=opp(s)}}
@@ -72,6 +82,6 @@ function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,name:c.name,look:{
  else if(c.kind=='bless'){const b=c.n||1;t.c.atk+=b;t.c.hp+=b;t.c.mhp+=b}
  else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0;u.hp+=d.hp||0;u.mhp+=d.hp||0;u.rch+=d.rch||0;if(d.kw&&!has(u,d.kw)){u.k2=((u.k2||'')+' '+d.kw).trim();if(d.kw=='haste'&&u.fresh){u.ready=true;u.mv=u.init}}if(c.slot){u['s'+c.slot]=1;u.gear={...u.gear,[c.slot]:c.name}}}}
 function play(s,c,t,pos){const X=G[s];X.hand=X.hand.filter(x=>x!==c);X.mp-=c.cost;if(c.t=='c'){c.o=s;c.fresh=1;c.mv=has(c,'haste')?c.init:0;c.ready=has(c,'haste');G.b[pos]=c;ev({k:'sum',i:pos,s});log((s=='p'?'You summon ':'Foe summons ')+c.name+'.','summon',s)}else cast(s,c,t)}
-const api={LOG_LIMIT,AREA,hits,has,use,rnd,d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,spellDamage,saves,roll,attack,move,drawValue,refreshValue,ok,mres,cast,play};
+const api={LOG_LIMIT,AREA,hits,has,use,rnd,d20,rollFirst,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,spellDamage,saves,roll,attack,move,drawValue,refreshValue,ok,mres,cast,play};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversEngine=api;
 })(typeof self!=='undefined'?self:globalThis);

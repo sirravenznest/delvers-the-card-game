@@ -71,6 +71,7 @@ test('new cards share normal three-copy limits in ranked and replay identical le
     assert(!P.validRanked(illegal), name + ' copy cap');
     function run() {
       const G = P.newMatch(71, deck, C.STARTERS[1].list);
+      if(G.turn!=='p')assert(P.act(G,G.turn,{a:'end'}).ok);
       G.p.hand = [E.mk(c)];
       G.p.mp = 10;
       if (c.t == 'c') {

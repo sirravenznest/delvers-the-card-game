@@ -24,6 +24,7 @@ async function player(uid,name){
   for(const name of S.deck)S.col[name]=Math.max(3,S.col[name]||0);
   CF.normalize(S);
   for(const id of S.deckCopies){const {copy}=CF.find(S,id);copy.look={frame:uid==='landAlice'?'gold':'blue',lettering:'silver',background:'holographic',foil:'foil'};for(const slot of CF.SLOTS)copy.unlocked[slot]=[copy.look[slot]];copy.purchased=true}
+  S.gold=1000;DelversDice.buy(S,uid==='landAlice'?'emberheart':uid==='landBob'?'starless':'deep-anvil');
   S.sp='done';sv();V.v='ranked';render();
  },{uid});
  assert(await p.locator('[data-a="rfind"]').isEnabled(),'normal deck with three Rares and Legendaries is ranked legal');
@@ -33,14 +34,20 @@ async function player(uid,name){
 async function enter(p){await p.waitForFunction(()=>G&&G.pvp,{timeout:35000});assert.equal(await p.locator('#intro .introPlayer').count(),2);
  await p.waitForTimeout(650);
  const stableIntro=await p.evaluate(()=>{
-  const intro=document.querySelector('#intro'),box=intro.querySelector('.introBox'),button=intro.querySelector('[data-a="battleintro"]');
+  const intro=document.querySelector('#intro'),box=intro.querySelector('.introBox'),button=intro.querySelector('[data-a="diceroll"]');
   button.focus();box.scrollTop=5;
   const scroll=box.scrollTop,animations=box.getAnimations(),time=animations[0]?.currentTime;
   for(let i=0;i<3;i++)pvSync();
   return{same:intro===document.querySelector('#intro'),focus:document.activeElement===button,scroll:box.scrollTop===scroll,animation:box.getAnimations()[0]===animations[0]&&box.getAnimations()[0]?.currentTime===time,count:document.querySelectorAll('#intro').length};
  });
  assert.deepEqual(stableIntro,{same:true,focus:true,scroll:true,animation:true,count:1},'ranked polling preserves intro node, completed animation, focus and scroll without flicker');
- const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');await p.click('[data-a="battleintro"]');assert.equal(await p.locator('#intro').count(),0,'Begin battle dismisses preserved intro');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
+ const bounds=await p.locator('.introBox').boundingBox();assert(bounds.y>=0&&bounds.y+bounds.height<=p.viewportSize().height+1,'intro fits landscape');
+ assert(await p.locator('[data-a="battleintro"]').isDisabled(),'cannot begin before rolling');
+ await p.click('[data-a="diceroll"]');
+ await p.waitForFunction(()=>G.opening.rolled.p&&G.opening.rolled.e);
+ assert.equal(await p.locator('#openingDice .dieRoll[data-die-side="p"] .d20').getAttribute('aria-label'),await p.evaluate(()=>DelversDice.byId[S.cosmetics.die].name+' d20: '+G.opening.rounds.at(-1).p),'every seat sees its own selected die and actual roll');
+ assert.equal(await p.evaluate(()=>G.turn),await p.evaluate(()=>G.opening.winner),'highest d20 determines the relative first player');
+ await p.click('[data-a="battleintro"]');assert.equal(await p.locator('#intro').count(),0,'Begin battle dismisses preserved intro');assert(await p.locator('.turnClock').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=innerWidth),'turn timer remains readable');
  assert(await p.evaluate(()=>document.querySelector('.hw').getBoundingClientRect().top>=document.querySelector('.board').getBoundingClientRect().bottom),'online hand is below the board');
  assert.equal(await p.locator('.hand .card.cc-foil-foil.cc-background-holographic').count(),await p.evaluate(()=>G.p.hand.length),'ranked, friendly and bot hands show every selected copy style');
  assert.equal(await p.locator('.hand .card.cc-frame-gold').count(),await p.evaluate(()=>UN()==='Alice'?G.p.hand.length:0),'styles remain attached to the correct online player');
@@ -75,7 +82,7 @@ async function run(){
  browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});
  const A=await player('landAlice','Alice'),B=await player('landBob','Bob');
  await A.p.click('[data-a="rfind"]',{force:true});await B.p.click('[data-a="rfind"]',{force:true});
- await enter(A.p);await enter(B.p);
+ await Promise.all([enter(A.p),enter(B.p)]);
  await A.p.click('[data-a="emotetoggle"]',{force:true});await A.p.click('[data-a="emotesend"][data-k="hello"]',{force:true});
  await B.p.waitForSelector('.emoteBubble.e');assert((await B.p.locator('.emoteBubble.e').innerText()).includes('Hello, Delver!'),'online emote delivered');
  const first=await A.p.evaluate(()=>G.turn=='p')?A:B,second=first===A?B:A;
@@ -98,7 +105,7 @@ async function run(){
  await B.p.waitForSelector('[data-a="facc"]',{timeout:15000});await B.p.click('[data-a="facc"]',{force:true});
  await A.p.waitForSelector('[data-a="finv"]',{timeout:15000});await A.p.click('[data-a="finv"]',{force:true});
  await B.p.waitForSelector('[data-a="iacc"]',{timeout:15000});await B.p.click('[data-a="iacc"]',{force:true});
- await enter(A.p);await enter(B.p);
+ await Promise.all([enter(A.p),enter(B.p)]);
  await A.p.click('[data-a="resign"]');await A.p.click('[data-a="resign"]');
  await B.p.waitForFunction(()=>G&&G.over=='p');
  assert((await B.p.locator('#ov').innerText()).includes('no rating change'),'friendly results not rated');

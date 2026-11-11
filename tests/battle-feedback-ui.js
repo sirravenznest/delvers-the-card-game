@@ -10,7 +10,7 @@ let browser;
  await p.addInitScript(()=>{localStorage.delvers_mute='1';localStorage.delvers_consent='2026-11-09'});
  await p.goto(url);await p.locator('.titleActions .pri').click();await p.click('[data-a="tutskipmenu"]');
  await p.evaluate(()=>{
-  newGame(0,1);V.intro=null;G.ev=[];G.p.mp=10;
+  newGame(0,1,true);V.intro=null;G.ev=[];G.p.mp=10;
   const u=mk(BN['Town Guard']);u.o='p';u.ready=true;u.mv=u.init;G.b[16]=u;
   G.p.hand=[mk({...BN.Dagger,look:{frame:'gold',background:'holographic',foil:'foil'}}),mk(BN.Shield),mk(BN['Amulet of Health']),mk(BN['Magic Missile'])];
   render();
@@ -101,7 +101,7 @@ let browser;
   const oldNet=NET,oldPv=V.pv;
   const g=DelversPvp.newMatch(1,Array(20).fill('Squire'),Array(20).fill('Squire'));
   g.fx=true;DelversEngine.use(g);DelversEngine.cast('e',BN['Mana Potion'],null);
-  NET={G:g,seat:'e',opp:{name:'Opponent'},timeLeft:()=>30000};V.pv={mid:'fixture'};
+  NET={G:g,seat:'e',meta:{p:'one',e:'two'},opp:{name:'Opponent'},timeLeft:()=>30000};V.pv={mid:'fixture'};
   const event=pvView().ev.find(x=>x.k==='spell');
   NET=oldNet;V.pv=oldPv;DelversEngine.use(G);
   return{caster:event.caster,side:event.s};
