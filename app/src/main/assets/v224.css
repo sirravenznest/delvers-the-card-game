@@ -355,6 +355,7 @@ body[data-view="duel"] #app>.navbar,body[data-view="duel"] #app>.navbar+.sw{disp
 .bookPages .op{background:none;border:0;border-bottom:1px dashed #9e8558;border-radius:0;padding:7px 0;margin:0;gap:6px}
 .bookPages .op>div{flex:1;min-width:0}.bookPages .op b{font:700 14px/1.2 Georgia,serif}
 .bookPages .op small{font:11px/1.3 Georgia,serif}
+.encounterStars{display:flex;align-items:center;gap:5px;margin-top:3px}
 .bookPages .op.boss b{color:#7b352a}
 .bookPages .btn{font:12px Georgia,serif;background:transparent;color:#543823;border:1px solid #9a774e;padding:5px 8px;min-height:28px}
 .bookPages .btn.pri{background:#e2c893;color:#432a1c;box-shadow:inset 0 0 0 1px #f8edcb}
