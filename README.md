@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.26
+
+Story encounter briefings and the dice/avatar opening use compact landscape layouts, keeping Begin, Back and Roll controls visible without scrolling. Story dialogue, difficulty choices, rewards, avatars and PvP ranks remain present. Battlefield foil and holographic finishes cover the inner unit surface and remain visible through translucent stat panels; metallic names keep their opaque backing, while all live stats, ability tags, gear and buff markers remain above the finishes.
+
+`tests/battle-intro-fit-ui.js` checks all 60 Story briefings and battle openings, difficulty states and PvP ranks across seven landscape sizes. `tests/battle-cosmetics-ui.js` compares actual rendered finish pixels at five sizes and three shimmer phases, including real equipped gear and Bless, alongside existing lettering, layer and reduced-motion checks.
+
 ## 2.2.25
 
 Every normal battle now starts with an **opposed d20 roll**: each player taps **Roll d20**, highest goes first, and ties reroll automatically. Story, human Ranked, rated bots and friendly matches all use the same rule. Both online players replay the same seeded results; independent, immutable roll acknowledgements cannot collide, change a result or consume gameplay action numbers. Play waits for both rolls, the normal turn timer starts after the second roll, and a player who never rolls forfeits after the opening time limit. Reconnecting restores rolls and the original dice, not a new chance. The second player retains the extra opening card regardless of seat. Guided practice and lessons remain player-first, without an opening roll.
