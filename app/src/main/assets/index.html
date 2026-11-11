@@ -542,7 +542,8 @@ function aiT(c,s){s=s||'e';const o=opp(s),X=G[s],P=units(o),E=units(s),big=l=>l.
  if(c.t=='c'){const f=(s=='e'?FOEB:DelversCards.BACK).filter(q=>!G.b[q]);return f.length?pick(f):null}
  if(c.kind=='aoe')return P.length>=2;
  if(AREA[c.kind]){let b=null,bs=0;P.forEach(x=>{const h=hits(s,c,x),v=h.reduce((m,[u,n])=>m+Math.min(n,u.hp)+(n>=u.hp?u.atk+2:0),0);if(v>bs){bs=v;b=x}});return b&&bs>=c.n?{side:o,c:b}:c.tg=='any'&&!P.length?{side:o,c:null}:null}
- if(c.kind=='draw')return E.length>0||X.hand.length<5||null;
+ if(c.kind=='draw')return DelversEngine.drawValue(G,s,c)>0||null;
+ if(c.kind=='haste'){const targets=E.map(u=>({u,v:DelversEngine.refreshValue(G,s,u)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);return targets.length?{side:s,c:targets[0].u}:null}
  if(c.kind=='mana')return X.hand.some(x=>x.cost>X.mp)||null;
  if(c.kind=='mheal')return E.some(x=>x.hp<x.mhp)||X.hp<=X.mx-5||null;
  if(c.kind=='turn')return P.some(x=>x.cls=='U')||null;
@@ -562,9 +563,13 @@ async function aiUnit(u,L,s){s=s||'e';const o=opp(s),home=q=>s=='e'?ROWS-1-row(q
   if(L&&sc(best)>=sc(p))return;
   G.b[best]=u;G.b[p]=null;u.mv-=dist(p,best);render();await sl(550)}}
 async function aiPlay(s,L){const X=G[s],stop=()=>s=='p'&&!G.auto;
- for(let g=0;g<8&&G&&!G.over&&!stop();g++){const c=X.hand.filter(x=>x.cost<=X.mp).sort((a,b)=>L?b.cost-a.cost:Math.random()-.5).find(x=>aiT(x,s)!==null&&aiT(x,s)!==false);if(!c)break;const t=aiT(c,s);
-  if(c.t=='c')play(s,c,null,t);else play(s,c,t===true?null:t);render();await sl(750)}
- for(const u of units(s)){if(!G||G.over||stop())break;await aiUnit(u,L,s)}}
+ for(let pass=0;pass<8&&G&&!G.over&&!stop();pass++){
+  let played=false;
+  for(let g=0;g<8&&G&&!G.over&&!stop();g++){const choice=X.hand.filter(x=>x.cost<=X.mp).sort((a,b)=>L?b.cost-a.cost:Math.random()-.5).map(c=>({c,t:aiT(c,s)})).find(x=>x.t!==null&&x.t!==false);if(!choice)break;const {c,t}=choice;
+   if(c.t=='c')play(s,c,null,t);else play(s,c,t===true?null:t);played=true;render();await sl(750)}
+  for(const u of units(s)){if(!G||G.over||stop())break;await aiUnit(u,L,s)}
+  if(!played&&pass>0)break;
+ }}
 async function autoTurn(){if(!G||!G.auto||G.over||G.busy||G.turn!='p'||G.pvp||G.tut)return;G.sel=null;G.busy=true;render();await sl(500);
  await aiPlay('p',2);if(!G)return;G.busy=false;if(G&&G.auto&&!G.over)endTurn();else render()}
 async function endTurn(){if(G.over||G.busy||G.turn!='p')return;const tutorialKey=G.tut&&!G.lesson?tutorialGuide()?.key:null;G.sel=null;G.turn='e';G.busy=true;startTurn('e');render();await sl(600);
@@ -605,6 +610,10 @@ const KI={heal:'✚',regen:'♻️',keen:'🎯',haste:'⚡',dbl:'⚔️',poison:
 const kws=c=>Object.keys(KN).filter(k=>c.kw==k||(c.k2||'').split(' ').includes(k));
 const abilityMark=k=>KI[k]+(k=='dbl'?'×2':'');
 const icon=c=>c.t=='c'?GL[c.cls]:c.t=='i'?SLI[c.slot]:SI[c.kind]||'✦';
+const gearSlots=[['P','Weapon'],['A','Armour'],['I','Magic item']];
+const equippedGear=c=>gearSlots.filter(([slot])=>c['s'+slot]).map(([slot,label])=>({slot,label,name:c.gear?.[slot]||label}));
+const gearSummary=c=>equippedGear(c).map(g=>g.label+': '+g.name).join('; ')||'No gear';
+function gearHTML(c){const gear=equippedGear(c);return gear.length?`<span class="tileGear" title="${esc(gearSummary(c))}" aria-label="${esc(gearSummary(c))}">${gear.map(g=>`<span>${SLI[g.slot]}<span class="gearName"> ${esc(g.name)}</span></span>`).join('')}</span>`:''}
 function rules(c){return c.t=='c'?kws(c).map(k=>`<span class="kw"><i>${abilityMark(k)}</i>${KW[k]}</span>`).join('')+(c.rch>1?`<span class="kw"><i>↔</i>Reach ${c.rch}</span>`:''):`<span class="kw"><i>${icon(c)}</i>${c.txt}</span>`}
 const statDefs=[['ATK','atk'],['HP','hp'],['GRD','ac'],['AIM','thac0'],['MOVE','init'],['SAVE','save']];
 function statsHTML(c){const original=BN[c.name]||c;return `<span class="stats">${statDefs.map(([label,key])=>{const changed=c[key]!==original[key]||(key=='hp'&&c.mhp&&c.mhp!==original.hp),value=key=='hp'&&c.mhp?c.hp+'/'+c.mhp:key=='init'&&c.mv!=null?c.mv+'/'+c.init:c[key];return `<span class="stat ${changed?'changed':''}" title="${label}${changed?' changed from '+original[key]:''}"><b>${label}</b><strong>${value}</strong></span>`}).join('')}</span>`}
@@ -612,7 +621,7 @@ function tagsHTML(c,compact){return kws(c).map(k=>`<span class="abilityTag" data
 const lookClass=c=>Object.entries(CF.cleanLook(c.look)).map(([slot,id])=>' cc-'+slot+'-'+id).join('');
 const finishHTML=c=>CF.cleanLook(c.look).background?'<span class="finishSurface" aria-hidden="true"></span>':'';
 function card(c,attr,cls,n,staticStats){const creature=c.t=='c';
- const identity=creature?(CLASS[c.cls]||CL[c.cls][0]):c.t=='s'?'Spell · '+CL[c.cls][0]:CL[c.cls][0],type=creature?(c.ct||CTYPE[c.cls]||'Creature'):c.t=='s'?(c.sub||'Spell'):'Equipment';
+ const identity=creature?'Creature · '+(CLASS[c.cls]||CL[c.cls][0]):c.t=='s'?'Spell · '+CL[c.cls][0]:'Gear · '+CL[c.cls][0],type=creature?(c.ct||CTYPE[c.cls]||'Creature'):c.t=='s'?(c.sub||'Spell'):'Equipment';
  return `<button class="card rar${c.rar} ${cls||''}${lookClass(c)}" style="--k:${CL[c.cls][1]};--rar:${RC[c.rar]}" data-z="${c.name}" data-look="${esc(JSON.stringify(CF.cleanLook(c.look)))}" ${c.copyId?`data-copy="${c.copyId}"`:''} ${attr||''}>${finishHTML(c)}<span class="cardHead"><span class="cost ${/\bno\b/.test(cls||'')?'no':''}" aria-label="${c.cost} mana">${c.cost}</span><b class="cardName">${c.name}</b></span><span class="artFrame">${art(c)}</span><span class="identity">${identity}<small>${type}</small></span><span class="abilities">${creature?tagsHTML(c):`<span class="effect">${c.txt}</span>`}</span>${creature?statsHTML(staticStats?BN[c.name]||c:c):''}<span class="cardFoot"><span class="rarityBadge">${RN[c.rar]}</span>${n!=null?`<span class="quantity">×${n}</span>`:''}</span></button>`}
 const need=(a,guard)=>Math.min(20,Math.max(2,a.thac0-guard-(DelversEngine.has(a,'keen')?1:0)));
 function canPlay(c){const P=G.p;if(c.cost>P.mp)return false;if(c.t=='c')return BACK.some(i=>!G.b[i]);if(c.tg=='none')return true;
@@ -650,9 +659,9 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
   return `<button class="tile ${home} ${m?'mv':''}" data-a="cell" data-i="${i}" aria-label="Empty tile, row ${row(i)+1}, column ${i%COLS+1}${home?', '+(home=='foeHome'?'opponent':'your')+' deployment row':''}${m?pl?', place here':', move here':''}">${m?(pl?'Place here':'Move here'):home=='foeHome'?'Foe deploy':home=='yourHome'?'Your deploy':''}</button>`}
   const inr=un&&u.o=='e'&&un.ready&&dist(up,i)<=un.rch,tg=hl(u.o,u)||(inr?'tgt':'');
   const cl=(u.o=='p'&&mine&&(u.mv>0||u.ready)&&!sel?'ready ':'')+(sel&&sel.c===u?'sel ':'')+(u.sleep||(u.o=='p'&&mine&&!u.ready&&u.mv<=0)?'done ':'')+tg;
-  const marks=tagsHTML(u,true)+[u.sP&&'<span class="abilityTag" title="Weapon" aria-label="Weapon">⚔</span>',u.sA&&'<span class="abilityTag" title="Armour" aria-label="Armour">🛡</span>',u.sI&&'<span class="abilityTag" title="Item" aria-label="Item">💍</span>',u.sleep&&'<span class="abilityTag" title="Asleep" aria-label="Asleep">💤</span>'].filter(Boolean).join('');
-  return `<button class="tile u ${u.o} ${cl}${lookClass(u)}" style="--k:${CL[u.cls][1]};--rar:${RC[u.rar]}" data-a="cell" data-i="${i}" data-z="${u.name}" aria-label="${u.o=='p'?'Your unit':'Opponent unit'}: ${u.name}. ${CLASS[u.cls]||CL[u.cls][0]}. ${RN[u.rar]}. Attack ${u.atk}, health ${u.hp} of ${u.mhp}, Guard ${u.ac}, Aim ${u.thac0}, movement ${u.mv} of ${u.init}, Save ${u.save}.">${finishHTML(u)}<span class="tileHeader"><span class="tileOwner">${u.o=='p'?'YOU':'FOE'}</span><b class="tileName">${u.name}</b></span><i class="hit" style="${inr?'':'display:none'}">Hit ${inr?need(un,u.ac):''}+</i>${statsHTML(u)}<span class="ab">${marks}</span></button>`}).join('');
- const pr=G.over?'':G.turn=='e'?'Foe is acting… please wait.':G.msg||(pl?'Tap a glowing tile on your back row (bottom).':sp?`Choose a target for ${sp.name}.`:un?`Tap a yellow tile to move (${un.mv} initiative left)${un.ready?', or a red target to attack':''}.`:'Play a green-bordered hand card, or select one of your blue YOU units.');
+  const marks=tagsHTML(u,true)+(u.sleep?'<span class="abilityTag" title="Asleep" aria-label="Asleep">💤</span>':'');
+  return `<button class="tile u ${u.o} ${cl}${lookClass(u)}" style="--k:${CL[u.cls][1]};--rar:${RC[u.rar]}" data-a="cell" data-i="${i}" data-z="${u.name}" aria-label="${u.o=='p'?'Your unit':'Opponent unit'}: ${u.name}. ${CLASS[u.cls]||CL[u.cls][0]}. ${RN[u.rar]}. Attack ${u.atk}, health ${u.hp} of ${u.mhp}, Guard ${u.ac}, Aim ${u.thac0}, movement ${u.mv} of ${u.init}, Save ${u.save}. ${esc(gearSummary(u))}.">${finishHTML(u)}<span class="tileHeader"><span class="tileOwner">${u.o=='p'?'YOU':'FOE'}</span><b class="tileName">${u.name}</b>${gearHTML(u)}</span><i class="hit" style="${inr?'':'display:none'}">Hit ${inr?need(un,u.ac):''}+</i>${statsHTML(u)}<span class="ab">${marks}</span></button>`}).join('');
+ const pr=(G.over?'':G.turn=='e'?'Foe is acting… please wait.':G.msg||(pl?'Tap a glowing tile on your back row (bottom).':sp?`Choose a target for ${sp.name}.`:un?`Tap a yellow tile to move (${un.mv} initiative left)${un.ready?', or a red target to attack':''}.`:'Play a green-bordered hand card, or select one of your blue YOU units.'))+(un&&equippedGear(un).length?`<p class="selectedGear"><b>Equipped:</b> ${esc(gearSummary(un))}. Hold unit for gear effects.</p>`:'');
  const hd=P.hand.map((c,i)=>{const playable=mine&&!G.busy&&canPlay(c),selected=sel&&sel.c===c;
   const state=G.over?'Battle over':!mine?'Foe’s turn':G.busy?'Please wait':c.cost>P.mp?`Need ${c.cost-P.mp} mana`:!playable?(c.t=='c'?'Back row full':'No valid target'):selected?'SELECTED':'PLAYABLE';
   return card(c,`data-a="hand" data-i="${i}" data-play-state="${esc(state)}" aria-label="${esc(c.name+': '+state)}" aria-disabled="${!playable}"`,(selected?'sel ':'')+(playable?'can ':'dim ')+(c.cost>P.mp?'no':''),null,true)}).join('');
@@ -711,10 +720,10 @@ function copyManagerHTML(){
  const list=S.copies[V.copyName]||[],c=list.find(c=>c.id===V.copyId);
  if(!c)return'';
  const preview={...CF.styled(S,V.copyName,c.id),look:V.lookDraft||c.look},purchase=V.lookPurchase;
- const slots=CF.SLOTS.map(slot=>`<fieldset><legend>${slot[0].toUpperCase()+slot.slice(1)}</legend><div class="cosmeticChoices"><button class="btn" data-a="lookdefault" data-slot="${slot}" aria-pressed="${!preview.look[slot]}">Default</button>${CF.CATALOG[slot].map(x=>{
+ const slots=[['Frame',['frame']],['Lettering',['lettering']],['Finishes',['background','foil']]].map(([label,group])=>`<fieldset><legend>${label}</legend>${group.map(slot=>`<div class="cosmeticChoices" role="group" aria-label="${slot==='background'?'Holographic background':slot==='foil'?'Foil shine':label}"><button class="btn" data-a="lookdefault" data-slot="${slot}" aria-pressed="${!preview.look[slot]}">${slot==='background'?'No holographic':slot==='foil'?'No foil':'Default'}</button>${CF.CATALOG[slot].map(x=>{
   const owned=c.unlocked[slot].includes(x.id);
   return `<button class="btn" data-a="lookpreview" data-slot="${slot}" data-k="${x.id}" aria-pressed="${preview.look[slot]===x.id}">${x.name}<small>${owned?'Unlocked · use free':'Preview · '+x.cost+' Dust'}</small></button>`;
- }).join('')}</div></fieldset>`).join('');
+ }).join('')}</div>`).join('')}${label==='Finishes'?'<small>Holographic backgrounds and foil shine can be worn together.</small>':''}</fieldset>`).join('');
  const deckSlots=S.deck.map((name,i)=>name===V.copyName?`<button class="btn" data-a="copydeck" data-i="${i}" data-copy="${c.id}" aria-pressed="${S.deckCopies[i]===c.id}">Use in deck slot ${i+1}</button>`:'').join('');
  const salvage=CF.extras(S,[c.id],true).length>0;
  return `<div class="copyShade"><section id="copyManager" role="dialog" aria-modal="true" aria-labelledby="copyTitle"><header><h2 id="copyTitle">${V.copyName} · Copies &amp; cosmetics</h2><button class="btn" data-a="copyclose">Close</button></header><div class="copyBody"><aside class="copyPreview">${card(preview,'','zoom')}<small>${esc(copyLabel({...c,look:preview.look}))}</small></aside><div class="copyControls sc v"><label for="copySelect">Individual copy</label><select id="copySelect" data-f="copyId">${list.map((x,i)=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>Copy ${i+1} (${x.id}) · ${copyLabel(x)}${CF.protectedCopy(x)?' · Protected':CF.cosmeticCopy(x)?' · Pack cosmetic':''}</option>`).join('')}</select><p><b>${S.dust} Arcane Dust</b> · Treatments unlock only on this copy. Previewing is free.</p>${V.copyMessage?`<p role="status">${esc(V.copyMessage)}</p>`:''}${V.saveMsg?`<p role="alert">${esc(V.saveMsg)}</p>`:''}${purchase?`<div class="cosmeticConfirm" role="group" aria-label="Confirm cosmetic purchase"><b>Unlock ${CF.option(purchase.slot,purchase.id).name} ${purchase.slot} for ${CF.option(purchase.slot,purchase.id).cost} Arcane Dust?</b><p>This copy will permanently become protected from breakdown.</p><button class="btn pri" data-a="lookbuy" ${S.dust<CF.option(purchase.slot,purchase.id).cost?'disabled':''}>Confirm purchase</button><button class="btn" data-a="lookcancel">Cancel preview</button></div>`:''}${slots}<div class="bar">${deckSlots}</div><p>${CF.protectedCopy(c)?'Protected: this copy has a purchased cosmetic and cannot be broken down.':CF.cosmeticCopy(c)?'Pack cosmetic: excluded from bulk breakdown. Only spares beyond three may be salvaged separately, with a 6% treatment bonus rounded down.':'Plain copy: eligible for spare breakdown only when more than three are owned.'}</p>${salvage?'<button class="btn" data-a="salvageask">Break down this pack cosmetic spare</button>':''}${V.salvageQuote?breakdownConfirmHTML(V.salvageQuote,'salvageconfirm','salvagecancel'):''}</div></div></section></div>`;
@@ -940,7 +949,7 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
  const mi=i=>mir?(ROWS-1-row(i))*COLS+i%COLS:i;
  const fl=l=>!mir?l:l.startsWith('You summon ')?'Foe summons '+l.slice(11):l.startsWith('You use ')?'Foe uses '+l.slice(8):l.startsWith('Foe summons ')?'You summon '+l.slice(12):l.startsWith('Foe uses ')?'You use '+l.slice(9):l;
  const b=Array(NT).fill(null);g.b.forEach((u,i)=>{if(u)b[mi(i)]=mir?{...u,o:u.o=='p'?'e':'p'}:u});
- const evs=(g.ev||[]).map(x=>({...x,s:x.s==null?x.s:(x.s==s?'p':'e'),i:x.i>=0?mi(x.i):x.i,f:x.f>=0?mi(x.f):x.f}));g.ev=[];
+ const evs=(g.ev||[]).map(x=>({...x,s:x.s==null?x.s:(x.s==s?'p':'e'),caster:x.caster==null?x.caster:(x.caster==s?'p':'e'),i:x.i>=0?mi(x.i):x.i,f:x.f>=0?mi(x.f):x.f}));g.ev=[];
  const v={ev:evs,pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
  v.turnNo=g.turnNo;
  v.history=(g.history||[]).map(h=>({...h,text:mir&&h.kind=='move'?fl(h.text).replace(/\bR(\d+) C(\d+)/g,(_,r,c)=>`R${ROWS+1-Number(r)} C${c}`):fl(h.text),side:h.side==s?'p':'e',turnSide:h.turnSide==s?'p':'e'}));v.historyDropped=g.historyDropped||0;
@@ -1061,6 +1070,8 @@ function render(){
  if(V.resetBookScroll){$app.querySelectorAll('.pageContent').forEach(e=>e.scrollTop=0);V.resetBookScroll=false}
  const on=$app.querySelector('.nav .on');
  if(on&&V.navOn!==V.v){V.navOn=V.v;on.parentNode.scrollLeft=on.offsetLeft-on.parentNode.clientWidth/2+on.offsetWidth/2}
+ const phase=Date.now();
+ $app.querySelectorAll('.card[class*="cc-"],.tile[class*="cc-"]').forEach(el=>{el.style.setProperty('--cf-holo-delay',-(phase%12000)+'ms');el.style.setProperty('--cf-foil-delay',-(phase%7000)+'ms')});
  sarUpdate();fxRun();
 }
 const psnd=(n,a)=>{try{PKS[n](a)}catch(e){}};
@@ -1163,6 +1174,22 @@ function turnNoticeSync(){
 const tileEl=i=>$app.querySelector(`.tile[data-i="${i}"]`),heroEl=s=>$app.querySelector(s=='e'?'[data-a="ehero"]':'[data-a="phero"]');
 function fl(el,txt,cl){if(!el)return;const r=el.getBoundingClientRect(),n=document.createElement('span');n.className='fl '+cl;n.textContent=txt;n.style.left=(r.left+r.width/2)+'px';n.style.top=(r.top+r.height/2)+'px';document.body.appendChild(n);setTimeout(()=>n.remove(),950)}
 function cls(el,c,ms){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el&&el.classList.remove(c),ms||500)}
+function spellNotice(x){
+ let tray=document.getElementById('battleNotices');
+ if(!tray){tray=document.createElement('div');tray.id='battleNotices';tray.setAttribute('role','status');tray.setAttribute('aria-live','polite');document.body.appendChild(tray)}
+ const notice=document.createElement('div');notice.className='battleNotice '+(x.kind==='gear'?'equipped':'cast');
+ const heading=document.createElement('b'),detail=document.createElement('span'),face=document.createElement('div');
+ heading.textContent=(x.caster==='p'?'You':'Foe')+(x.kind==='gear'?' equip':' cast');
+ face.className='playedCard';face.setAttribute('inert','');face.innerHTML=card({...BN[x.name],look:CF.cleanLook(x.look)},'tabindex="-1"');
+ detail.textContent='→ '+x.target;notice.append(heading,face,detail);tray.replaceChildren(notice);
+ const board=$app.querySelector('.board').getBoundingClientRect();
+ const scale=Math.min(1,(innerHeight-64)/parseFloat(getComputedStyle(face.firstElementChild).height));
+ face.style.setProperty('--played-scale',scale);
+ face.style.height=face.firstElementChild.offsetHeight*scale+'px';
+ const half=tray.offsetHeight/2;
+ tray.style.left=board.left+board.width/2+'px';tray.style.top=Math.max(half+8,Math.min(innerHeight-half-8,board.top+board.height/2))+'px';
+ setTimeout(()=>{notice.remove();if(!tray.childElementCount)tray.remove()},2000);
+}
 function fxOne(x){const el=x.i>=0?tileEl(x.i):heroEl(x.s);
  if(x.k=='atk'){const f=tileEl(x.f);if(f){const a=x.f,b=x.i>=0?x.i:null,dx=b==null?0:(b%COLS)-(a%COLS),dy=b==null?(x.s=='e'?-1:1):row(b)-row(a);f.style.setProperty('--dx',Math.sign(dx)*14);f.style.setProperty('--dy',Math.sign(dy)*14);cls(f,'fx-atk',300)}}
  else if(x.k=='dmg'){cls(el,'fx-hit',350);fl(el,(x.cr?'💥 ':'')+'-'+x.n,x.cr?'c':'d');snd(x.cr?'crit':'hit')}
@@ -1170,14 +1197,15 @@ function fxOne(x){const el=x.i>=0?tileEl(x.i):heroEl(x.s);
  else if(x.k=='heal'){fl(el,'+'+x.n,'h');cls(el,'fx-heal',500);snd('heal')}
  else if(x.k=='die'){cls(el,'fx-die',550);snd('die')}
  else if(x.k=='sum'||x.k=='mov'){cls(el,'fx-in',400);snd(x.k)}
- else if(x.k=='spell'){const t=x.i>=0?tileEl(x.i):x.all?$app.querySelector('.board'):heroEl(x.s);cls(t,'fx-spell',500);snd(x.kind=='gear'||x.kind=='bless'?'gear':'spell')}}
-function fxRun(){if(!G){fxOver=false;return}
+ else if(x.k=='spell'){const t=x.i>=0?tileEl(x.i):x.all?$app.querySelector('.board'):heroEl(x.s);cls(t,x.kind==='gear'?'fx-equip':'fx-spell',700);spellNotice(x);snd(x.kind=='gear'?'gear':'spell')}}
+let fxBattle=null;
+function fxRun(){const battle=G?(G.pvp?V.pv?.mid:G.p):null;if(battle!==fxBattle){document.getElementById('battleNotices')?.remove();fxBattle=battle}if(!G){fxOver=false;return}
  if(G.over&&!fxOver){fxOver=true;snd(G.over=='p'?'win':'lose')}else if(!G.over)fxOver=false;
- const e=G.ev;if(!e||!e.length)return;G.ev=[];e.slice(0,16).forEach((x,n)=>setTimeout(()=>fxOne(x),n*230))}
+ const e=G.ev;if(!e||!e.length)return;G.ev=[];const game=G,mid=G.pvp&&V.pv?.mid;e.forEach((x,n)=>setTimeout(()=>{if(G&&(G===game||mid&&G.pvp&&V.pv?.mid===mid))fxOne(x)},n*230))}
 // ===== Card zoom: hold a card or creature (or right-click) to read it in full =====
 const LEG='<p class="lg"><b>ATK</b> attack damage · <b>HP</b> health · <b>GRD</b> Guard (lower is harder to hit) · <b>AIM</b> d20 target number (lower is better) · <b>MOVE</b> tiles per turn · <b>SAVE</b> spell resistance (lower is better).</p>';
 function zoomHTML(c,live){const creature=c.t=='c',meta=creature?`<p><b>Class:</b> ${CLASS[c.cls]||'—'} · <b>Creature type:</b> ${c.ct||CTYPE[c.cls]||'Creature'} · <b>Alignment:</b> ${c.al||'—'}</p><p><b>Combat stats</b><br>Attack ${c.atk} · Health ${c.hp}${c.mhp?'/'+c.mhp:''}<br>Guard ${c.ac} · Aim ${c.thac0}<br>Initiative ${c.init} · Save ${c.save}</p>`:'';
- const l=creature?kws(c).map(k=>`<p><b>${abilityMark(k)} ${KN[k]}</b><br>${KW[k]}</p>`).join('')+(c.rch>1?`<p><b>↔ Reach ${c.rch}</b><br>Can strike foes up to ${c.rch} tiles away.</p>`:'')+(!kws(c).length&&c.rch<2?'<p>No special abilities.</p>':'')+(live?`<p><b>Carrying</b><br>${[c.sP&&'Weapon',c.sA&&'Armour',c.sI&&'Magic item'].filter(Boolean).join(', ')||'No gear'}</p>`:'')+LEG:`<p><b>${icon(c)} ${c.sub}</b><br>${c.txt}</p>`+(c.t=='i'?'<p>Played on one of your creatures. It stays for the rest of the duel.</p>':'')+(c.t=='s'&&c.kind=='dmg'?'<p>Damage spells ignore Guard and never miss.</p>':'');
+ const l=creature?kws(c).map(k=>`<p><b>${abilityMark(k)} ${KN[k]}</b><br>${KW[k]}</p>`).join('')+(c.rch>1?`<p><b>↔ Reach ${c.rch}</b><br>Can strike foes up to ${c.rch} tiles away.</p>`:'')+(!kws(c).length&&c.rch<2?'<p>No special abilities.</p>':'')+(live?`<p><b>Equipped gear</b><br>${equippedGear(c).map(g=>`<b>${g.label}: ${esc(g.name)}</b><br>${esc(BN[g.name]?.txt||'Equipped for this battle.')}`).join('<br>')||'No gear'}</p>`:'')+LEG:`<p><b>${icon(c)} ${c.sub}</b><br>${c.txt}</p>`+(c.t=='i'?'<p>Played on one of your creatures. It stays for the rest of the duel.</p>':'')+(c.t=='s'&&c.kind=='dmg'?'<p>Damage spells ignore Guard and never miss.</p>':'');
  return `<div class="zc">${card(c,'','zoom')}<div class="zr"><h3>${c.name}</h3><small>${RN[c.rar]}${creature?` · Class: ${CLASS[c.cls]||'—'} · Type: ${c.ct||CTYPE[c.cls]||'Creature'}`:''}</small>${meta}${l}</div></div><small>Tap anywhere to close</small>`}
 let zt=null,zAt=0,zHoverTimer=null,zHoverEl=null,zPressed=null,zStart=null;
 function zoomShow(el,hover){if(!el.isConnected||V.pk||V.packReview&&!V.copyName&&!el.closest('#packReview'))return;let c=null,live=false;if(el.classList.contains('tile')){c=G&&G.b[+el.dataset.i];live=true}else{const base=BN[el.dataset.z];if(base)c={...base,look:el.dataset.look?CF.cleanLook(JSON.parse(el.dataset.look)):{}}}if(!c)return;if(!hover)zAt=Date.now();let z=document.getElementById('zm');if(!z){z=document.createElement('div');z.id='zm';z.addEventListener('click',()=>z.remove());document.body.appendChild(z)}z.className=hover?'hover':'';z.setAttribute('role','dialog');z.setAttribute('aria-label',c.name+' card details');z.setAttribute('aria-modal',String(!hover));z.innerHTML=zoomHTML(c,live);z.scrollTop=0}

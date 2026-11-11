@@ -106,10 +106,10 @@ function score(G,s,a,skill){
   else if(c.kind=='aoe')v=G.b.filter(u=>u&&u.o==o).length*(1.4+c.n*.25);
   else if(c.kind=='sleep')v=unit?3+unit.atk*.8:0;
   else if(c.kind=='heal')v=hero?Math.min(c.n,X.mx-X.hp)*.9:unit?Math.min(c.n,unit.mhp-unit.hp)*.8:0;
-  else if(c.kind=='haste')v=unit&&unit.fresh?4+unit.atk:0;
+  else if(c.kind=='haste'){v=unit?E.refreshValue(G,s,unit):0;if(v<=0)return -100;v+=4}
   else if(c.kind=='bless')v=unit?2+c.n*.5:0;
   else if(c.kind=='gear')v=unit?2+(c.d.atk||0)+(c.d.hp||0)*.35+(c.d.kw?1:0):0;
-  else if(c.kind=='draw')v=2.2;
+  else if(c.kind=='draw'){v=E.drawValue(G,s,c);if(v<=0)return -100}
   else if(c.kind=='mheal')v=1+G.b.filter(u=>u&&u.o==s&&u.hp<u.mhp).length;
   else if(c.kind=='turn')v=G.b.filter(u=>u&&u.o==o&&u.cls=='U').length*2;
   else if(c.kind=='mana')v=1;
@@ -133,7 +133,7 @@ function chooseAction(G,s,tier,random){
  const legal=[];
  for(const a of actions(G,s)){
   const trial=copy(G);
-  if(P.act(trial,s,a).ok)legal.push({a,v:score(G,s,a,skill)});
+  if(P.act(trial,s,a).ok){const v=score(G,s,a,skill);if(a.a!=='end'&&v>-100)legal.push({a,v})}
  }
  if(!legal.length)return{a:'end'};
  legal.sort((a,b)=>b.v-a.v);

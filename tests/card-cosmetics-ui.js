@@ -16,6 +16,9 @@ let browser;
  await p.click('[data-a="copies"][data-k="Squire"]');
  await p.selectOption('#copySelect',id);
  assert.equal(await p.locator('#copySelect').inputValue(),id);
+ assert.deepEqual(await p.locator('.copyControls fieldset legend').allTextContents(),['Frame','Lettering','Finishes']);
+ const finishes=p.locator('.copyControls fieldset').filter({has:p.locator('legend', {hasText:'Finishes'})});
+ assert.equal(await finishes.locator('[data-a="lookpreview"]').count(),3,'all three finishes share one section');
  const treatments=[['frame','gold',75],['lettering','blue',25],['background','gold-holographic',1200],['foil','foil',300]];
  let dust=4000;
  for(const [slot,treatment,cost] of treatments){
@@ -69,7 +72,33 @@ let browser;
  assert(handIndex>=0);
  const dressed=p.locator(`.hand .card[data-i="${handIndex}"]`);
  assert(await dressed.evaluate(e=>e.classList.contains('cc-foil-foil')&&e.classList.contains('cc-background-gold-holographic')),'campaign hand shows cosmetics');
+ assert(await dressed.locator('.finishSurface').evaluate(e=>e.clientWidth>e.parentElement.clientWidth*.8),'battle finish is visible across the card, not a three-pixel strip');
+ const shimmer=await p.evaluate(async()=>{
+  const progress=()=>document.querySelector('.hand .finishSurface').getAnimations()[0].effect.getComputedTiming().progress;
+  const before=progress();render();const after=progress();
+  return Math.abs(before-after);
+ });
+ assert(shimmer<.03,'background refresh preserves shimmer phase instead of restarting it');
  assert(await dressed.evaluate(e=>getComputedStyle(e).borderTopColor==='rgb(142, 228, 176)'),'playable green border survives cosmetics');
+ for(const [width,height] of [[568,320],[640,360],[844,390],[1024,600],[1280,720]]){
+  await p.setViewportSize({width,height});
+  const issues=await p.evaluate(()=>{
+   const original=G.p.hand,issues=[];
+   const rgb=hex=>{const n=parseInt(hex.slice(1),16);return `rgb(${n>>16}, ${(n>>8)&255}, ${n&255})`};
+   for(const c of ALL){
+    G.p.hand=[mk({...c,look:{frame:'gold',lettering:'blue',background:'holographic',foil:'foil'}})];render();
+    const el=document.querySelector('.hand .card'),band=el.querySelector('.identity'),style=getComputedStyle(band);
+    const type=c.t==='c'?'Creature':c.t==='s'?'Spell':'Gear',r=band.getBoundingClientRect(),cardRect=el.getBoundingClientRect(),stats=el.querySelector('.stats');
+    if(style.display==='none'||style.backgroundColor!==rgb(CL[c.cls][1])||!band.textContent.startsWith(type+' · '))issues.push(c.name+' missing class/type');
+    if(band.scrollWidth>band.clientWidth+1||r.top<cardRect.top||r.bottom>cardRect.bottom)issues.push(c.name+' clipped identity');
+    if(stats&&stats.getBoundingClientRect().bottom>cardRect.bottom)issues.push(c.name+' clipped stats');
+    if(c.t!=='c'&&el.querySelector('.abilities').clientHeight<20)issues.push(c.name+' cramped rules');
+   }
+   G.p.hand=original;render();return issues;
+  });
+  assert.deepEqual(issues,[],'all card types retain readable class bands and stats at '+width+'x'+height);
+ }
+ await p.setViewportSize({width:568,height:320});
  await dressed.click({force:true});await p.click('[data-a="cell"][data-i="16"]',{force:true});
  assert.equal(await p.locator('.tile.u.p.cc-frame-gold.cc-lettering-blue.cc-background-gold-holographic.cc-foil-foil').count(),1,'summoned campaign creature retains all treatments');
  assert.equal(await p.locator('.tile.u.p .tileOwner').textContent(),'YOU','ownership remains distinct');

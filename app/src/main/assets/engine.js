@@ -19,6 +19,22 @@ function heal(s,c,n){ev({k:'heal',i:ix(c),s,n});const before=c?c.hp:G[s].hp;if(c
 function saves(c){if(!c)return 0;const r=d20(),k=r>=c.save;log(`${c.name} Save: rolls ${r} (needs ${c.save}+): ${k?'resisted':'failed'}.`,'roll',c.o);return k}
 function roll(a,ac){const need=Math.min(20,Math.max(2,a.thac0-ac-(has(a,'keen')?1:0))),r=d20(),hit=r==20||(r>1&&r>=need);log(`${a.name} rolls ${r} (needs ${need}+): ${r==20?'CRIT!':hit?'hit':'miss'}`,'roll',a.o);return hit?(r==20?2:1):0}
 function move(s,from,to){const u=G.b[from];G.b[to]=u;G.b[from]=null;u.mv-=dist(from,to);ev({k:'mov',i:to,s});log(`${u.name} moves R${row(from)+1} C${from%COLS+1} to R${row(to)+1} C${to%COLS+1} (${u.mv}/${u.init} movement left).`,'move',s)}
+function drawValue(g,s,c){
+ const x=g[s],available=Math.min(c.n,x.deck.length,Math.max(0,8-x.hand.length)),fatigue=Math.max(0,c.n-x.deck.length)*2;
+ return fatigue>=x.hp?0:Math.max(0,available*2-fatigue);
+}
+function refreshValue(g,s,u){
+ const from=g.b.indexOf(u);if(from<0||u.o!==s)return 0;
+ const foes=g.b.map((c,i)=>c&&c.o!==s?i:-1).filter(i=>i>=0),home=i=>s==='p'?row(i):ROWS-1-row(i);
+ const cells=mv=>g.b.map((c,i)=>(i===from||!c&&dist(from,i)<=mv)?i:-1).filter(i=>i>=0);
+ const refreshed=cells(u.init),current=cells(u.mv);
+ const attacks=has(u,'dbl')?2:1,remaining=u.ready?(has(u,'dbl')&&u.u2?1:attacks):0;
+ const inRange=refreshed.some(i=>home(i)<u.rch||foes.some(j=>dist(i,j)<=u.rch));
+ const attackGain=u.atk>0&&inRange?(attacks-remaining)*u.atk:0;
+ const gap=i=>Math.min(Math.max(0,home(i)-u.rch+1),...foes.map(j=>Math.max(0,dist(i,j)-u.rch)));
+ const movementGain=Math.max(0,Math.min(...current.map(gap))-Math.min(...refreshed.map(gap)));
+ return attackGain+movementGain;
+}
 // A creature may strike any foe within its reach. The foe only strikes back if the attacker is within the foe's own reach.
 function attack(s,a,t){const o=opp(s),tc=t.c,d=tc?dist(G.b.indexOf(a),G.b.indexOf(tc)):0;log(`${a.name} attacks ${tc?tc.name:'the opposing hero'}.`,'attack',s);ev({k:'atk',f:ix(a),i:ix(tc),s:o});const m=roll(a,tc?tc.ac:10);
  if(!m)ev({k:'miss',i:ix(tc),s:o});
@@ -40,7 +56,7 @@ function hits(s,c,tc){const o=opp(s),E=units(o),i=ix(tc),k=c.kind,n2=c.n2==null?
  else if(k=='rowl')rest.forEach(x=>row(ix(x))==row(i)&&r.push([x,c.n]));
  else if(k=='chain'){let cur=tc,n=c.n;const seen=[tc];for(let h=0;h<2;h++){n-=c.d||2;if(n<1)break;const nx=rest.filter(x=>!seen.includes(x)&&dist(ix(x),ix(cur))<=2).sort((a,b)=>dist(ix(a),ix(cur))-dist(ix(b),ix(cur))||ix(a)-ix(b))[0];if(!nx)break;seen.push(nx);r.push([nx,n]);cur=nx}}
  return r}
-function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,i:t&&t.c?ix(t.c):-1,s:t?t.side:o,all:c.kind=='aoe'||c.kind=='turn'||c.kind=='mheal'});log((s=='p'?'You use ':'Foe uses ')+c.name+(t?' on '+(t.side==s?'allied ':'opposing ')+(t.c?t.c.name:'hero'):'')+'.','spell',s);
+function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,name:c.name,look:{...c.look},caster:s,target:t?(t.c?t.c.name:t.side==s?'own hero':'opposing hero'):c.kind=='draw'||c.kind=='mana'?'self':c.kind=='mheal'?'all allies':'all foes',i:t&&t.c?ix(t.c):-1,s:t?t.side:c.kind=='draw'||c.kind=='mana'||c.kind=='mheal'?s:o,all:c.kind=='aoe'||c.kind=='turn'||c.kind=='mheal'});log((s=='p'?'You use ':'Foe uses ')+c.name+(t?' on '+(t.side==s?'allied ':'opposing ')+(t.c?t.c.name:'hero'):'')+'.','spell',s);
  if(c.kind=='dmg'){if(mres(t.c,s))return;let n=c.n;if(saves(t.c))n>>=1;dmg(t.side,t.c,n)}
  else if(AREA[c.kind]){if(!t.c){dmg(t.side,null,c.n);return}hits(s,c,t.c).forEach(([x,n])=>{if(x.hp<=0||mres(x,s))return;if(saves(x))n>>=1;dmg(o,x,n)})}
  else if(c.kind=='heal')heal(t.side,t.c,c.n);
@@ -52,8 +68,8 @@ function cast(s,c,t){const o=opp(s);ev({k:'spell',kind:c.kind,i:t&&t.c?ix(t.c):-
  else if(c.kind=='haste'){t.c.ready=true;t.c.mv=t.c.init;t.c.u2=0;t.c.sleep=0}
  else if(c.kind=='sleep'){if(imm(t.c))log(t.c.name+' is immune.','status',t.side);else if(!mres(t.c,s)&&!saves(t.c)){t.c.sleep=c.n||1;t.c.ready=false;t.c.mv=0;log(`${t.c.name} sleeps for ${t.c.sleep} turns.`,'status',t.side)}}
  else if(c.kind=='bless'){const b=c.n||1;t.c.atk+=b;t.c.hp+=b;t.c.mhp+=b}
- else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0;u.hp+=d.hp||0;u.mhp+=d.hp||0;u.rch+=d.rch||0;if(d.kw&&!has(u,d.kw)){u.k2=((u.k2||'')+' '+d.kw).trim();if(d.kw=='haste'&&u.fresh){u.ready=true;u.mv=u.init}}if(c.slot)u['s'+c.slot]=1}}
+ else if(c.kind=='gear'){const d=c.d,u=t.c;u.atk+=d.atk||0;u.thac0+=d.thac0||0;u.ac+=d.ac||0;u.init+=d.init||0;u.mv+=d.init||0;u.save+=d.save||0;u.hp+=d.hp||0;u.mhp+=d.hp||0;u.rch+=d.rch||0;if(d.kw&&!has(u,d.kw)){u.k2=((u.k2||'')+' '+d.kw).trim();if(d.kw=='haste'&&u.fresh){u.ready=true;u.mv=u.init}}if(c.slot){u['s'+c.slot]=1;u.gear={...u.gear,[c.slot]:c.name}}}}
 function play(s,c,t,pos){const X=G[s];X.hand=X.hand.filter(x=>x!==c);X.mp-=c.cost;if(c.t=='c'){c.o=s;c.fresh=1;c.mv=has(c,'haste')?c.init:0;c.ready=has(c,'haste');G.b[pos]=c;ev({k:'sum',i:pos,s});log((s=='p'?'You summon ':'Foe summons ')+c.name+'.','summon',s)}else cast(s,c,t)}
-const api={LOG_LIMIT,AREA,hits,has,use,rnd,d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,move,ok,mres,cast,play};
+const api={LOG_LIMIT,AREA,hits,has,use,rnd,d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,move,drawValue,refreshValue,ok,mres,cast,play};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DelversEngine=api;
 })(typeof self!=='undefined'?self:globalThis);
