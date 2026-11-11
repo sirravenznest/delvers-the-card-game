@@ -30,6 +30,9 @@ button{cursor:pointer}button:disabled{cursor:default}
 .deckTools .dkt{font-size:12px;gap:6px}.deckTools .btn{font-size:12px;padding:5px 7px}.deckTools .bar{flex-wrap:wrap}
 .deckTools .fbar{display:flex;flex-direction:column;margin:0}.deckTools .fbar>*{flex:none!important;width:100%}
 .deckTools .fpanel{max-height:200px;min-height:100px;padding:5px;flex:none}.deckTools .fg{flex-direction:column;gap:3px}.deckTools .fg>b{flex:none}
+.collectionWorkspace .collectionFilterPanel{max-height:none;min-height:0;overflow:visible;margin:0}
+.collectionWorkspace .collectionFilterPanel .fg,.collectionWorkspace .collectionFilterPanel .chips{min-width:0;width:100%}
+.collectionWorkspace .collectionFilterPanel .chip{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .deckWorkspace .split{height:100%;min-height:0;align-items:stretch}
 .deckWorkspace .main,.collectionWorkspace .main{height:100%;overflow:auto;min-height:0;display:block;padding:4px}
 .deckWorkspace .dlist{height:100%;max-height:none;min-height:0;position:relative;top:0;flex-basis:134px}

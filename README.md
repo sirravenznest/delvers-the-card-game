@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.27
+
+The deck list no longer repeats every card as a separate slot menu. Each grouped card instead opens Copies & cosmetics directly, with deck-copy choices shown above the treatments; owned copies already in the deck are marked. Purchases, individual copy selections and saved builds remain unchanged. Collection filters share the tools panel's single scroll surface, without overlapping scroll arrows.
+
+`tests/deck-cosmetics-filters-ui.js` covers deck-copy selection and swaps, saved-build restoration, and filter layout and interaction at seven landscape sizes.
+
 ## 2.2.26
 
 Story encounter briefings and the dice/avatar opening use compact landscape layouts, keeping Begin, Back and Roll controls visible without scrolling. Story dialogue, difficulty choices, rewards, avatars and PvP ranks remain present. Battlefield foil and holographic finishes cover the inner unit surface and remain visible through translucent stat panels; metallic names keep their opaque backing, while all live stats, ability tags, gear and buff markers remain above the finishes.

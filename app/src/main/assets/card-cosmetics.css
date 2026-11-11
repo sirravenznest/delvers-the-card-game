@@ -30,8 +30,7 @@ body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;backgro
 @keyframes card-holographic{50%{background-position:100% 100%}}
 @keyframes card-foil{0%,100%{background-position:0 0}50%{background-position:100% 0}}
 .copyButton{width:100%;margin-top:3px;padding:5px;font:12px Arial,sans-serif}
-.deckCopyRow .btn{width:100%;text-align:left;padding:5px;overflow-wrap:anywhere}
-.deckCopyRow small{display:block;font:10px/1.2 Arial,sans-serif}
+.deckWorkspace .deckCopyAction{grid-column:1/-1;min-height:28px;padding:3px 6px;font-size:10px;text-align:left}
 .packExtras{padding:8px;border:1px solid #6a5638;border-radius:8px}
 .packExtras h3{margin:0 0 4px}.packExtras>.btn{display:block;margin-top:6px}
 #packReview{display:flex;flex-direction:column;width:min(960px,100%);height:min(640px,100%);min-height:0;padding:12px;background:#201b26;border:2px solid #ffe297;border-radius:12px;text-align:left;color:#f1e8d6}
@@ -54,6 +53,11 @@ body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;backgro
 .copyPreview>small{font:11px/1.3 Arial,sans-serif}
 .copyControls{overflow:auto;min-height:0;padding:6px}
 .copyControls select{width:100%;min-height:40px;background:#17121e;color:#fff;font:14px Arial,sans-serif;border:1px solid #91caff;border-radius:6px}
+.copyDeck{margin:8px 0;padding:6px;border:1px solid #6a6380;border-radius:6px}
+.copyDeck>b,.copyDeck>small{display:block}.copyDeck>small{margin:3px 0}
+.copyDeckChoices{display:flex;flex-wrap:wrap;gap:5px}
+.copyDeckChoices .btn{flex:1 1 85px;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.copyDeckChoices .btn small{display:block;font:10px/1.2 Arial,sans-serif}
 .copyControls fieldset{margin:6px 0;padding:6px;border:1px solid #6a6380;border-radius:6px}
 .cosmeticChoices{display:flex;flex-wrap:wrap;gap:5px}.cosmeticChoices .btn{padding:6px;flex:1 1 85px}
 .cosmeticChoices small{display:block;font:11px Arial,sans-serif}
