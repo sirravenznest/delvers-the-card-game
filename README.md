@@ -3,6 +3,31 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.24
+
+First Adventures now contains **130 cards**. Eight additions cover the five player classes and three spells; no monsters, new Legendaries or automatic card grants are added. Existing collections, starter lists, pack prices, rarity/cosmetic rates and reward gates remain unchanged. The ten Legendary names retain their individual pull odds. Pull rates derives rarity counts from the current set, discloses duplicates, and shows the actual probability of at least one specific card rather than its expected copy count. Every pack tier has a collapsible card pool grouped by rarity, including all eight additions.
+
+| Card | Class | Cost | Rarity | Role |
+|---|---|---:|---|---|
+| Ashen Standard-Bearer | Fighter | 3 | Uncommon | Modest front line with hero healing |
+| Lanternbound Adept | Wizard | 2 | Common | Small Warded caster |
+| Emberheart Confessor | Cleric | 4 | Rare | Spell-resistant alternative to a healer |
+| Vaultstep Infiltrator | Thief | 3 | Uncommon | Sturdier, slower Backstab option |
+| Embertrail Archer | Ranger | 3 | Common | Accessible Reach-2 support |
+| Lantern Study | Wizard spell | 1 | Common | Cycle one card without gaining hand advantage |
+| Hearthward Prayer | Cleric spell | 2 | Uncommon | Creature-only healing |
+| Ashen Reprisal | Wizard spell | 4 | Rare | A weaker, cheaper three-target chain |
+
+**Warded** reduces spell damage by one after Saves, never reducing positive damage below one; zero damage stays zero. It does not prevent physical damage, Poison, retaliation or control. Deep Anvil Charm grants it using the existing magic-item slot, and Lanternbound Adept has it naturally. Repeated grants do not stack. Cera now has two health and Regenerate alongside Heal; Nim now has two health and Haste alongside Backstab. Costs and rarities stay unchanged.
+
+Story's book-style **Index** provides nine chapter destinations, saved star totals and the current encounter, with one shared chapter scroll surface. Future chapters remain browsable but their fights stay locked. Enemy decks use twenty faction profiles, with thematic new cards gated by the encounter's existing rarity cap. Health, mana, AI levels and rewards are unchanged. Earlier enemies favour more cheap bodies rather than a stronger midrange curve.
+
+The Haste lesson now requires **summon, move and attack in the same turn**, rather than finishing at summon. It explains each phase, accepts missed attacks, and cannot waste its movement on an irrelevant tile. Battlefield metallic lettering remains intact on an opaque header backing; unchanged name/header nodes survive background renders, and filtered-text compositing is removed from small unit labels. Foil, holographic finishes, ownership markers and exhausted colours remain.
+
+The glossary is the first expandable Guide section, directly below tutorial controls. Guide and card wording distinguish Tough from Warded, describe Backstab's extra Attack damage even on critical hits, and clarify ranged Thorns and Turn Undead's existing magic-resistance bypass. These wording corrections do not change the original cards' combat rules.
+
+`tests/final-set.test.js` compares one and three copies of every new card against all starters in both seats (100 fixed seeds per matchup). Observed starter win-rate changes range from -6.2 to +4.7 percentage points. Cheap-Legend comparisons and early/mid/late campaign comparisons run separately. These are heuristic regression samples, not proof of optimal-play balance.
+
 ## Tutorial pack and menu lessons
 
 Winning practice awards **one free Standard pack**, alongside the existing free starter choice. After selecting the starter, the tutorial continues through real pack opening, the full card-results/optional breakdown summary, gold and Arcane Dust, and the Deck UI. The deck lesson requires changing a card quantity and finishing with 20–30 cards; players may restore their original quantities. No currency spending or breakdown is required.
@@ -14,6 +39,8 @@ Pack and deck guidance is confined to the dedicated tutorial; normal Packs and D
 During pack reveals, **Open all** immediately shows every obtained card in the summary; it does not discard cards. The separate Packs-menu **Open all** opens all unopened packs outside the guided free-pack lesson.
 
 Run `tests/tutorial-menus-ui.js` with the local-server/Playwright setup below to cover tutorial rewards, existing-player grants, save failures, resumable real-menu lessons and replay protection. Cloud UI checks also cover delayed sync and restored one-time reward markers.
+
+The creature-ability lesson demonstrates Haste through actual summon-turn movement and an attack. Summoning or selecting alone cannot finish it; an attack that misses still completes the demonstration. `tests/tutorial-abilities-ui.js` covers all four deployment columns, restricted movement, short-screen objective layouts and reward neutrality.
 
 ## Card cosmetics & Arcane Dust (development)
 
@@ -29,15 +56,15 @@ Collection, Deck and pack results have **Copies & cosmetics** controls. Each ind
 
 Plain spare breakdown keeps at least **three total copies per card name** and pays the existing gold reward plus **5 / 15 / 50 / 150 Arcane Dust** for Common / Uncommon / Rare / Legendary. Purchased-cosmetic copies cannot be broken down, even with their default appearance selected. Pack-only cosmetic spares require a separate confirmation and pay normal gold and rarity Dust plus **6% of their granted treatment's price, rounded down** (1 / 4 / 18 / 36 / 72 bonus Dust for basic colours / gold / foil / holographic / gold holographic). Bulk breakdown never includes cosmetic copies. Purchasing any additional treatment permanently protects an originally pack-granted copy too.
 
-The **end-of-opening summary** shows every card obtained and offers **Review & break down extras**, listing the exact plain spare copies and both rewards before confirmation. It considers only the last individual pack opened, never older collection copies. **Open all** displays all cards but uses only its final individual pack for breakdown. Closing the summary keeps remaining cards; obtained-card review and pack-extra breakdown are not shown in the Packs menu. The receipt persists across reloads to prevent consumed copies paying twice.
+The **end-of-opening summary** shows every card obtained and offers **Review & break down extras**, listing the exact plain spare copies and both rewards before confirmation. It considers every pack in the current opening, including mixed-tier **Open all**, never older collection copies. The guided tutorial retains its separate five-card receipt. Closing the summary keeps remaining cards; obtained-card review and pack-extra breakdown are not shown in the Packs menu. Saved copy ownership and currencies prevent consumed copies paying twice; the persisted latest-pack receipt remains five cards and does not reopen a closed batch.
 
 Every packed card independently has a **0.25% / 0.75% / 1.5%** cosmetic chance in Standard / Veteran / Legendary packs, without changing card-rarity odds. A cosmetic drop unlocks and equips one treatment for free. Basic foil and silver/red/blue treatments are possible even on Common cards in Standard packs. Gold treatments require at least Uncommon, holographic requires Rare or Legendary, and gold holographic requires Legendary. Higher card rarity improves the treatment mix; higher pack tiers weight gold, foil and holographic treatments more heavily. Exact conditional treatment odds are shown under Pull rates.
 
 Finishes use original procedural CSS, not third-party game assets. They appear in menus, pack reveals, full-card previews, battle hands and battlefield units. Gameplay colours always take precedence: playable/blocked cards, blue/red ownership, readiness, targets, changed stats, class bands and rarity indicators keep their original colours. Battle holographic finishes cover the inner card surface at reduced opacity rather than being squeezed into a thin strip, and shimmer keeps its phase across background refreshes. Exhausted unit names retain their muted appearance. All campaign difficulties, human ranked, rated bots and friendly matches support cosmetics. Tutorial lessons and guided practice use plain cards. Reduced-motion settings disable animated shimmer.
 
-Spells and gear briefly show the actual played card front and center over the battlefield, identifying who played it and its target. The presentation fades automatically, requires no dismissal, and never takes focus or blocks controls. Equipped units show gear markers; select or hold a unit to identify every item and inspect its effects. Larger battle views also show gear names beside the unit name. These are presentation-only changes, with existing gear slots and stat bonuses unchanged. Run `tests/battle-feedback-ui.js` with the local-server/Playwright setup below for centered presentations, equipment inspection, landscape sizes and online seat attribution.
+Spells and gear show the actual played card front and center for two seconds, identifying who played it and its target. A simple fade replaces the moving/scaling entrance. The latest rapid cast replaces the previous presentation and receives its own lifetime; resizing refits it, and battle results or leaving clear it immediately. It requires no dismissal, never takes focus and never blocks controls. Equipped units show gear markers; select or hold a unit to identify every item and inspect its effects. Larger battle views also show gear names beside the unit name. Run `tests/battle-feedback-ui.js` with the local-server/Playwright setup below.
 
-Battle-hand cards retain their class-coloured identity band even on compact screens, explicitly labelling Creature, Spell or Gear alongside class or equipment slot. The band remains separate from playable/blocked borders, selection outlines and cosmetic finishes.
+Battle-hand cards retain their class-coloured identity band even on compact screens, explicitly labelling Creature, Spell, Consumable or Gear alongside class or equipment slot. Single-use magic items are Consumables, not permanent gear. The band remains separate from playable/blocked borders, selection outlines and cosmetic finishes.
 
 Auto-play, campaign AI and ranked bots evaluate draw spells using actual deck and hand space, including the slot freed by casting. They avoid empty-deck/fatal-fatigue draws and save Potion of Speed for useful restored attacks or movement instead of refreshing unused actions. Auto-play and campaign AI reconsider cards after units act, so Speed can grant a genuine extra action that turn. Ranked bots do not randomly end a turn while a useful action remains.
 
@@ -45,7 +72,7 @@ Pack openings have an original Delvers seal, tear effects, rarity-specific halos
 
 Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
 
-Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 7 isolates the expanded set and revised card rules from older clients, and shares only equipped appearances with match participants. Both players must use a compatible build. No Firebase rules changes are required.
 
 ## 2.2.23
 
@@ -167,7 +194,7 @@ Requires `aapt`, `apksigner`, `zipalign`, `smali`, `zip`, a JDK, and the Android
 
 Output: `app/build/outputs/apk/debug/app-debug.apk` (debug-signed with a locally generated keystore).
 
-## First Adventures (Set 1, 122 cards)
+## First Adventures (Set 1, 130 cards)
 Creatures, spells, weapons, armour and magic items. Play on a 4×5 grid, use abilities like haste, poison, paralysis and backstab, move with **initiative**, and use **reach** to hit foes from range. Reach the enemy's side to attack their hero.
 Download the latest APK from the [android-latest release](../../releases/tag/android-latest).
 
@@ -187,6 +214,7 @@ After the title, new players without story progress get a dedicated Learn to pla
 ## Regression checks
 
 Run Node suites with `for f in tests/*.test.js; do node "$f" || exit; done`.
+Focused browser checks for this pass are `tests/story-index-ui.js`, `tests/story-progress-ui.js`, `tests/pack-opening-ui.js`, `tests/tutorial-abilities-ui.js`, `tests/battle-cosmetics-ui.js`, `tests/battle-feedback-ui.js` and `tests/set-cohesion-ui.js`. They use the same local-server setup below.
 For landscape, zoom, tutorial, save, retry and simulated online UI checks, serve the repository locally with `python3 -m http.server 8765 --bind 127.0.0.1`, then run `tests/ui224.js`, `tests/card-cosmetics-ui.js`, `tests/practice-ui.js`, `tests/cloud-ui224.js`, `tests/campaign-ui224.js` and `tests/online-ui224.js` sequentially with Node. Set `PLAYWRIGHT_MODULE` to an installed Playwright module and `CHROME_BIN` if Chrome is not at `/usr/bin/google-chrome`. Cosmetic checks exercise per-copy purchases, menus, previews, persistence, pack rewards and salvage. Practice checks cover one-time objectives, manual review and replay. Campaign checks play real turns with shortened presentation delays and cosmetic-equipped decks at all difficulties; cloud-reset and online checks use simulated services, not production Firebase. Online checks verify both players' finishes in human ranked, friendly and bot battles.
 
 ## Legal & privacy

@@ -101,7 +101,7 @@ function score(G,s,a,skill){
  if(a.a=='cast'){
   const c=X.hand[a.h],t=a.t,unit=t&&t.i!=null?G.b[t.i]:null,hero=t&&t.i==null;
   let v=1;
-  if(c.kind=='dmg')v=unit?Math.min(c.n,unit.hp)*1.5+(c.n>=unit.hp?3:0):hero?Math.min(c.n,en.hp)*.8:0;
+  if(c.kind=='dmg'){const damage=E.spellDamage(unit,c.n);v=unit?Math.min(damage,unit.hp)*1.5+(damage>=unit.hp?3:0):hero?Math.min(c.n,en.hp)*.8:0}
   else if(['splash','blast','col','rowl','chain'].includes(c.kind))v=2.5+G.b.filter(u=>u&&u.o==o).length*1.15;
   else if(c.kind=='aoe')v=G.b.filter(u=>u&&u.o==o).length*(1.4+c.n*.25);
   else if(c.kind=='sleep')v=unit?3+unit.atk*.8:0;

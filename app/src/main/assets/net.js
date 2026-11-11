@@ -7,7 +7,7 @@ const EM=typeof require!=='undefined'?require('./emotes.js'):root.DelversEmotes;
 const F=typeof require!=='undefined'?require('./card-cosmetics.js'):root.DelversCardCosmetics;
 const SV={'.sv':'timestamp'};
 // Bump when rules or the shared battle presentation contract changes.
-const PROTO=6,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+const PROTO=7,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000,BOT_WAIT_MS=20000;
 
 function create(o){
