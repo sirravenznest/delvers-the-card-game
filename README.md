@@ -3,7 +3,7 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
-## Final set and UI pass (unreleased)
+## 2.2.24
 
 First Adventures now contains **130 cards**. Eight additions cover the five player classes and three spells; no monsters, new Legendaries or automatic card grants are added. Existing collections, starter lists, pack prices, rarity/cosmetic rates and reward gates remain unchanged. The ten Legendary names retain their individual pull odds. Pull rates derives rarity counts from the current set, discloses duplicates, and shows the actual probability of at least one specific card rather than its expected copy count. Every pack tier has a collapsible card pool grouped by rarity, including all eight additions.
 

@@ -22,8 +22,8 @@ android {
         applicationId "com.sirravenznest.delvers"
         minSdk 23
         targetSdk 34
-        versionCode 37
-        versionName "2.2.23"
+        versionCode 38
+        versionName "2.2.24"
     }
 
     if (hasReleaseSigning) {
