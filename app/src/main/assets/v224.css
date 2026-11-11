@@ -3,10 +3,10 @@
 body{font-family:Arial,Helvetica,sans-serif;font-size:14px}
 #app{max-width:1280px;padding:8px 12px;height:100dvh}
 button{cursor:pointer}button:disabled{cursor:default}
-.card,.card.zoom,body.battle .hand .card{width:var(--card-width);height:var(--card-height);flex:0 0 var(--card-width);display:flex;flex-direction:column;gap:3px;padding:5px;border:2px solid var(--rar);border-radius:5px;background:#1a2030;box-shadow:inset 4px 0 var(--k);overflow:hidden;text-align:left}
-.card .cardHead{display:grid;grid-template-columns:22px 1fr;align-items:center;gap:4px;min-height:32px}
+.card,.card.zoom,body.battle .hand .card{width:var(--card-width);height:var(--card-height);flex:0 0 auto;display:flex;flex-direction:column;gap:3px;padding:5px;border:2px solid var(--rar);border-radius:5px;background:#1a2030;box-shadow:inset 4px 0 var(--k);overflow:hidden;text-align:left}
+.card .cardHead{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;gap:4px;min-height:32px;flex:none}
 .card .cost{position:static;background:#171c28;border:1px solid #d5dfeb;color:#fff;border-radius:3px;width:22px;height:24px;line-height:22px;text-align:center;font-size:14px;min-width:0}
-.card .cardName,.card.zoom .cardName,body.battle .hand .card .cardName{font:700 13px/1.12 Arial,sans-serif;margin:0;min-height:0;display:block;text-align:left;color:#fff}
+.card .cardName,.card.zoom .cardName,body.battle .hand .card .cardName{font:700 13px/1.12 Arial,sans-serif;margin:0;min-height:0;min-width:0;overflow-wrap:anywhere;display:block;text-align:left;color:#fff}
 .card .art,.card.zoom .art,body.battle .hand .card .art{height:48px;min-height:48px;width:100%;object-fit:contain;background:#111625;border-radius:0;image-rendering:pixelated}
 .card .identity{background:var(--k);color:#fff;border:1px solid #ffffff55;min-height:28px;display:flex;flex-direction:column;justify-content:center;padding:2px 4px;font-size:11px;font-weight:bold;line-height:1.15;text-shadow:0 1px 2px #000}
 .card .identity small{font-size:10px;font-weight:normal;color:#fff;opacity:1}
@@ -93,7 +93,7 @@ button{cursor:pointer}button:disabled{cursor:default}
 .deckWorkspace .dlc b{min-width:20px;text-align:center;font-size:10px}
 .deckWorkspace .dlb{flex:none;width:28px;min-height:30px;font-size:17px}
 .deckWorkspace .dlist .hint{font-size:9px}
-.deckWorkspace .deckCardGrid .card{height:clamp(180px,28vh,224px);min-height:0;flex-basis:auto;padding:3px;gap:2px}
+.deckWorkspace .deckCardGrid .card{height:clamp(200px,28vh,224px);min-height:0;flex-basis:auto;padding:3px;gap:2px}
 .deckWorkspace .deckCardGrid .card .cardHead{min-height:23px}
 .deckWorkspace .deckCardGrid .card .art{height:30px;min-height:30px}
 .deckWorkspace .deckCardGrid .card .identity{min-height:22px;font-size:10px}
