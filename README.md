@@ -3,7 +3,7 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
-## Unreleased fixes
+## 2.2.28
 
 Audio unlock is retried on completed clicks/taps and keyboard input, including when a track is already selected but the audio context is suspended. Returning to the app resumes audio, with rejected audio operations reported to the console. Music and global mute retain their separate settings.
 
