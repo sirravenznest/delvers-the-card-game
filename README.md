@@ -47,6 +47,10 @@ Pack cards settle gently into view without a white opening flash or edge-on flip
 
 Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
 
+## 2.2.23
+
+Story reopens on the encounter page containing the next uncleared fight, including after reloads, returning from battles and chapter transitions. Manual browsing remains available while reading. Each encounter shows earned stars out of three; the briefing distinguishes cleared, next and locked difficulty tiers. Wins, losses and higher-star replays retain the existing saved progress and one-time rewards.
+
 ## 2.2.22
 
 Restores class-coloured Creature/Spell/Gear labels in battle hands, improves cosmetic finish visibility and groups the three finishes together. Played spells and gear briefly appear front and center; equipped units identify their items. Auto-play, campaign AI and ranked bots use draw spells more reliably and save Potion of Speed for useful extra actions.
