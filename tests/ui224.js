@@ -167,7 +167,7 @@ async function run(){
    V.pk=null;document.getElementById('app').innerHTML=original;return bad;
   });
   assert.deepEqual(clipping,[],`${w}x${h}: all 130 cards visible`);
-  await p.evaluate(()=>{V.v='duel';newGame(0,1);V.intro=null;G.p.hand=['Squire','Archmage','Goblin Skulker','Dagger'].map(n=>mk(BN[n]));render()});
+  await p.evaluate(()=>{V.v='duel';newGame(0,1,true);V.intro=null;G.p.hand=['Squire','Archmage','Goblin Skulker','Dagger'].map(n=>mk(BN[n]));render()});
   const turnBanner=await p.locator('.turn').evaluate(e=>{
    const r=e.getBoundingClientRect(),board=document.querySelector('.board').getBoundingClientRect(),rail=document.querySelector('.battleRail').getBoundingClientRect();
    return{text:e.querySelector('.turnState').textContent,width:r.width,bottom:r.bottom,boardTop:board.top,railTop:rail.top,font:parseFloat(getComputedStyle(e.querySelector('.turnState')).fontSize),highlight:document.body.classList.contains('turnHighlight')};
@@ -289,7 +289,8 @@ async function run(){
   const afterRetry=await p.evaluate(()=>({gold:S.gold,tier:G.tier,oi:G.oi,missions:JSON.stringify(S.ms),over:G.over,hp:G.p.hp}));
   assert.equal(afterRetry.gold,beforeRetry.gold);assert.equal(afterRetry.missions,beforeRetry.missions);
   assert.equal(afterRetry.tier,beforeRetry.tier);assert.equal(afterRetry.oi,beforeRetry.oi);assert(!afterRetry.over&&afterRetry.hp==20,'retry resets fight');
-  await p.click('[data-a="battleintro"]',{force:true});
+  await p.click('[data-a="diceroll"]');await p.click('[data-a="battleintro"]',{force:true});
+  await p.waitForFunction(()=>!G.busy&&G.turn==='p'||G.over);
   const beforeEmote=await p.evaluate(()=>({hp:G.p.hp,mp:G.p.mp,hand:G.p.hand.length,gold:S.gold}));
   await p.click('[data-a="emotetoggle"]',{force:true});
   await p.click('[data-a="emotesend"][data-k="hello"]',{force:true});
@@ -321,7 +322,7 @@ async function run(){
  await deckPage.fill('#fq','Squire');
  assert.deepEqual(await deckPage.locator('.deckCardGrid .cardName').allTextContents(),['Squire'],'deck search narrows the card gallery');
  const deckSquire=await deckPage.locator('.deckCardGrid .card').evaluate(e=>({name:e.querySelector('.cardName').textContent,abilities:e.querySelector('.abilities').textContent.replace(/\s+/g,' ').trim(),stats:[...e.querySelectorAll('.stat')].map(x=>[x.querySelector('b').textContent,x.querySelector('strong').textContent])}));
- await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN.Squire)];render()});
+ await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1,true);V.intro=null;G.p.hand=[mk(BN.Squire)];render()});
  const battleSquire=await deckPage.locator('.hand .card').first().evaluate(e=>({name:e.querySelector('.cardName').textContent,abilities:e.querySelector('.abilities').textContent.replace(/\s+/g,' ').trim(),stats:[...e.querySelectorAll('.stat')].map(x=>[x.querySelector('b').textContent,x.querySelector('strong').textContent])}));
  assert.deepEqual(deckSquire,battleSquire,'deck and battle show the same creature rules and stats');
  const handStates=await deckPage.evaluate(()=>{
@@ -376,7 +377,7 @@ async function run(){
  await deckPage.emulateMedia({reducedMotion:'no-preference'});
  await deckPage.evaluate(()=>{G=null;V.v='deck';V.q='Cure Light Wounds';render()});
  const deckSpell=await deckPage.locator('.deckCardGrid .card .effect').textContent();
- await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1);V.intro=null;G.p.hand=[mk(BN['Cure Light Wounds'])];render()});
+ await deckPage.evaluate(()=>{V.v='duel';V.q='';newGame(0,1,true);V.intro=null;G.p.hand=[mk(BN['Cure Light Wounds'])];render()});
  assert.equal((await deckPage.locator('.hand .card .effect').textContent()).trim(),deckSpell.trim(),'deck and battle show identical spell rules');
  await deckPage.evaluate(()=>{G=null;V.v='deck';V.q='Squire';render()});
  await deckPage.click('[data-a="fopen"]');
@@ -454,7 +455,8 @@ async function run(){
  assert((await p.locator('.storyBrief').innerText()).includes(await p.evaluate(()=>STORY[0].after)),'next scene follows the discovery');
  await p.click('[data-a="begin"]',{force:true});
  assert((await p.locator('.storyIntro').innerText()).includes(await p.evaluate(()=>STORY[1].line)),'story intro has text dialogue');
- await p.click('[data-a="battleintro"]',{force:true});
+ await p.click('[data-a="diceroll"]');await p.click('[data-a="battleintro"]',{force:true});
+ await p.waitForFunction(()=>!G.busy&&G.turn==='p'||G.over);
  await p.evaluate(()=>{G=null;V.v='duel';V.brief=null;render()});
  assert.equal(await p.locator('.bookChapter').count(),1);assert.equal(await p.locator('.bookPages').count(),1);
  assert.deepEqual(await p.locator('.chapterControls button').allTextContents(),['Previous','Next'],'chapter navigation uses labeled controls');

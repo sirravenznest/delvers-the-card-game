@@ -3,6 +3,16 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.25
+
+Every normal battle now starts with an **opposed d20 roll**: each player taps **Roll d20**, highest goes first, and ties reroll automatically. Story, human Ranked, rated bots and friendly matches all use the same rule. Both online players replay the same seeded results; independent, immutable roll acknowledgements cannot collide, change a result or consume gameplay action numbers. Play waits for both rolls, the normal turn timer starts after the second roll, and a player who never rolls forfeits after the opening time limit. Reconnecting restores rolls and the original dice, not a new chance. The second player retains the extra opening card regardless of seat. Guided practice and lessons remain player-first, without an opening roll.
+
+**Store → Custom d20s** sells permanent cosmetic dice for gold only: Emberheart **250**, Deep Anvil **400**, Gloamwood **550**, and Starless Court **800**. Guild Ivory is free. Buying equips the die; switching owned dice is free. Profile links to dice selection. The chosen die is used in Story and every other normal mode, and both online players see each other's choices. No Story dice rewards are granted. Dice ownership and selection survive local reloads and cloud restores; failed saves roll purchases/equips back with an error. Appearances never change roll odds.
+
+Dice have original faceted artwork, a short tumble animation and synthesized rattle/settle effects. Muting suppresses the effects; reduced motion skips tumbling. Background refreshes preserve active dice nodes rather than restarting animations. Battle results dismiss any pending roll screen.
+
+`node tests/dice.test.js` checks 10,000 seeded openings, every face, tied rerolls, seat fairness, second-player cards, ownership, gold purchases and deterministic replay. `node tests/dice-net.test.js` covers concurrent rolls, opponent ownership, reconnects, clocks, network failures and bots using the simulated database. Run `tests/dice-ui.js` with the browser setup below for four-size Store/Story, purchase rollback, real audio/mute, animation/reduced-motion and practice coverage; `tests/online-ui224.js` covers actual manual rolls and custom dice in ranked, friendly and bot matches.
+
 ## 2.2.24
 
 First Adventures now contains **130 cards**. Eight additions cover the five player classes and three spells; no monsters, new Legendaries or automatic card grants are added. Existing collections, starter lists, pack prices, rarity/cosmetic rates and reward gates remain unchanged. The ten Legendary names retain their individual pull odds. Pull rates derives rarity counts from the current set, discloses duplicates, and shows the actual probability of at least one specific card rather than its expected copy count. Every pack tier has a collapsible card pool grouped by rarity, including all eight additions.
@@ -72,7 +82,7 @@ Pack openings have an original Delvers seal, tear effects, rarity-specific halos
 
 Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
 
-Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 7 isolates the expanded set and revised card rules from older clients, and shares only equipped appearances with match participants. Both players must use a compatible build. No Firebase rules changes are required.
+Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 8 also isolates the opening-roll rules from older clients, and shares only equipped appearances with match participants. Both players must use a compatible build. No Firebase rules changes are required.
 
 ## 2.2.23
 

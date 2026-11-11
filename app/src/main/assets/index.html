@@ -243,7 +243,7 @@ table.rates{width:100%;border-collapse:collapse;margin:4px 0;font-size:13.5px}ta
 .sar:active{transform:scale(.94);filter:brightness(1.2)}
 </style><link rel="stylesheet" href="v224.css"><link rel="stylesheet" href="card-cosmetics.css"></head>
 <body><div class="rotateHint" role="status"><strong>Turn your device sideways</strong>Delvers uses landscape for readable cards and battles.</div><div id="app"></div>
-<script src="cards.js"></script><script src="card-cosmetics.js"></script><script src="pixel-art.js"></script><script src="battle-music.js"></script><script src="menu-music.js"></script><script src="story.js"></script><script src="emotes.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="ranked-bots.js"></script><script src="campaign-decks.js"></script><script src="net.js"></script><script src="social.js"></script>
+<script src="cards.js"></script><script src="card-cosmetics.js"></script><script src="dice.js"></script><script src="pixel-art.js"></script><script src="battle-music.js"></script><script src="menu-music.js"></script><script src="story.js"></script><script src="emotes.js"></script><script src="engine.js"></script><script src="pvp.js"></script><script src="ranked-bots.js"></script><script src="campaign-decks.js"></script><script src="net.js"></script><script src="social.js"></script>
 <script>
 const SET={name:'First Adventures',size:122};
 const SAVE_KEY='delvers2';
@@ -413,7 +413,7 @@ function continueTutorialMenus(){
  }
 }
 const cleanCosmetics=x=>{const avatars=AVATARS.filter(a=>a.price&&Array.isArray(x&&x.avatars)&&x.avatars.includes(a.id)).map(a=>a.id),backgrounds=BG_SKIN_DEFS.filter(a=>a.price&&Array.isArray(x&&x.backgrounds)&&x.backgrounds.includes(a.id)).map(a=>a.id),scene=x&&x.scene;
- return{avatars,backgrounds,scene:scene=='story'||backgrounds.includes(scene)?scene:'story',emotes:DelversEmotes.clean(x&&x.emotes)}};
+ return{avatars,backgrounds,scene:scene=='story'||backgrounds.includes(scene)?scene:'story',emotes:DelversEmotes.clean(x&&x.emotes),...DelversDice.clean(x)}};
 const cleanStars=o=>{const r={};if(o&&typeof o=='object')for(const k of Object.keys(o)){const i=+k,v=Math.floor(Number(o[k]));if(Number.isInteger(i)&&i>=0&&i<CAMP.length&&v>=1)r[i]=Math.min(3,v)}return r};
 function loadSave(){
  try{
@@ -496,6 +496,7 @@ function profileHTML(){const a=AVATARS.find(x=>x.id==S.avatar)||AVATARS[0],owned
  let h=`<div class="sec"><h4>Profile</h4><div class="profileHead">${portrait(a.id,'portraitLg')}<div><b>${esc(UN()||'Choose a name')}</b><small>${AU?esc(AU.email||'Google account connected'):'This profile is saved on this device'}</small></div></div>`;
  h+=`<h4 class="avTitle">Profile picture</h4><div class="avatarGrid">${avatars.map(x=>`<button class="avatarChoice ${S.avatar==x.id?'selected':''}" data-a="avatar" data-k="${x.id}" aria-label="${x.name} profile picture" aria-pressed="${S.avatar==x.id}">${portrait(x.id)}<small>${x.name}</small></button>`).join('')}</div></div>`;
  h+=`<div class="sec"><h4>Battlefield background</h4><span class="hint">Story scenes change with each act. Choose an unlocked theme to use it in every battle.</span><div class="backgroundGrid">${scenes.map(x=>`<button class="backgroundChoice ${cos.scene==x.id?'selected':''}" data-a="scene" data-k="${x.id}" aria-pressed="${cos.scene==x.id}"><span class="sceneThumb" style="${x.url?`background-image:${x.url}`:''}"></span><b>${x.name}</b></button>`).join('')}</div></div>`;
+ h+=`<div class="sec"><h4>Your d20</h4><div class="cosmeticCard">${dieHTML(cos.die,20)}<span><b>${DelversDice.byId[cos.die].name}</b><small>Appearance only; no roll advantage.</small><button class="btn" data-a="dicestore">Choose dice in Store</button></span></div></div>`;
  h+=`<div class="sec"><h4>Rank badge</h4>${rr?`<div class="rankPanel">${rankBadge(rr.r,rr.w,rr.l)}<span>${rr.r} rating · ${rr.w} wins · ${rr.l} losses</span></div>`:`<span class="hint">${AU?'Open Ranked to load your current rank.':'Sign in and play ranked matches to earn a rank badge.'}</span>`}</div>`;
  if(V.uedit||!UN())h+=nameHTML();else h+=`<div class="sec"><h4>Player name <button class="btn" data-a="uedit">Change</button></h4><span class="hint">This is the name shown to other players. Your Google account name stays private.</span></div>`;
  if(V.sm)h+=`<div class="mid" role="alert">${esc(V.sm)}</div>`;
@@ -506,6 +507,16 @@ function cosmeticStoreHTML(){const av=AVATARS.filter(x=>x.price),ownedA=new Set(
  return `<div class="sec"><h4>Upcoming set</h4><b>The Monster Handbook</b><span class="hint">A new set in development, focused on more fantasy creatures and powerful Legendary heroes.</span><button class="btn" data-a="monpreview">View set preview</button></div>
  <div class="sec"><h4>Profile pictures</h4><span class="hint">Unlock new portraits with gold; select them on your Profile page.</span>${av.map(x=>item(x,'avatar',ownedA.has(x.id),portrait(x.id))).join('')}</div>
  <div class="sec"><h4>Battlefield backgrounds</h4><span class="hint">Unlock original themes with gold; select a theme on your Profile page.</span>${BG_SKINS.map(x=>item(x,'background',ownedB.has(x.id),`<span class="sceneThumb" style="background-image:${x.url}"></span>`)).join('')}</div>${V.shopMsg?`<div class="mid" role="status">${esc(V.shopMsg)}</div>`:''}`}
+function dieHTML(id,value,rolled=false){
+ const d=DelversDice.byId[DelversDice.valid(id)];
+ return `<span class="d20 ${rolled?'d20Rolling':''}" style="--die-body:${d.body};--die-edge:${d.edge};--die-ink:${d.ink}" role="img" aria-label="${d.name} d20${Number.isInteger(value)?': '+value:''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path class="dieBody" d="M50 3 94 28 94 80 50 107 6 80 6 28Z"/><path class="dieFacet" d="m50 3 24 72H26Zm-44 25 20 47-20 5m88-52L74 75l20 5M6 28h88M26 75l24 32 24-32H26"/><path class="dieShade" d="m50 3 44 25H6Zm24 72 20 5-44 27Z"/></svg><strong>${value==null?'?':value}</strong></span>`;
+}
+function diceStoreHTML(){
+ return `<div class="sec"><h4>Custom d20s</h4><p>Each player rolls their own d20 before Story, ranked, rated-bot and friendly battles. Highest goes first; ties reroll. Dice are cosmetic only: every face has the same chance. Unlocks are Store-only, permanent, and cost gold.</p>${DelversDice.CATALOG.map(d=>{
+  const owned=!d.price||S.cosmetics.dice.includes(d.id),selected=S.cosmetics.die===d.id;
+  return `<div class="op diceItem"><div class="cosmeticCard">${dieHTML(d.id,20)}<span><b>${d.name}</b><small>${selected?'Equipped':owned?'Unlocked':'Cosmetic only'}</small></span></div><button class="btn ${selected?'':'pri'}" data-a="${owned?'dieequip':'diebuy'}" data-k="${d.id}" ${selected||!owned&&S.gold<d.price?'disabled':''}>${selected?'Equipped':owned?'Equip':'Buy · 🪙 '+d.price}</button></div>`;
+ }).join('')}${V.diceMsg?`<p role="status">${esc(V.diceMsg)}</p>`:''}</div>`;
+}
 function monsterPreviewHTML(){return `<div class="sec"><button class="btn" data-a="storeback">← Back to Store</button><h2>The Monster Handbook</h2><span class="badge">Preview · Coming soon</span><p>A future card set built around a wider range of fantasy monsters and mighty Legendary heroes.</p><div class="op" style="display:block"><b>What to expect</b><ul><li>More creature types and monster-focused strategies.</li><li>Powerful Legendary heroes, limited to one copy per deck.</li><li>New original art, abilities and encounter ideas.</li></ul></div><small>This is a concept preview only. No cards from this set are available yet, and no release date is announced.</small></div>`}
 const own=n=>S.col[n]||0,sh=a=>a.sort(()=>Math.random()-.5),pick=a=>a[Math.floor(Math.random()*a.length)];
 // Auto deck: up to 18 creatures (cheaper ones first), then spells and items, up to 30 cards.
@@ -517,14 +528,15 @@ const newSave=!S;
 function freshSave(){const save={saveEpoch:SAVE_EPOCH,gold:150,col:Object.fromEntries(ALL.map(c=>[c.name,ST[c.name]||0])),deck:[],prog:0,ver:2,stars:{},builds:[],packs:{std:0,t2:0,t3:0},avatar:'vanguard',cosmetics:cleanCosmetics(null),emotesMuted:false,lastOnlineMatch:'',sp:'tut',sd:[],ms:cleanM(null),ts:0,tutorialMenus:cleanTutorialMenus(null,'tut')};save.deck=auto(save);return CF.normalize(save)}
 if(!S)S=freshSave();
 const {d20,opp,row,dist,mk,units,log,draw,startTurn,dmg,heal,saves,roll,attack,ok,mres,cast,AREA,hits}=DelversEngine,play=(...a)=>{const r=DelversEngine.play(...a);if(a[0]=='p'&&G&&!G.tut)msnAdd('play',1);return r},sl=ms=>new Promise(r=>setTimeout(r,ms));
-function newGame(oi,t){t=Math.max(1,Math.min(3,t|0||1));const o=CAMP[oi].slice(),mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
+function newGame(oi,t,practice=false){t=Math.max(1,Math.min(3,t|0||1));const o=CAMP[oi].slice(),mkp=n=>({hp:n,mx:n,mp:0,max:0,deck:[],hand:[]});
  o[1]=Math.round(o[1]*(1+.2*(t-1)));o[2]=Math.min(3,o[2]+t-1);o[3]=Math.min(3,o[3]+t-1);o[5]+=t>2?1:0;
  G={fx:true,oi,tier:t,opp:{n:o[0],lvl:o[2]},b:Array(NT).fill(null),p:mkp(20),e:mkp(o[1]),turn:'p',busy:false,over:null,sel:null,msg:'',log:['Battle begins!']};
  CF.normalize(S);DelversEngine.use(G);G.p.deck=sh(CF.deckCards(S).map(c=>mk(c)));
  G.e.deck=DelversCampaignDecks.build(oi,o[3]).map(name=>mk(BN[name]));
- G.e.max=o[5];for(let i=0;i<3;i++){draw('p');draw('e')}draw('e');startTurn('p');V.logOpen=false;V.emoteOpen=false;V.emoteBubble=null;V.intro={mid:'campaign-'+Date.now(),label:o[8],scene:oi,story:STORY[oi],name:o[0]};render()}
+ if(!practice){G.opening=DelversEngine.rollFirst();G.turn=G.opening.winner;G.dice={p:S.cosmetics.die,e:'classic'}}
+ G.e.max=o[5];for(let i=0;i<3;i++){draw('p');draw('e')}draw(opp(G.turn));startTurn(G.turn);V.logOpen=false;V.emoteOpen=false;V.emoteBubble=null;V.diceMsg='';V.intro=practice?null:{mid:'campaign-'+Date.now(),label:o[8],scene:oi,story:STORY[oi],name:o[0]};render()}
 function handle(a,i){
- if(G.over||G.busy||G.turn!='p')return;const P=G.p,sel=G.sel;G.msg='';
+ if(G.over||G.busy||G.turn!='p'||V.intro)return;const P=G.p,sel=G.sel;G.msg='';
  const spell=t=>{if(sel&&sel.m=='spell'){if(ok(sel.c.tg,'p',t,sel.c)){play('p',sel.c,t);G.sel=null;return 1}if(t.c&&t.side=='p'&&sel.c.slot&&t.c['s'+sel.c.slot]){G.msg='That creature already carries a '+sel.c.sub.toLowerCase()+'.';return 1}}};
  if(a=='hand'){const c=P.hand[i];if(sel&&sel.c===c)G.sel=null;else if(c.cost>P.mp)G.msg='Not enough mana.';else if(c.t=='c')G.sel={m:'place',c};else if(c.tg=='none'){play('p',c);G.sel=null}else G.sel={m:'spell',c}}
  else if(a=='cell'){const u=G.b[i];
@@ -569,9 +581,10 @@ async function aiPlay(s,L){const X=G[s],stop=()=>s=='p'&&!G.auto;
   for(const u of units(s)){if(!G||G.over||stop())break;await aiUnit(u,L,s)}
   if(!played&&pass>0)break;
  }}
-async function autoTurn(){if(!G||!G.auto||G.over||G.busy||G.turn!='p'||G.pvp||G.tut)return;G.sel=null;G.busy=true;render();await sl(500);
+async function autoTurn(){if(!G||!G.auto||G.over||G.busy||G.turn!='p'||G.pvp||G.tut||V.intro)return;G.sel=null;G.busy=true;render();await sl(500);
  await aiPlay('p',2);if(!G)return;G.busy=false;if(G&&G.auto&&!G.over)endTurn();else render()}
-async function endTurn(){if(G.over||G.busy||G.turn!='p')return;const tutorialKey=G.tut&&!G.lesson?tutorialGuide()?.key:null;G.sel=null;G.turn='e';G.busy=true;startTurn('e');render();await sl(600);
+async function endTurn(){if(G.over||G.busy||G.turn!='p'||V.intro)return;const tutorialKey=G.tut&&!G.lesson?tutorialGuide()?.key:null;G.sel=null;G.turn='e';startTurn('e');await foeTurn(tutorialKey)}
+async function foeTurn(tutorialKey){if(!G||G.busy||G.over||G.turn!=='e')return;G.busy=true;render();await sl(600);
  const E=G.e,L=G.opp.lvl;
  await aiPlay('e',L);
  if(!G)return;
@@ -674,6 +687,7 @@ function gameHTML(){const P=G.p,E=G.e,sel=G.sel,sp=sel&&sel.m=='spell'?sel.c:nul
 const GUIDE=[
 ['Hub, Story and landscape',`<p>The <b>Hub</b> links directly to Story, Ranked, Collection, Deck, Store, Packs, Missions, Social, Profile, Lore and this Guide. Story is a chapter book: turn pages to browse encounters, then defeat them in order. Rotate your device horizontally; the board stays 4 columns by 5 rows, with your hand along the bottom and battle controls on the right.</p><p><b>Your units</b> have a blue solid border and a YOU badge. <b>Opponent units</b> have a red dashed border and a FOE badge. These markers follow units wherever they move; the top and bottom deployment rows do not determine ownership. Hold a unit or hand card to inspect its full details.</p><p>After a single-player defeat, <b>Retry battle</b> restarts the same encounter and difficulty without another reward for pressing Retry.</p>`],
 ['A continuous story',`<p>Each encounter follows a discovery from the previous fight. Read the original introductory dialogue, win to reveal the next clue, then choose <b>Next encounter</b> to continue directly to its briefing. Returning to the book does not lose your place: <b>Continue story</b> opens the next uncleared encounter. The final battle concludes the chronicle. Dialogue is text, not recorded or synthesized speech.</p>`],
+['Opening d20 &amp; custom dice',`<p>In Story, Ranked, rated-bot and friendly battles, each player rolls their own d20. Tap <b>Roll d20</b> on the opening screen: the higher roll goes first, and ties reroll automatically until there is a winner. Both online players see the same results, including after reconnecting; a roll cannot be changed by closing the screen or tapping again. The second player keeps the extra opening card, whichever seat wins the roll.</p><p><b>Store → Custom d20s</b> offers permanent cosmetic dice for gold: Emberheart 250, Deep Anvil 400, Gloamwood 550 and Starless Court 800. Guild Ivory is included. Buy or equip a die there, or follow the dice link from Profile. Your equipped die appears in every normal mode and is visible to your online opponent. Dice never change the odds: every face has a 1-in-20 chance. There are no Story dice rewards.</p><p>Rolling has an original tumble animation and synthesized sound effects. Sound mute applies; reduced motion shows the result without tumbling. Online play waits for both players to roll, then starts the normal turn clock; failing to roll within the opening time limit forfeits. Guided lessons and practice keep their fixed first turn and need no opening roll.</p>`],
 ['Battle emotes',`<p>All six base text emotes are included automatically, with no purchase or unlock step. Tap <b>Emote during combat</b> to express yourself, including on your opponent's turn. The picker shows the full phrase before you send it. Send one every 3 seconds, or mute opponent emotes from the picker. Emotes are not shown on battle results.</p><p><b>Store → Graphic emotes</b> offers optional original pixel-art emotes for 350 gold each, with previews. Paid graphics are not granted for free. All owned emotes are available without equipping and never change rolls or rewards. Story, rated bots, human Ranked and friend matches support emotes. Online messages are fixed choices, not free-form chat, and are stored with match logs.</p>`],
 ['Review combat',`<p>Tap <b>Log</b> during a battle or <b>Combat log</b> on the result screen. Events run oldest to newest, grouped by turn and labelled You or Foe. Review attack and Save rolls with required thresholds, actual damage, healing, summons, spells and movement. Filter to Rolls, HP changes or Actions.</p><p>Scroll upward to review older events without being pulled back down by new actions. <b>Follow latest</b> resumes live following. Reviewing does not pause the battle or online timer. History is kept for the current battle only, up to 2,000 events; any trimming is disclosed. Close or press Escape to return without taking an action.</p>`],
 ['The goal',`<p>Each duel is a fight between you and a foe. Every hero has Health. <b>Reduce the enemy hero to 0 Health to win.</b> If your own hero reaches 0 you are defeated, but you still earn a little gold and can try again.</p><p>Your hero starts with 20 Health. Foes have more as the campaign goes on.</p>`],
@@ -798,7 +812,7 @@ function doAgree(){try{localStorage.setItem('delvers_consent',POLICY_V)}catch(e)
 const stStats=d=>{const l=d.list.map(n=>BN[n]);return `${l.filter(c=>c.t=='c').length} creatures · ${l.filter(c=>c.t=='s').length} spells · ${l.filter(c=>c.t=='i').length} gear`};
 const stChips=d=>`<div class="chips">${Object.entries(d.cards).map(([n,k])=>`<button class="chipc" data-z="${esc(n)}" style="--k:${CL[BN[n].cls][1]}">${k>1?k+'× ':''}${esc(n)}</button>`).join('')}</div>`;
 const addCards=d=>{for(const [n,k] of Object.entries(d.cards))CF.add(S,n,k);S.sd=[...new Set([...(S.sd||[]),d.id])]};
-function startPractice(){newGame(0,1);G.tut=1;G.tutSeen=new Set();V.intro=null;V.tutPrompt=false;G.opp.n='Practice Foe';G.e.hp=G.e.mx=8;G.opp.lvl=0;G.e.max=0;G.e.cap=1;
+function startPractice(){newGame(0,1,true);G.tut=1;G.tutSeen=new Set();V.intro=null;V.tutPrompt=false;G.opp.n='Practice Foe';G.e.hp=G.e.mx=8;G.opp.lvl=0;G.e.max=0;G.e.cap=1;
  G.p.deck=sh(STARTERS[0].list.map(n=>mk(BN[n])));G.e.deck=sh(Array.from({length:30},(_,i)=>mk(BN[['Giant Rat','Cutpurse','Squire'][i%3]])));G.p.hand=[];G.e.hand=[];
  const first=G.p.deck.findIndex(c=>c.t=='c'&&c.cost<=1);if(first>=0)G.p.deck.push(G.p.deck.splice(first,1)[0]);
  for(let i=0;i<3;i++){draw('p');draw('e')}draw('e');G.p.max=0;startTurn('p');showPracticeObjective();render()}
@@ -814,7 +828,7 @@ const LESSONS=[
 ];
 function startTut(){V.welcome=false;V.tutPrompt=true;setupLesson(0)}
 function setupLesson(step){
- newGame(0,1);G.tut=1;G.lesson={step,done:false};V.intro=null;G.opp.n='Rules practice';G.e.hp=G.e.mx=20;G.p.hp=G.p.mx=20;G.b=Array(NT).fill(null);G.log=[];G.p.deck=Array.from({length:30},()=>mk(BN.Squire));G.e.deck=Array.from({length:30},()=>mk(BN['Giant Rat']));G.p.hand=[];G.e.hand=[];G.p.max=G.p.mp=step<2?1:3;
+ newGame(0,1,true);G.tut=1;G.lesson={step,done:false};V.intro=null;G.opp.n='Rules practice';G.e.hp=G.e.mx=20;G.p.hp=G.p.mx=20;G.b=Array(NT).fill(null);G.log=[];G.p.deck=Array.from({length:30},()=>mk(BN.Squire));G.e.deck=Array.from({length:30},()=>mk(BN['Giant Rat']));G.p.hand=[];G.e.hand=[];G.p.max=G.p.mp=step<2?1:3;
  const unit=(name,pos,side)=>{const c=mk(BN[name]);c.o=side;c.ready=true;c.mv=c.init;G.b[pos]=c;return c};
  if(step==0)G.p.hand=[mk(BN.Squire)];
  if(step==1){const c=unit('Squire',16,'p');c.ready=false;c.mv=0}
@@ -947,11 +961,12 @@ function menuHTML(){if(V.priv)return privHTML();if(V.title)return titleHTML();if
  else if(V.v=='cards')h+=cardsHTML('coll');
  else if(V.v=='deck')h+=cardsHTML('deck');
  else if(V.v=='store'&&V.monPreview)h+=monsterPreviewHTML();
- else if(V.v=='store'){const categories=[['packs','Card packs'],['starters','Starter decks'],['emotes','Graphic emotes'],['cosmetics','Avatars & backgrounds']],tab=categories.some(([k])=>k==V.storeTab)?V.storeTab:'packs';
+ else if(V.v=='store'){const categories=[['packs','Card packs'],['starters','Starter decks'],['dice','Custom d20s'],['emotes','Graphic emotes'],['cosmetics','Avatars & backgrounds']],tab=categories.some(([k])=>k==V.storeTab)?V.storeTab:'packs';
   h+=`<nav class="storeSections" aria-label="Store categories">${categories.map(([k,n])=>`<button class="btn ${tab==k?'pri':''}" data-a="storecategory" data-k="${k}" aria-pressed="${tab==k}" aria-controls="storeContent">${n}</button>`).join('')}</nav><div id="storeContent">`;
   if(tab=='emotes')h+=emoteStoreHTML();
   else if(tab=='starters')h+=startersStoreHTML();
   else if(tab=='cosmetics')h+=cosmeticStoreHTML();
+  else if(tab=='dice')h+=diceStoreHTML();
   else{const PR=PACK_PRICE,mx=Math.max(1,Math.floor(S.gold/PR)),q=Math.min(Math.max(1,V.qty||1),mx);V.qty=q;
    h+=`<div class="op" style="display:block"><b>${SET.name} Pack</b><br><small>${PACK_SIZE} cards, the last is Uncommon or better. 🪙 ${PR} each. <button class="lnk" data-a="nav" data-v="packs">See pull rates</button></small><div class="bar" style="margin-top:8px;align-items:center"><button class="btn" data-a="qm" ${q<=1?'disabled':''}>−</button><b style="min-width:2.5em;text-align:center;font-size:18px">${q}</b><button class="btn" data-a="qp" ${q>=mx||S.gold<PR*(q+1)?'disabled':''}>+</button><button class="btn" data-a="qmax" ${S.gold<PR?'disabled':''}>Max</button><button class="btn pri" style="flex:1" data-a="buy" ${S.gold<PR*q?'disabled':''}>Buy ${q} · 🪙 ${PR*q}</button></div></div><small>You own ${PN()} unopened. <button class="lnk" data-a="nav" data-v="packs">Open your packs</button></small>`}
   h+='</div>'}
@@ -962,15 +977,20 @@ const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'
 const RANKS=DelversRankedBots.STEPS.map((s,i)=>[s.tier,s.min,['♟','◆','✦','✧','✥','♛'][i],['#bd8350','#bbc7dc','#ffd05a','#79e5d0','#75c8ff','#db8aff'][i]]);
 function rankFor(r,w,l,bot){if(!(w+l)&&!bot)return{name:'Unranked',sigil:'◇',color:'#9b91a8'};let x=RANKS[0];for(const v of RANKS)if(r>=v[1])x=v;return{name:x[0],sigil:x[2],color:x[3]}}
 function rankBadge(r,w,l,small,bot){const x=rankFor(r,w,l,bot);return `<span class="rankBadge ${small?'small':''}" style="--rank:${x.color}" aria-label="${x.name} rank"><i class="sigil">${x.sigil}</i>${x.name}</span>`}
-function matchIntroHTML(x){if(!x)return'';if(x.story)return `<div id="intro" style="--intro-bg:${sceneFor(x.scene)}"><section class="introBox storyIntro" role="dialog" aria-modal="true" aria-labelledby="introTitle"><small>${esc(x.label)}</small><h2 id="introTitle">${esc(x.name)}</h2><p>${esc(x.story.intro)}</p><blockquote><b>${esc(x.story.speaker)}</b><br>${esc(x.story.line)}</blockquote><button class="btn pri" data-a="battleintro">Begin encounter</button></section></div>`;const side=p=>`<div class="introPlayer">${portrait(p.avatar||'vanguard','portraitLg')}<strong>${esc(p.name||'Delver')}</strong>${rankBadge(p.r||1000,p.w||0,p.l||0,false,p.bot)}<span class="introRecord">${p.bot?'Rated bot · '+esc(p.theme):`${p.w||0} wins · ${p.l||0} losses`}</span></div>`;
- return `<div id="intro" style="--intro-bg:${sceneFor(x.scene==null?-1:x.scene)}"><section class="introBox" role="dialog" aria-modal="true" aria-labelledby="introTitle"><div id="introTitle" class="introLabel">${esc(x.label||'Battle begins')}</div><div class="introMatch">${side(x.player)}<span class="introVs">VS</span>${side(x.opponent)}</div><button class="btn pri" data-a="battleintro">Begin battle</button></section></div>`}
+function openingDiceHTML(){
+ const r=G.opening;if(!r)return'';
+ const ready=r.rolled.p&&r.rolled.e,last=r.rounds[r.rounds.length-1];
+ return `<section id="openingDice" aria-label="Opening d20 rolls"><b>Roll for first turn</b><small>Each player rolls a d20. Highest goes first; ties reroll.</small><div class="openingDicePair">${['p','e'].map(s=>`<div class="dieRoll" data-die-side="${s}"><span>${s==='p'?'You':esc(G.opp.n)}</span>${dieHTML(G.dice?.[s],r.rolled[s]?last[s]:null,r.rolled[s])}<small>${r.rolled[s]?last[s]+' / 20':'Not rolled'}</small></div>`).join('')}</div><div class="openingResult" role="status" tabindex="-1">${ready?`${r.rounds.length>1?r.rounds.slice(0,-1).map(x=>`Tie ${x.p}–${x.e}; rerolled. `).join(''):''}<b>${r.winner==='p'?'You go first.':esc(G.opp.n)+' goes first.'}</b>`:r.rolled.p?'Waiting for your opponent to roll…':'Roll your own die to decide the first turn.'}</div>${!r.rolled.p?`<button class="btn pri" data-a="diceroll" ${V.dicePending?'disabled':''}>${V.dicePending?'Rolling…':'Roll d20'}</button>`:''}${V.diceMsg?`<p role="alert">${esc(V.diceMsg)}</p>`:''}<button class="btn ${ready?'pri':''}" data-a="battleintro" ${ready?'':'disabled'}>${ready?'Begin battle':'Both players must roll'}</button></section>`;
+}
+function matchIntroHTML(x){if(!x)return'';if(x.story)return `<div id="intro" style="--intro-bg:${sceneFor(x.scene)}"><section class="introBox storyIntro" role="dialog" aria-modal="true" aria-labelledby="introTitle"><small>${esc(x.label)}</small><h2 id="introTitle">${esc(x.name)}</h2><p>${esc(x.story.intro)}</p><blockquote><b>${esc(x.story.speaker)}</b><br>${esc(x.story.line)}</blockquote>${openingDiceHTML()}</section></div>`;const side=p=>`<div class="introPlayer">${portrait(p.avatar||'vanguard','portraitLg')}<strong>${esc(p.name||'Delver')}</strong>${rankBadge(p.r||1000,p.w||0,p.l||0,false,p.bot)}<span class="introRecord">${p.bot?'Rated bot · '+esc(p.theme):`${p.w||0} wins · ${p.l||0} losses`}</span></div>`;
+ return `<div id="intro" style="--intro-bg:${sceneFor(x.scene==null?-1:x.scene)}"><section class="introBox" role="dialog" aria-modal="true" aria-labelledby="introTitle"><div id="introTitle" class="introLabel">${esc(x.label||'Battle begins')}</div><div class="introMatch">${side(x.player)}<span class="introVs">VS</span>${side(x.opponent)}</div>${openingDiceHTML()}</section></div>`}
 const netOn=()=>!!(agreed()&&cloudOn()&&CLOUD.dbUrl&&AU);
 const LOCAL_UKEY='delvers_local_user',UKEY=()=>'delvers_user_'+(AU?AU.uid:''),UN=()=>{try{return AU?localStorage.getItem(UKEY())||localStorage.getItem(LOCAL_UKEY)||'':localStorage.getItem(LOCAL_UKEY)||''}catch(e){return''}},UOK=n=>/^[A-Za-z0-9_ ]{3,16}$/.test(n)&&n==n.trim();
 function portrait(id,cls=''){const a=AVATARS.find(x=>x.id==id)||AVATARS[0];return `<span class="portrait ${cls}" role="img" aria-label="${a.name} portrait">${DelversArt.portrait(a.id,a.bg,a.fg)}</span>`}
 function nameHTML(){const cur=UN();return `<div class="op" style="display:block"><b>${cur?'Change username':'Choose a username'}</b><br><small>This is the name other players see, not your Google name. 3–16 letters, numbers, spaces or underscores. Friends find you by your friend code, so names need not be unique.</small><div class="bar" style="margin-top:6px"><input id="un" maxlength="16" value="${esc(cur)}" placeholder="Username" autocomplete="off" aria-label="Username" style="flex:1;padding:8px;border-radius:8px;border:2px solid var(--ln);background:#1b140d;color:inherit"><button class="btn pri" data-a="usave">Save</button>${cur?'<button class="btn" data-a="ucancel">Cancel</button>':''}</div>${V.sm?`<small role="alert" style="display:block;margin-top:4px;color:#ff9a7a">${esc(V.sm)}</small>`:''}</div>`}
 const needName=()=>AU&&(!UN()||V.uedit);
 let NET=null,SOC=null,pvBusy=false;const PT={prof:0,soc:0,lb:0};
-function netInit(){if(!netOn()||NET&&NET.account==AU.uid)return;const o={db:CLOUD.dbUrl.replace(/\/$/,''),fetch:(u,x)=>fetch(u,x),auth:()=>({uid:AU.uid,tok:AU.idToken,name:UN()||'Delver'}),avatar:()=>S.avatar,cardLooks:()=>{CF.normalize(S);return CF.deckCards(S).map(c=>c.look)}};
+function netInit(){if(!netOn()||NET&&NET.account==AU.uid)return;const o={db:CLOUD.dbUrl.replace(/\/$/,''),fetch:(u,x)=>fetch(u,x),auth:()=>({uid:AU.uid,tok:AU.idToken,name:UN()||'Delver'}),avatar:()=>S.avatar,die:()=>S.cosmetics.die,cardLooks:()=>{CF.normalize(S);return CF.deckCards(S).map(c=>c.look)}};
  NET=DelversNet.create({...o,onChange:()=>pvSync()});NET.account=AU.uid;SOC=DelversSocial.create(o)}
 const WHY={win:'You won the duel.',loss:'You were defeated.',cheat:'Your opponent made an illegal move, so you win.',timeout:'Your opponent left or ran out of time, so you win.'};
 function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv;
@@ -980,6 +1000,8 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
  const evs=(g.ev||[]).map(x=>({...x,s:x.s==null?x.s:(x.s==s?'p':'e'),caster:x.caster==null?x.caster:(x.caster==s?'p':'e'),i:x.i>=0?mi(x.i):x.i,f:x.f>=0?mi(x.f):x.f}));g.ev=[];
  const v={ev:evs,pvp:1,fin:1,b,p:g[s],e:g[o],turn:g.turn==s?'p':'e',over:g.over?(g.over==s?'p':'e'):null,busy:false,log:g.log.map(fl),msg:pv.msg||'',oi:-1};
  v.turnNo=g.turnNo;
+ v.opening={...g.opening,rolled:{p:g.opening.rolled[s],e:g.opening.rolled[o]},winner:g.opening.winner===s?'p':'e',rounds:g.opening.rounds.map(r=>({p:r[s],e:r[o]}))};
+ v.dice={p:DelversDice.valid(T.meta.dice?.[T.meta[s]]),e:DelversDice.valid(T.meta.dice?.[T.meta[o]])};
  v.history=(g.history||[]).map(h=>({...h,text:mir&&h.kind=='move'?fl(h.text).replace(/\bR(\d+) C(\d+)/g,(_,r,c)=>`R${ROWS+1-Number(r)} C${c}`):fl(h.text),side:h.side==s?'p':'e',turnSide:h.turnSide==s?'p':'e'}));v.historyDropped=g.historyDropped||0;
  const sec=Math.ceil(T.timeLeft()/1000),mine=g.turn==s;
  v.opp={n:T.opp.name,seconds:sec,avatar:T.opp.avatar||'vanguard',lvl:0,r:T.opp.r,w:T.opp.w,l:T.opp.l,bot:T.opp.bot};
@@ -989,6 +1011,10 @@ function pvView(){const T=NET,g=T.G,s=T.seat,o=s=='p'?'e':'p',mir=s=='e',pv=V.pv
  return v}
 const P_elo=(a,b,r)=>DelversPvp.elo(a,b,r)[0];
 function pvSync(){const T=NET;if(!T)return;if(T.G)T.G.fx=true;
+ if(T.G&&T.st==='match'){
+  const key=T.mid+':'+T.G.opening.rolled[T.seat==='p'?'e':'p'];
+  if(V.diceOpponentKey!==key){if(T.G.opening.rolled[T.seat==='p'?'e':'p'])snd('dice');V.diceOpponentKey=key}
+ }
  if(T.G&&(!V.pv||V.pv.mid!=T.mid)){V.logOpen=false;V.emoteBubble=null;V.emoteOpen=false}
  if(T.emote&&V.emoteKey!=T.mid+'/'+T.emote.key){V.emoteKey=T.mid+'/'+T.emote.key;showEmote(T.emote.id,T.emote.u==T.opp.uid?'e':'p')}
  if(T.G&&(T.st=='match'||T.st=='over')){if(!V.pv||V.pv.mid!=T.mid){V.pv={mid:T.mid,sel:null,msg:'',rc:false};const me=T.myRecord||T.rec||{r:1000,w:0,l:0};V.intro={mid:T.mid,label:T.opp.bot?'Rated bot match · '+T.opp.tier:T.ranked?'Ranked match':'Friendly match',scene:String(T.mid),player:{name:UN()||'Delver',avatar:S.avatar,r:me.r,w:me.w,l:me.l},opponent:{name:T.opp.name,avatar:T.opp.avatar,r:T.opp.r,w:T.opp.w,l:T.opp.l,bot:T.opp.bot,theme:T.opp.theme}}}G=pvView();DelversEngine.use(G);render()}
@@ -1060,7 +1086,7 @@ let renderedIntro=null,renderedPack=null,renderedPackStep='';
 function render(){
  musicSet(V.title&&!V.priv?'title':G?(G.over?null:'battle'):V.pk?'pack':V.v=='hub'&&!V.priv&&V.brief==null&&!V.pick?'hub':'menu');
  document.documentElement.style.setProperty('--bgb',G?sceneFor(G.pvp&&V.pv?String(V.pv.mid):G.oi):BGB);
- if(G&&G.over){V.emoteOpen=false;V.emoteBubble=null;if(!G.fin)finish()}
+ if(G&&G.over){V.intro=null;V.emoteOpen=false;V.emoteBubble=null;if(!G.fin)finish()}
  if(G&&G.over&&!G.mc&&!G.tut){G.mc=1;if(!G.pvp||S.lastOnlineMatch!=V.pv.mid){if(G.pvp)S.lastOnlineMatch=V.pv.mid;msnFight(G)}}
  document.body.className=G?'battle'+(G.lesson?' lesson':''):'menu'+(V.v=='hub'&&!V.priv&&V.brief==null&&!V.pick?' hubbg':'');
  document.body.dataset.view=G?'battle':V.v;
@@ -1078,6 +1104,15 @@ function render(){
  const retained=intro||pack;
  if(retained){
   const next=document.createElement('template');next.innerHTML=html;
+  if(intro){
+   const oldDice=intro.querySelector('#openingDice'),newDice=next.content.querySelector('#openingDice');
+   if(oldDice&&newDice&&oldDice.outerHTML!==newDice.outerHTML){
+    const focused=oldDice.contains(document.activeElement);
+    for(const node of newDice.querySelectorAll('.dieRoll')){const old=oldDice.querySelector(`[data-die-side="${node.dataset.dieSide}"]`);if(old&&old.outerHTML===node.outerHTML)node.replaceWith(old)}
+    oldDice.replaceWith(newDice);
+    if(focused)(newDice.querySelector('button:not([disabled])')||newDice.querySelector('.openingResult')).focus({preventScroll:true});
+   }
+  }
   next.content.querySelector(intro?'#intro':'.pkov').remove();
   // Keep active presentations attached so background updates cannot restart them.
   [...$app.childNodes].filter(node=>node!==retained).forEach(node=>node.remove());
@@ -1155,6 +1190,7 @@ function tone(f,d,ty,v,t0,f2){const a=mute?null:actx();if(!a)return;const o=a.cr
 function noise(d,v,fc,t0){const a=mute?null:actx();if(!a)return;const n=Math.floor(a.sampleRate*d),b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=(Math.random()*2-1)*(1-i/n);const o=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime+(t0||0);o.buffer=b;f.type='lowpass';f.frequency.value=fc||1500;g.gain.value=v||.2;o.connect(f);f.connect(g);g.connect(a.destination);o.start(t)}
 const SFX={hit:()=>{noise(.12,.25,900);tone(140,.12,'square',.12,0,60)},crit:()=>{noise(.2,.35,1400);tone(220,.25,'sawtooth',.2,0,50);tone(660,.1,'square',.1,.05)},miss:()=>noise(.18,.12,3500),heal:()=>[523,659,784].forEach((f,i)=>tone(f,.18,'sine',.12,i*.08)),die:()=>tone(300,.4,'sawtooth',.15,0,60),sum:()=>{tone(330,.1,'triangle',.15);tone(495,.15,'triangle',.15,.08)},mov:()=>noise(.06,.08,700),spell:()=>{tone(400,.35,'sine',.15,0,1200);noise(.25,.1,2500)},gear:()=>{tone(700,.08,'square',.1);tone(1050,.12,'square',.1,.07)},turn:()=>{tone(660,.15,'sine',.15);tone(880,.2,'sine',.15,.12)},win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.18,i*.14)),lose:()=>[392,330,262,196].forEach((f,i)=>tone(f,.3,'sawtooth',.14,i*.18)),title:()=>{tone(392,.48,'triangle',.09);tone(587,.55,'sine',.075,.13);tone(784,.7,'sine',.055,.3);noise(.42,.025,1800,.04)}};
 const snd=n=>{try{SFX[n]&&SFX[n]()}catch(e){}};
+SFX.dice=()=>{for(let i=0;i<7;i++){const t=i*.065+i*i*.006;noise(.035,.12-i*.01,900+i*120,t);tone(180+i*37,.04,'triangle',.065,t,85)}tone(420,.12,'triangle',.08,.72)};
 
 // ===== Original procedural music (synthesised in code, no audio files, no samples) =====
 let musOff=false;try{musOff=localStorage.getItem('delvers_mus')=='1'}catch(e){}
@@ -1337,11 +1373,28 @@ $app.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)ret
  if(a=='sar'){const sc=b.closest('.sc')||b.closest('.sw').querySelector('.sc'),v=sc.classList.contains('v');sc.scrollBy({[v?'top':'left']:+b.dataset.d*(v?sc.clientHeight:sc.clientWidth)*.7,behavior:'smooth'});return}
  if(a=='snd'){mute=!mute;try{localStorage.setItem('delvers_mute',mute?'1':'0')}catch(e){}if(V.title&&!mute)snd('title');render();return}
  if(a=='mus'){musOff=!musOff;try{localStorage.setItem('delvers_mus',musOff?'1':'0')}catch(e){}render();return}
- if(a=='battleintro'){V.intro=null;render();return}
+ if(a=='diceroll'&&G&&V.intro&&!G.opening.rolled.p&&!V.dicePending){
+  V.diceMsg='';snd('dice');V.dicePending=true;render();
+  if(G.pvp){NET.roll().catch(err=>{V.diceMsg='Could not roll: '+err.message}).finally(()=>{V.dicePending=false;pvSync()})}
+  else{G.opening.rolled={p:true,e:true};V.dicePending=false;render()}
+  return;
+ }
+ if(a=='battleintro'){if(!G?.opening?.rolled.p||!G.opening.rolled.e)return;V.intro=null;render();if(!G.pvp&&G.turn==='e')foeTurn();return}
+ if(G&&V.intro)return;
  if(G&&!G.tut&&!G.pvp&&a==='quit'&&(!G.busy||G.over))resumeStory();
  if(G&&G.pvp){pvClick(a,i);return}
  if(G){if(a=='tutpromptopen'&&G.tut){V.tutPrompt=true;render();return}if(a=='tutpromptclose'&&G.tut){V.tutPrompt=false;render();$app.querySelector('[data-a="tutpromptopen"]')?.focus({preventScroll:true});return}if(a=='retry'&&G.over&&!G.pvp){if(G.tut)startTut();else{const oi=G.oi,t=G.tier;newGame(oi,t);render()}return}if(a=='lessonnext'&&G.lesson){lessonNext();return}if(G.lesson&&a!='tutskip'&&a!='quit'){lessonAction(a,i);return}if(a=='tutskip'){if(!G.busy||G.over){if(S.sp=='tut')S.sp='none';sv();G=null;V.intro=null;V.tutPrompt=false;render()}return}if(a=='auto'){if(G.pvp||G.tut)return;G.auto=!G.auto;render();if(G.auto&&G.turn=='p'&&!G.busy)autoTurn();return}if(a=='end')endTurn();else if(a=='quit'){if(!G.busy||G.over){if(G.tut&&G.over=='p'){if(S.sp=='ptut')V.pick=true;else if(S.sp=='done'){V.menuTutorial=true;V.v='packs';if(['review','currencies','deck','done'].includes(S.tutorialMenus.stage)){V.demoTutorialStage='pack';V.demoDeckEdited=false}}}G=null;V.intro=null;if(!V.menuTutorial)V.v='duel';V.tutPrompt=false;render()}}else{const tutorialKey=G.tut&&!G.lesson?tutorialGuide()?.key:null;handle(a,i);if(tutorialKey&&G&&tutorialKey!=tutorialGuide()?.key){showPracticeObjective();render()}}return}
  if(a=='nav'){if(b.dataset.v==='duel')resumeStory();V.v=b.dataset.v;if(V.v!='store')V.monPreview=false;V.msg='';V.stMsg='';V.cs=false;V.sold='';V.sm='';V.shopMsg='';PT.lb=0;PT.soc=0;if(V.v=='profile'&&AU){netInit();if(NET&&!NET.rec)onlineAction(()=>NET.getRating())}}
+ else if(a==='dicestore'){V.v='store';V.storeTab='dice';V.diceMsg=''}
+ else if(a==='diebuy'||a==='dieequip'){
+  const before=JSON.stringify(S);
+  try{
+   if(a==='diebuy'){const d=DelversDice.buy(S,k);V.diceMsg=d.name+' unlocked and equipped.'}
+   else{DelversDice.equip(S,k);V.diceMsg=DelversDice.byId[k].name+' equipped.'}
+   if(!sv()){S=JSON.parse(before);V.diceMsg='Die change was not saved. '+V.saveMsg}
+  }catch(err){S=JSON.parse(before);V.diceMsg=err.message}
+  render();return;
+ }
  else if(a=='storecategory'){V.storeTab=k;V.emoteShop='';V.shopMsg='';V.stMsg='';render();$app.scrollTop=0;$app.querySelector(`[data-a="storecategory"][data-k="${k}"]`)?.focus({preventScroll:true});return}
  else if(a=='emoteunlock'){const e=DelversEmotes.byId[k];if(!e)V.emoteShop='That emote is unavailable.';else if(S.cosmetics.emotes.includes(k))V.emoteShop='Already unlocked.';else if(S.gold<e.price)V.emoteShop='You need more gold for that graphic emote.';else{S.gold-=e.price;S.cosmetics.emotes.push(k);V.emoteShop=e.name+' unlocked! Ready in your collection and in every battle.'}}
  else if(a=='avatar'){const av=AVATARS.find(x=>x.id==k);if(av&&(!av.price||S.cosmetics.avatars.includes(av.id))){S.avatar=k;sv();V.sm='';if(AU){netInit();onlineAction(()=>SOC.ensureProfile())}}}

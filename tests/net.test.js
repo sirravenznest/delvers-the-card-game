@@ -49,7 +49,13 @@ function bot(c, r) { // plays a few random legal actions then ends the turn
   }
   if (c.T.st == 'match' && G.turn == s) c.T.act({ a: 'end' });
 }
-async function step(clients, ms = 1000) { clk.t += ms; for (const c of clients) await c.T.tick(); }
+async function step(clients, ms = 1000) {
+ clk.t += ms;
+ for (const c of clients) await c.T.tick();
+ let rolled=false;
+ for (const c of clients)if(c.T.st==='match'&&!c.T.G.opening.rolled[c.T.seat]){await c.T.roll();rolled=true}
+ if(rolled)for(const c of clients)await c.T.tick();
+}
 
 (async () => {
   // 1. Full ranked match between two bots, matched through the queue

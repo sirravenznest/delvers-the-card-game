@@ -13,14 +13,15 @@ const { lcg, deckFor, turn, play } = require('./bot.js');
 // --- Rule checks ---
 if (P.P_OPT.extraCard) {
   const r = lcg(1), d = deckFor(r, 1), G = P.newMatch(7, d, d);
+  const first=G.opening.winner,second=G.second;
   const h = s => G[s].hand.length;
   assert.strictEqual(h('p'), 4, 'first player opens with 3 cards plus the draw for their first turn');
   assert.strictEqual(h('e'), 4, 'second player opens with 3 cards plus 1 extra');
-  assert.strictEqual(G.p.mp, 1);
-  assert.strictEqual(G.e.mp, 0);
-  P.act(G, 'p', { a: 'end' });
-  assert.strictEqual(h('e'), 5, 'second player draws on their first turn (5 cards, 1 mana)');
-  assert.strictEqual(G.e.mp, 1);
+  assert.strictEqual(G[first].mp, 1);
+  assert.strictEqual(G[second].mp, 0);
+  P.act(G, first, { a: 'end' });
+  assert.strictEqual(h(second), 5, 'second player draws on their first turn (5 cards, 1 mana)');
+  assert.strictEqual(G[second].mp, 1);
   console.log('PASS opening hands: first player 4 cards, second player 5 cards on their first turn');
 }
 { // summoning sickness
@@ -65,7 +66,7 @@ if (P.P_OPT.extraCard) {
 }
 { // a creature is not stuck "ready" for the opponent's turn: only the active seat can act
   const r = lcg(3), d = deckFor(r, 1), G = P.newMatch(3, d, d);
-  assert(!P.act(G, 'e', { a: 'summon', h: 0, pos: P.HOME.e[0] }).ok, 'second player cannot act on first players turn');
+  assert(!P.act(G, G.second, { a: 'summon', h: 0, pos: P.HOME[G.second][0] }).ok, 'second player cannot act on first players turn');
   console.log('PASS cannot act out of turn');
 }
 
@@ -77,7 +78,7 @@ for (const rar of [0, 1, 3]) {
   for (let i = 0; i < N; i++) {
     const r = lcg(1000 * rar + i + 1), d = deckFor(r, rar), G = play(i + 1, d, d);
     if (!G.over) { over++; continue; }
-    n++; len += Math.ceil(G.n / 25); if (G.over == 'p') w++;
+    n++; len += Math.ceil(G.n / 25); if (G.over == G.opening.winner) w++;
   }
   console.log(`deck pool rarity<=${rar}: first player wins ${(100 * w / n).toFixed(1)}% of ${n} mirror matches`);
   tot += n; pw += w;

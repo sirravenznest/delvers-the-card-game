@@ -14,7 +14,7 @@ function legacy(i,rarity,random){
 function match(i,t,seed,player,deck){
  const g=P.newMatch(seed,player,deck),boss=i%3===2;
  g.e.hp=g.e.mx=Math.round((Math.round(i<36?8+i*.6:29.6+(i-35)*.3)+(boss?(i>=36?1:2):0))*(1+.2*(t-1)));
- g.e.max=(boss&&i>=32?1:0)+(t>2?1:0);
+ g.e.max=(boss&&i>=32?1:0)+(t>2?1:0)+(g.turn==='e'?1:0);g.e.mp=g.turn==='e'?g.e.max:0;
  for(let n=0;n<400&&!g.over;n++)turn(g,g.turn);
  assert(g.over,'campaign simulation terminates');return g.over;
 }

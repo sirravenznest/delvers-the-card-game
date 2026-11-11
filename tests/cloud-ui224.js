@@ -80,6 +80,7 @@ async function run(){
   S.dust=1000;CF.unlock(S,S.deckCopies[0],'foil','foil');CF.unlock(S,S.deckCopies[0],'frame','gold');
   const [id]=CF.add(S,'Squire');CF.grantPack(S,id,1,()=>0);S.lastPack={ids:[id]};
   S.builds.push({name:'Finished deck',deck:S.deck.slice(),copyIds:S.deckCopies.slice()});
+  DelversDice.buy(S,'emberheart');
   sv();await cloudPush();
  });
  const earned=await x.page.evaluate(()=>S),writes=x.state.writes.length;
@@ -89,6 +90,7 @@ async function run(){
  assert.equal(earned.dust,625,'cosmetic purchases deduct Dust before cloud upload');
  assert(earned.copies[earned.deck[0]].find(c=>c.id===earned.deckCopies[0]).purchased,'purchased-copy protection is saved');
  assert.equal(earned.lastPack.ids.length,1,'last pack receipt is saved');
+ assert.deepEqual(earned.cosmetics.dice,['emberheart']);assert.equal(earned.cosmetics.die,'emberheart','equipped custom die syncs with permanent ownership');
  await x.page.reload();await x.page.waitForFunction(()=>V.cloud.st==='ok');
  assert.deepEqual(await x.page.evaluate(()=>S),earned,'new testing progress and purchases survive reload and sync');
  assert.equal(x.state.writes.length,writes,'reset is not repeated on relaunch');

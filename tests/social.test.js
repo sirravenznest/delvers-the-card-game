@@ -72,6 +72,8 @@ const rawq = (db, uid, m, p, body) => db.fetch(`https://x/${p}.json?auth=${uid}`
   assert(!db.get('invites/uB/uA'), 'invite consumed');
   assert(!db.get('ratings/uA') && !db.get('ratings/uB'), 'friendly games book no rating');
   const nets = [ann.net, bob.net];
+  await Promise.all(nets.map(n=>n.roll()));
+  for(const n of nets)await n.tick();
   for (let i = 0; i < 6; i++) {
     const first = nets.find(n => n.G.turn == n.seat);
     first.act({ a: 'end' }); clk.t += 1000;

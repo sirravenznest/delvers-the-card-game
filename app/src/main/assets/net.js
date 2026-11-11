@@ -5,9 +5,10 @@ const P=typeof require!=='undefined'?require('./pvp.js'):root.DelversPvp;
 const B=typeof require!=='undefined'?require('./ranked-bots.js'):root.DelversRankedBots;
 const EM=typeof require!=='undefined'?require('./emotes.js'):root.DelversEmotes;
 const F=typeof require!=='undefined'?require('./card-cosmetics.js'):root.DelversCardCosmetics;
+const D=typeof require!=='undefined'?require('./dice.js'):root.DelversDice;
 const SV={'.sv':'timestamp'};
 // Bump when rules or the shared battle presentation contract changes.
-const PROTO=7,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
+const PROTO=8,VERR='You and your opponent are on different versions of the app. Please update to the latest version.';
 const TURN_MS=75000,FRIENDLY_MS=120000,GRACE_MS=20000,STALE_MS=45000,BEAT_MS=10000,BOT_WAIT_MS=20000;
 
 function create(o){
@@ -17,6 +18,7 @@ function create(o){
  const now=()=>o.now?o.now():Date.now();
  const uid=()=>o.auth().uid;
  const deckLooks=deck=>{const looks=o.cardLooks?o.cardLooks():[];return deck.map((_,i)=>F.cleanLook(looks[i]))};
+ const die=()=>D.valid(o.die?o.die():'classic');
  async function rq(m,path,body,q){
   const a=o.auth(),u=`${o.db}/${path}.json?auth=${encodeURIComponent(a.tok)}${q?'&'+q:''}`;
   const r=await o.fetch(u,{method:m,body:body===undefined||m=='GET'||m=='DELETE'?undefined:JSON.stringify(body)});
@@ -55,7 +57,7 @@ function create(o){
   // A prior pending result already booked its loss. A new queue entry commits that loss.
   if(T.rec.from){await rq('PATCH','ratings/'+uid(),{from:null});T.rec.from=null}
   const a=o.auth(),t0=now();
-  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV,j:SV});
+  await rq('PUT','queue/'+a.uid,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',die:die(),r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV,j:SV});
   const me=await rq('GET','queue/'+a.uid);
   T.queueGen++;T.off=me.t-t0;T.joinedAt=me.j;T.lastBeat=now();T.queueAge=0;T.botAvailable=false;
   T.deck=deck;T.st='queue';T.err='';T.finished=false;T.over=null;changed()};
@@ -88,12 +90,13 @@ function create(o){
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   try{await rq('PUT',`queue/${best.k}/m`,mid)}catch(e){return false}
   if(gen!==T.queueGen||T.st!='queue')return false;
-  const seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:best.k,e:meFirst?best.k:me,seed,t0:SV,rk:1,tl:75,pv:PROTO,
+  const seed=Math.floor(Math.random()*4294967296),meBottom=seed%2==0;
+  const meta={p:meBottom?me:best.k,e:meBottom?best.k:me,seed,t0:SV,rk:1,tl:75,pv:PROTO,
+   manualRoll:true,dice:{[me]:D.valid(mine.die),[best.k]:D.valid(best.e.die)},
    names:{[me]:mine.n||'Delver',[best.k]:best.e.n||'Delver'},avatars:{[me]:mine.av||'vanguard',[best.k]:best.e.av||'vanguard'},r:{[me]:mine.r,[best.k]:best.e.r},
    records:{[me]:{w:mine.w||0,l:mine.l||0},[best.k]:{w:best.e.w||0,l:best.e.l||0}},
-   deckP:meFirst?mine.d:best.e.d,deckE:meFirst?best.e.d:mine.d,
-   looksP:(meFirst?mine.looks:best.e.looks)||[],looksE:(meFirst?best.e.looks:mine.looks)||[]};
+   deckP:meBottom?mine.d:best.e.d,deckE:meBottom?best.e.d:mine.d,
+   looksP:(meBottom?mine.looks:best.e.looks)||[],looksE:(meBottom?best.e.looks:mine.looks)||[]};
   await rq('PUT',`matches/${mid}/meta`,meta);
   if(gen!==T.queueGen||T.st!='queue')return false;
   T.mid=mid;return true}
@@ -114,13 +117,14 @@ function create(o){
    if(claimed&&claimed.m==mid)try{await rq('DELETE','queue/'+me)}catch(e){}
    return false}
   const seed=Math.floor(Math.random()*4294967296),bot=B.forRating(mine.r,seed),botId='bot_'+mid;
-  const meFirst=seed%2==0,p=meFirst?me:botId,e=meFirst?botId:me;
+  const meBottom=seed%2==0,p=meBottom?me:botId,e=meBottom?botId:me;
   const meta={p,e,seed,t0:SV,rk:1,tl:75,pv:PROTO,
+   manualRoll:true,dice:{[me]:D.valid(mine.die),[botId]:'classic'},
    names:{[me]:mine.n||'Delver',[botId]:bot.name},avatars:{[me]:mine.av||'vanguard',[botId]:bot.avatar},
    r:{[me]:mine.r,[botId]:bot.r},
    records:{[me]:{w:mine.w||0,l:mine.l||0},[botId]:{w:0,l:0}},
-   deckP:meFirst?mine.d:bot.deck,deckE:meFirst?bot.deck:mine.d,
-   looksP:meFirst?mine.looks||[]:[],looksE:meFirst?[]:mine.looks||[],
+   deckP:meBottom?mine.d:bot.deck,deckE:meBottom?bot.deck:mine.d,
+   looksP:meBottom?mine.looks||[]:[],looksE:meBottom?[]:mine.looks||[],
    bot:{v:1,uid:botId,label:bot.label,name:bot.name,tier:bot.tier,r:bot.r,skill:bot.skill,theme:bot.theme,title:bot.title}};
   const still=await rq('GET','queue/'+me);
   if(gen!==T.queueGen||T.st!='queue'||!still||still.m!==mid){
@@ -151,8 +155,9 @@ function create(o){
   if(!okDeck(meta.deckP)||!okDeck(meta.deckE)){T.st='over';T.err='The match was invalid.';changed();return true}
   const mine=T.seat=='p'?meta.deckP:meta.deckE;
   if(JSON.stringify(mine)!=JSON.stringify(T.deck)){T.st='over';T.err='The match was invalid.';changed();return true}
-  T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE});
-  T.lastT=srv();T.idle=0;T.outbox=[];T.finished=false;T.over=null;
+  T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE,manualRoll:true});
+  if(T.isBot)P.act(T.G,T.botSeat,{a:'roll'});
+  T.lastT=typeof meta.t0==='number'?meta.t0:srv();T.rollStart=T.lastT;T.openingStarted=false;T.idle=0;T.outbox=[];T.finished=false;T.over=null;
   try{await rq('DELETE','queue/'+me)}catch(e){}
   // The loss is booked up front so that quitting a ranked match costs rating; a win restores it.
   T.ranked=!!meta.rk;T.from=null;
@@ -186,7 +191,7 @@ function create(o){
    T.opp={uid:oid,name:(meta.names&&meta.names[oid])||'Opponent',avatar:meta.avatars&&meta.avatars[oid]||'vanguard',
     r:(meta.r&&meta.r[oid])||1000,w:rec.w||0,l:rec.l||0,bot:T.isBot,label:T.isBot?'BOT':null,
     tier:T.isBot?meta.bot.tier:null,theme:T.isBot?meta.bot.title:null};
-   T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE});T.G.over=result.w;
+   T.G=P.newMatch(meta.seed,meta.deckP,meta.deckE,{looksP:meta.looksP,looksE:meta.looksE,manualRoll:true});T.G.over=result.w;
    T.ranked=!!meta.rk;T.from=null;T.over=result.w;T.why=result.why;T.st='over';T.finished=true;
    // A previous client may have saved the result but lost its rating write. Finalize
    // only the matching pending marker; completed results are otherwise idempotent.
@@ -217,6 +222,7 @@ function create(o){
   return r}
  T.act=a=>{
   if(T.st!='match'||T.finished)return{ok:false,err:'No active match.'};
+  if(a&&a.a=='roll')return{ok:false,err:'Use the opening roll control.'};
   if(a&&a.a=='resign'){T.resign();return{ok:true}}
   const r=mine(a);
   if(r.ok){afterApply();flush();changed()}
@@ -226,6 +232,37 @@ function create(o){
   const k=T.G.n;P.act(T.G,T.seat,{a:'resign'});
   T.outbox.push({k,e:{u:uid(),a:{a:'resign'},t:SV}});
   afterApply();flush();changed()};
+
+ function openingClock(){
+  if(!T.openingStarted&&T.G.opening.rolled.p&&T.G.opening.rolled.e){
+   T.openingStarted=true;T.lastT=T.rollStart;
+  }
+ }
+ // Per-player keys allow simultaneous rolls without sharing a numbered action slot.
+ T.roll=async()=>{
+  if(T.st!='match'||T.finished)throw new Error('No active match.');
+  if(T.G.opening.rolled[T.seat])throw new Error('You have already rolled.');
+  const path=`matches/${T.mid}/log/roll_${uid()}`;
+  let record=await rq('GET',path);
+  if(!record)record=await rq('PUT',path,{u:uid(),roll:1,t:SV});
+  if(record.u!==uid()){await finish(T.seat,'cheat');return}
+  if(record.roll!==1)throw new Error('The saved opening roll is invalid.');
+  if(!T.G.opening.rolled[T.seat]){const r=P.act(T.G,T.seat,{a:'roll'});if(!r.ok)throw new Error(r.err)}
+  if(typeof record.t==='number')T.rollStart=Math.max(T.rollStart,record.t);
+  openingClock();changed();
+ };
+ async function readRolls(){
+  const rolls=await rq('GET',`matches/${T.mid}/log`,null,'orderBy="$key"&startAt="roll_"&endAt="roll_\\uf8ff"')||{};
+  for(const s of ['p','e']){
+   const id=T.meta[s],record=rolls['roll_'+id];
+   if(record&&record.u!==id){finish(s,'cheat');return}
+   if(record&&record.u===id&&record.roll===1&&!T.G.opening.rolled[s]){
+    P.act(T.G,s,{a:'roll'});
+    if(typeof record.t==='number')T.rollStart=Math.max(T.rollStart,record.t);
+   }
+  }
+  openingClock();
+ }
 
  function afterApply(){if(T.G.over&&!T.finished)finish(T.G.over,T.opp&&T.G.over==T.seat?'win':'loss')}
 
@@ -246,7 +283,17 @@ function create(o){
  async function matchTick(){
   const G=T.G,me=uid(),oid=T.opp.uid;
   await flush();
+  if(!T.openingStarted)await readRolls();
+  if(T.finished)return;
   await readEmote();
+  if(!T.openingStarted){
+   const res=await rq('GET',`matches/${T.mid}/res/${oid}`);
+   if(res&&res.w===T.seat){finish(T.seat,'win');return}
+   if(srv()-T.lastT>T.tl){
+    if(!G.opening.rolled[T.seat])T.resign();else finish(T.seat,'timeout');
+   }
+   return;
+  }
   // Bot turns are regenerated from the seed and current state. This keeps restart/reconnect
   // replay deterministic without writing synthetic bot actions as human log entries.
   if(T.isBot&&G.turn==T.botSeat&&!G.over){
@@ -306,7 +353,7 @@ function create(o){
   if(!P.validDeck(deck))throw new Error('Your deck needs 20-30 cards, max 3 copies each.');
   await T.getRating();
   const a=o.auth();
-  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV});
+  await rq('PUT',`invites/${fid}/${a.uid}`,{n:a.name||'Delver',av:o.avatar?o.avatar():'vanguard',die:die(),r:T.rec.r,w:T.rec.w,l:T.rec.l,d:deck,looks:deckLooks(deck),pv:PROTO,t:SV});
   T.deck=deck;T.inviteTo={uid:fid,name:fname||'Friend'};T.inviteAt=now();T.st='invite';T.err='';T.finished=false;T.over=null;changed()};
  T.cancelInvite=async()=>{if(T.st!='invite')return;T.st='idle';const f=T.inviteTo;T.inviteTo=null;try{await rq('DELETE',`invites/${f.uid}/${uid()}`)}catch(e){}changed()};
  T.declineInvite=async from=>{await rq('DELETE',`invites/${uid()}/${from}`)};
@@ -316,11 +363,12 @@ function create(o){
   if(!inv||!P.validDeck(inv.d))throw new Error('That invite is no longer available.');
   if(inv.pv!==PROTO)throw new Error(VERR);
   await T.getRating();
-  const me=uid(),seed=Math.floor(Math.random()*4294967296),meFirst=seed%2==0;
-  const meta={p:meFirst?me:from,e:meFirst?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},avatars:{[me]:o.avatar?o.avatar():'vanguard',[from]:inv.av||'vanguard'},
+  const me=uid(),seed=Math.floor(Math.random()*4294967296),meBottom=seed%2==0;
+  const meta={p:meBottom?me:from,e:meBottom?from:me,seed,t0:SV,rk:0,tl:120,pv:PROTO,names:{[me]:o.auth().name||'Delver',[from]:inv.n||'Friend'},avatars:{[me]:o.avatar?o.avatar():'vanguard',[from]:inv.av||'vanguard'},
+   manualRoll:true,dice:{[me]:die(),[from]:D.valid(inv.die)},
    r:{[me]:T.rec.r,[from]:inv.r||1000},records:{[me]:{w:T.rec.w,l:T.rec.l},[from]:{w:inv.w||0,l:inv.l||0}},
-   deckP:meFirst?deck:inv.d,deckE:meFirst?inv.d:deck,
-   looksP:meFirst?deckLooks(deck):inv.looks||[],looksE:meFirst?inv.looks||[]:deckLooks(deck)};
+   deckP:meBottom?deck:inv.d,deckE:meBottom?inv.d:deck,
+   looksP:meBottom?deckLooks(deck):inv.looks||[],looksE:meBottom?inv.looks||[]:deckLooks(deck)};
   const mid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
   await rq('PUT',`matches/${mid}/meta`,meta);
   await rq('PUT',`invites/${me}/${from}/m`,mid);
