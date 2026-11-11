@@ -11,7 +11,7 @@ let browser;
  await p.goto(url);await p.locator('.titleActions .pri').click();await p.click('[data-a="tutskipmenu"]');
  await p.evaluate(()=>{
   newGame(0,1);V.intro=null;G.ev=[];G.p.mp=10;
-  const u=mk(BN.Squire);u.o='p';u.ready=true;u.mv=2;G.b[16]=u;
+  const u=mk(BN['Town Guard']);u.o='p';u.ready=true;u.mv=u.init;G.b[16]=u;
   G.p.hand=[mk({...BN.Dagger,look:{frame:'gold',background:'holographic',foil:'foil'}}),mk(BN.Shield),mk(BN['Amulet of Health']),mk(BN['Magic Missile'])];
   render();
  });
@@ -32,6 +32,25 @@ let browser;
   if(name==='Dagger')assert.equal(await p.locator('#battleNotices .cc-frame-gold.cc-background-holographic.cc-foil-foil').count(),1,'played card keeps its cosmetics');
  }
  assert.equal(await p.locator('.tileGear>span').count(),3,'all equipped slots remain visible on the unit');
+ const buffed=await p.evaluate(()=>{
+  const u=G.b[16];u.look={frame:'gold',lettering:'blue',background:'gold-holographic',foil:'foil'};
+  DelversEngine.use(G);DelversEngine.cast('p',BN.Bless,{side:'p',c:u});render();
+  for(let i=0;i<5;i++)render();
+  const tile=document.querySelector('.tile.u'),stats=[...tile.querySelectorAll('.stat')];
+  return{
+   labels:stats.map(e=>e.querySelector('b').textContent),
+   values:stats.map(e=>e.querySelector('strong').textContent),
+   changed:stats.filter(e=>e.classList.contains('changed')).map(e=>e.querySelector('b').textContent),
+   markers:stats.filter(e=>e.classList.contains('changed')).every(e=>getComputedStyle(e.querySelector('strong'),'::after').content==='"*"'),
+   tough:!!tile.querySelector('[data-ability="tough"]'),
+   gear:tile.querySelector('.tileGear').getAttribute('aria-label')
+  };
+ });
+ assert.deepEqual(buffed.labels,['ATK','HP','GRD','AIM','MOVE','SAVE']);
+ assert.deepEqual(buffed.values,['4','7/7','4','19','1/1','15'],'real gear and Bless bonuses remain visible with all finishes');
+ assert.deepEqual(buffed.changed,['ATK','HP','GRD']);
+ assert(buffed.markers&&buffed.tough,'buff markers and inherent ability tags survive cosmetic refreshes');
+ assert.equal(buffed.gear,'Weapon: Dagger; Armour: Shield; Magic item: Amulet of Health');
  await p.click('[data-a="cell"][data-i="16"]',{force:true});
  assert((await p.locator('.selectedGear').textContent()).includes('Weapon: Dagger; Armour: Shield; Magic item: Amulet of Health'),'selected unit names every equipped item');
  await p.locator('.tile.u').dispatchEvent('contextmenu');
@@ -65,6 +84,18 @@ let browser;
  }
  await p.waitForSelector('#battleNotices',{state:'detached'});
  assert.equal(await p.locator('#battleNotices').count(),0,'card presentation disappears automatically');
+ await p.evaluate(()=>spellNotice({name:'Ashen Reprisal',kind:'chain',caster:'e',target:'Sister Cera, Last Candle'}));
+ assert(await p.locator('.battleNotice').evaluate(e=>e.getAnimations().every(a=>a.effect.getKeyframes().every(f=>!f.transform||f.transform==='none'))),'presentation fades without bouncing, scaling or sliding');
+ await p.waitForTimeout(1100);
+ await p.evaluate(()=>spellNotice({name:'Deep Anvil Charm',kind:'gear',caster:'p',target:'Emberheart Confessor'}));
+ await p.setViewportSize({width:568,height:320});
+ await p.waitForTimeout(1000);
+ assert.equal(await p.locator('#battleNotices .cardName').textContent(),'Deep Anvil Charm','latest rapid cast gets its own lifetime');
+ assert.equal(await p.locator('.battleNotice').count(),1,'rapid casts never pile up cards');
+ assert(await p.locator('#battleNotices').evaluate(e=>{const r=e.getBoundingClientRect(),a=document.querySelector('.combatActions').getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight&&r.right<=a.left&&[...e.querySelectorAll('b,span')].every(x=>x.scrollWidth<=x.clientWidth+1)}),'resizing an active card keeps captions and actions clear');
+ await p.evaluate(()=>{G.over='e';render()});
+ assert.equal(await p.locator('#battleNotices').count(),0,'results never sit behind a played card');
+ await p.evaluate(()=>{G.over=null;G.fin=false;render()});
  // Spell attribution and target highlighting must be relative to either online seat.
  const mirrored=await p.evaluate(()=>{
   const oldNet=NET,oldPv=V.pv;
@@ -86,6 +117,6 @@ let browser;
  await p.waitForTimeout(300);
  assert.equal(await p.locator('#battleNotices').count(),0,'delayed effects do not leak after leaving a battle');
  assert.deepEqual(errors,[]);
- console.log('PASS centered card presentations, named gear, both online seats, responsive stats, motion and cleanup');
+ console.log('PASS clean fading cards, rapid casts, active resize, result cleanup, named gear and both online seats');
  await browser.close();
 })().catch(async e=>{console.error(e);if(browser)await browser.close();process.exitCode=1});

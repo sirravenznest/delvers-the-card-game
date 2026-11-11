@@ -11,6 +11,10 @@ const names = [
   'Hollow Seal Scribe', 'Gloamwood Lookout', 'Rustfang Runner',
   'Emberwatch Vigil', 'Deep Anvil Charm'
 ];
+const finalNames=[
+ 'Ashen Standard-Bearer','Lanternbound Adept','Emberheart Confessor',
+ 'Vaultstep Infiltrator','Embertrail Archer','Lantern Study','Hearthward Prayer','Ashen Reprisal'
+];
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const state = seed => ({
   p:{hp:15,mx:20,mp:10,max:10,hand:[],deck:[E.mk(C.BN.Squire)]},
@@ -32,12 +36,12 @@ function substitute(deck, old, name, count = 1) {
   return result;
 }
 
-test('122 unique cards; all 114 original names, definitions and starters unchanged', () => {
-  assert.equal(C.ALL.length, 122);
-  assert.equal(new Set(C.ALL.map(c => c.name)).size, 122);
-  const original = C.ALL.filter(c => !names.includes(c.name));
+test('130 unique cards; all 114 original mechanical definitions and starters unchanged', () => {
+  assert.equal(C.ALL.length, 130);
+  assert.equal(new Set(C.ALL.map(c => c.name)).size, 130);
+  const original = C.ALL.filter(c => ![...names,...finalNames].includes(c.name));
   assert.equal(original.length, 114);
-  assert.equal(hash(original), '5e89728a85c8aae7991aab90e9c511de20987bbfb00aaad909f62f0dc55a1232');
+  assert.equal(hash(original.map(({txt,...rules})=>rules)), '56c7510513368a88e84ed62c688db2068d735d08855f5d35894d5c40810160d7');
   assert.equal(hash(C.STARTERS), 'c7157046c97998ce636d1999f6ad1ef96610bc349b8b4c3186a388e317432b2a');
   const added = names.map(n => C.BN[n]);
   assert.deepEqual(['c','s','i'].map(t => added.filter(c => c.t == t).length), [6,1,1]);
@@ -51,13 +55,14 @@ test('122 unique cards; all 114 original names, definitions and starters unchang
     if (c.t == 'c') {
       assert(c.hp > 0 && c.atk >= 0 && c.init > 0 && c.rch > 0);
       assert(!c.kw || C.KW[c.kw], c.name);
+      assert((c.k2||'').split(' ').filter(Boolean).every(k=>C.KW[k]),c.name+' secondary abilities');
       assert.equal(c.ct, C.CTYPE[c.cls]);
     }
   }
 });
 
 test('new cards share normal three-copy limits in ranked and replay identical legal actions', () => {
-  for (const name of names) {
+  for (const name of [...names,...finalNames]) {
     const c = C.BN[name], cap = 3;
     const deck = substitute(C.STARTERS[0].list, 'Squire', name, cap);
     assert(P.validRanked(deck), name);
@@ -73,11 +78,12 @@ test('new cards share normal three-copy limits in ranked and replay identical le
         assert.equal(G.b[16].ready, c.kw == 'haste');
         assert.equal(G.b[16].mv, c.kw == 'haste' ? c.init : 0);
       } else {
-        if (c.tg == 'allyC') put(G, 'Squire', 'p', 16);
-        assert(P.act(G, 'p', {a:'cast',h:0,...(c.tg == 'none' ? {} : {t:{side:'p',i:16}})}).ok);
+        const side=c.tg==='any'||c.tg==='enemyC'?'e':'p';
+        if (c.tg != 'none') put(G, 'Squire', side, 16);
+        assert(P.act(G, 'p', {a:'cast',h:0,...(c.tg == 'none' ? {} : {t:{side,i:16}})}).ok,c.name);
       }
       assert.equal(G.p.mp, 10 - c.cost);
-      assert.equal(G.p.hand.length, 0);
+      assert.equal(G.p.hand.length, c.kind==='draw'?c.n:0);
       return G;
     }
     assert.deepEqual(run(), run(), name + ' seeded determinism');
@@ -111,6 +117,7 @@ test('Vigil heals only allies, Charm consumes the magic-item slot, Cera heals wi
 
 test('low-cost legends retain damage/removal tradeoffs across 2000 fixed combat seeds', () => {
   let nimDamage = 0, burglarDamage = 0, nimDeaths = 0, burglarDeaths = 0;
+  let ceraRemoved=0;
   for (let seed = 1; seed <= 2000; seed++) {
     for (const name of [names[1], 'Cat Burglar']) {
       const G = state(seed);
@@ -132,13 +139,28 @@ test('low-cost legends retain damage/removal tradeoffs across 2000 fixed combat 
     E.use(G);
     const cera = put(G, names[0], 'e', 0);
     E.cast('p', C.BN['Magic Missile'], {side:'e',c:cera});
-    assert(cera.hp <= 0, 'even a successful save cannot protect one-health Cera');
+    ceraRemoved+=cera.hp<=0;
   }
+  assert(ceraRemoved>1200&&ceraRemoved<1600,'Cera can survive a saved missile, but focused magic remains a counter');
   assert(nimDamage > burglarDamage, 'Nim buys accuracy');
-  assert(nimDeaths > burglarDeaths, 'Nim pays with worse Guard');
+  assert(nimDeaths > burglarDeaths, 'Nim retains lower Guard against two-damage hits');
   assert(C.BN[names[1]].save > C.BN['Cat Burglar'].save, 'and a worse save');
   assert(C.BN[names[0]].hp < C.BN.Acolyte.hp);
   console.log('legend combat samples:', {nimDamage,burglarDamage,nimDeaths,burglarDeaths});
+});
+
+test('cheap legends gain distinct existing abilities without changing their cost or rarity', () => {
+ const G=state(9);E.use(G);
+ const cera=put(G,names[0],'p',16,{hp:1});
+ E.startTurn('p');
+ assert.equal(cera.hp,2,'Cera regenerates chip damage');
+ assert.equal(G.p.hp,16,'Cera also heals her hero');
+ assert.equal(cera.atk,0,'Cera still needs gear to attack effectively');
+ const nim=E.mk(C.BN[names[1]]);G.p.hand=[nim];G.p.mp=2;
+ E.play('p',nim,null,17);
+ assert(nim.ready&&nim.mv===3,'Nim can move and attack immediately');
+ assert(E.has(nim,'back'),'Nim retains Backstab alongside Haste');
+ assert.equal(nim.hp,2,'Nim can survive one point of chip damage');
 });
 
 test('paired-seat starter substitutions: no new card causes a gross heuristic win-rate swing', () => {

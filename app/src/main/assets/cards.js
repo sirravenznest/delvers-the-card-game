@@ -1,6 +1,6 @@
 (function(root){
 const COLS=4,ROWS=5,NT=COLS*ROWS,BACK=[...Array(COLS).keys()].map(i=>(ROWS-1)*COLS+i),FOEB=[...Array(COLS).keys()];
-const KW={heal:'Heals hero 1/turn',regen:'Regenerates 2',keen:'Keen aim: hits 1 easier',haste:'Haste: acts when summoned',dbl:'Two attacks per turn',poison:'Poison: save or +2 dmg',para:'Paralysis: save or lose turn',drain:'Drain: foe loses 1 attack',back:'Backstab: double vs unhurt',mr:'Magic resistance: 50%',tough:'Tough: each hit deals 1 less damage',thorns:'Thorns: melee attackers take 1',lifelink:'Lifelink: heals your hero 1 per hit'};
+const KW={heal:'Heals hero 1/turn',regen:'Regenerates 2',keen:'Keen aim: hits 1 easier',haste:'Haste: acts when summoned',dbl:'Two attacks per turn',poison:'Poison: save or +2 dmg',para:'Paralysis: save or lose turn',drain:'Drain: foe loses 1 attack',back:'Backstab: +ATK damage vs unhurt',mr:'Magic resistance: 50%',tough:'Tough: attack damage -1 (minimum 1)',thorns:'Thorns: attackers take 1 on hit',lifelink:'Lifelink: heals your hero 1 per hit',ward:'Warded: spell damage -1 (minimum 1)'};
 const imm=c=>c.cls=='U'||c.cls=='K';
 const CL={F:['Fighter','#b3402a'],W:['Wizard','#3a62b8'],C:['Cleric','#b8921f'],T:['Thief','#7a4aa8'],R:['Ranger','#3b8a4a'],B:['Beast','#7a6648'],U:['Undead','#5a5a7a'],G:['Giant','#8a5a2b'],D:['Dragon','#b02a4a'],E:['Elemental','#2a8aa0'],K:['Construct','#6b6b6b'],P:['Weapon','#9a4a2a'],A:['Armour','#4a6a9a'],I:['Magic Item','#2f8f8f']};
 const RN=['Common','Uncommon','Rare','Legendary'],RC=['#8a8a8a','#3b8a4a','#3a62b8','#c98a1a'];
@@ -18,22 +18,30 @@ const CR=[
 ['Pseudodragon','D',2,1,2,19,5,3,12,1,'NG','mr'],['Wyvern','D',4,3,4,16,4,3,11,2,'N','poison',2],['Red Dragon','D',8,7,8,11,-1,3,6,3,'CE','mr',2],
 ['Fire Elemental','E',4,4,3,16,5,2,12,1,'N','thorns'],['Air Elemental','E',4,3,3,16,3,3,12,1,'N','haste',2],['Earth Elemental','E',5,4,6,16,2,1,11,2,'N','tough'],['Briar Elemental','E',3,2,4,18,6,1,13,1,'N','thorns'],
 ['Gargoyle','K',3,2,3,17,4,2,13,1,'CE','tough'],['Gelatinous Cube','K',4,3,6,18,8,1,14,1,'N','para'],['Clay Golem','K',5,4,6,15,3,1,9,2,'N','mr'],
-// Cheap legends trade durability (and Cera's attack) for a specialised role.
-['Sister Cera, Last Candle','C',1,0,1,20,9,1,14,3,'LG','heal'],
-['Nim, Gatemarket Guide','T',2,2,1,17,8,3,16,3,'CN','back'],
+// Cheap legends have distinct utility but remain vulnerable to focused removal.
+['Sister Cera, Last Candle','C',1,0,2,20,9,1,14,3,'LG','heal',1,'regen'],
+['Nim, Gatemarket Guide','T',2,2,2,17,8,3,16,3,'CN','haste',1,'back'],
 ['Ashen Road Escort','F',3,2,4,19,7,1,15,0,'LN','',2],
 ['Hollow Seal Scribe','W',3,2,3,18,7,1,10,1,'N','mr',2],
 ['Gloamwood Lookout','R',3,3,2,18,7,2,14,1,'NG','keen',2],
-['Rustfang Runner','T',2,1,2,18,7,3,14,0,'CN','haste']
-].map(a=>({t:'c',name:a[0],cls:a[1],ct:CTYPE[a[1]],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1}));
+['Rustfang Runner','T',2,1,2,18,7,3,14,0,'CN','haste'],
+['Ashen Standard-Bearer','F',3,2,4,19,6,1,14,1,'LG','heal'],
+['Lanternbound Adept','W',2,1,2,19,8,1,11,0,'NG','ward'],
+['Emberheart Confessor','C',4,2,5,18,5,1,9,2,'LG','mr'],
+['Vaultstep Infiltrator','T',3,2,3,18,7,2,14,1,'CN','back'],
+['Embertrail Archer','R',3,2,3,17,7,2,13,0,'NG','',2]
+].map(a=>({t:'c',name:a[0],cls:a[1],ct:CTYPE[a[1]],cost:a[2],atk:a[3],hp:a[4],thac0:a[5],ac:a[6],init:a[7],save:a[8],rar:a[9],al:a[10],kw:a[11]||'',rch:a[12]||1,...(a[13]?{k2:a[13]}:{})}));
 // name,class,cost,rarity,target,kind,amount,text
 const SP=[
 ['Magic Missile','W',1,0,'any','dmg',3,'3 dmg, no attack roll. Save halves.'],['Burning Hands','W',2,0,'any','splash',3,'3 dmg to a creature and 2 to each creature touching it. Save halves.',2],['Lightning Bolt','W',3,1,'any','col',4,'4 dmg to a creature and every enemy behind or in front of it in the same column. Save halves.'],
 ['Fireball','W',4,2,'any','blast',4,'4 dmg to a creature and 2 to every enemy within 1 tile (diagonals too). Save halves.',2],['Cone of Cold','W',4,2,'any','rowl',3,'3 dmg to a creature and every enemy in the same row. Save halves.'],['Chain Lightning','W',5,2,'any','chain',6,'6 dmg to a creature, then it leaps to the nearest foe within 2 tiles for 4, then 2. Save halves.'],['Meteor Swarm','W',7,3,'none','aoe',6,'6 dmg to all enemy creatures. Save halves.'],
 ['Sleep','W',2,1,'enemyC','sleep',1,'Foe skips its next turn. Save negates.'],['Hold Person','W',3,2,'enemyC','sleep',2,'Foe skips its next 2 turns. Save negates.'],
 ['Cure Light Wounds','C',1,0,'ally','heal',4,'Heal 4.'],['Cure Serious Wounds','C',3,1,'ally','heal',8,'Heal 8.'],['Bless','C',2,0,'allyC','bless',1,'+1 attack, +1 health.'],['Smite','C',3,1,'enemyC','dmg',4,'4 dmg to a creature. Save halves.'],
-['Arcane Insight','W',2,1,'none','draw',2,'Draw 2 cards.'],['Disintegrate','W',6,3,'enemyC','dmg',10,'10 dmg to a creature. Save halves.'],['Turn Undead','C',3,1,'none','turn',5,'5 dmg to every enemy Undead. Ignores saves.'],['Mass Cure Wounds','C',5,2,'none','mheal',3,'Heal 3 to your hero and all your creatures.'],['Mana Potion','I',0,1,'none','mana',1,'Gain 1 Mana this turn.'],['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.'],['Potion of Heroism','I',2,1,'allyC','bless',2,'+2 attack, +2 health.'],['Potion of Speed','I',2,1,'allyC','haste',0,'The creature refreshes: it may move and attack again this turn.'],['Wand of Lightning','I',4,2,'any','dmg',6,'6 dmg. Save halves.']
-,['Emberwatch Vigil','C',3,1,'none','mheal',2,'Heal 2 to your hero and all your creatures.']
+['Arcane Insight','W',2,1,'none','draw',2,'Draw 2 cards.'],['Disintegrate','W',6,3,'enemyC','dmg',10,'10 dmg to a creature. Save halves.'],['Turn Undead','C',3,1,'none','turn',5,'5 dmg to enemy Undead. No Save or magic resistance.'],['Mass Cure Wounds','C',5,2,'none','mheal',3,'Heal 3 to your hero and all your creatures.'],['Mana Potion','I',0,1,'none','mana',1,'Gain 1 Mana this turn.'],['Potion of Healing','I',1,0,'ally','heal',5,'Heal 5.'],['Potion of Heroism','I',2,1,'allyC','bless',2,'+2 attack, +2 health.'],['Potion of Speed','I',2,1,'allyC','haste',0,'The creature refreshes: it may move and attack again this turn.'],['Wand of Lightning','I',4,2,'any','dmg',6,'6 dmg. Save halves.']
+,['Emberwatch Vigil','C',3,1,'none','mheal',2,'Heal 2 to your hero and all your creatures.'],
+['Lantern Study','W',1,0,'none','draw',1,'Draw 1 card.'],
+['Hearthward Prayer','C',2,1,'allyC','heal',6,'Heal an allied creature for 6.'],
+['Ashen Reprisal','W',4,2,'any','chain',5,'5 dmg to a creature, then leaps to the nearest foe within 2 tiles for 3, then 1. Save halves.']
 ].map(a=>({t:'s',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:a[4],kind:a[5],n:a[6],n2:a[8],txt:a[7],sub:a[1]=='I'?'Magic Item':'Spell'}));
 const GT=d=>[d.atk&&`+${d.atk} attack`,d.thac0&&(d.thac0<0?`+${-d.thac0} to hit`:`${-d.thac0} to hit`),d.ac&&`Guard ${d.ac}`,d.hp&&`+${d.hp} health`,d.init&&`+${d.init} initiative`,d.rch&&`+${d.rch} reach`,d.save&&`Save ${d.save}`,d.kw&&KW[d.kw]].filter(Boolean).join(', ');
 // name,class (P weapon, A armour, I magic),cost,rarity,effects. A creature carries one weapon and one armour.
@@ -41,7 +49,7 @@ const IT=[
 ['Dagger','P',1,0,{atk:1}],['Club','P',1,0,{atk:2,thac0:1}],['Spear','P',2,0,{atk:1,rch:1}],['Poisoned Dagger','P',2,1,{atk:1,kw:'poison'}],['Assassin Knife','P',2,1,{atk:1,kw:'back'}],['Rapier','P',2,1,{atk:1,thac0:-1,init:1}],['Long Sword','P',2,1,{atk:2,thac0:-1}],['Halberd','P',3,1,{atk:2,rch:1}],['Longbow','P',3,1,{atk:1,thac0:-2,rch:1}],['War Hammer','P',3,2,{atk:3}],['Twin Axes','P',3,2,{atk:1,kw:'dbl'}],['Vampiric Blade','P',3,2,{atk:2,kw:'lifelink'}],['Flame Tongue','P',4,2,{atk:3,thac0:-2}],['Vorpal Blade','P',5,3,{atk:4,thac0:-3}],
 ['Leather Armor','A',1,0,{ac:-1,hp:1}],['Shield','A',1,0,{ac:-2}],['Buckler','A',1,0,{ac:-1,init:1}],['Chain Mail','A',2,1,{ac:-3}],['Tower Shield','A',2,1,{ac:-1,hp:2,kw:'tough'}],['Warding Robes','A',2,1,{ac:-1,hp:1,save:-3}],['Spiked Mail','A',3,1,{ac:-2,kw:'thorns'}],['Mithril Shirt','A',3,2,{ac:-3,init:1}],['Plate Armor','A',4,2,{ac:-4,hp:1,kw:'tough'}],['Dragonscale Mail','A',5,3,{ac:-5,hp:2,save:-2,kw:'thorns'}],
 ['Boots of Speed','I',2,1,{init:1,kw:'haste'}],['Cloak of Elvenkind','I',2,1,{ac:-1,init:1}],['Amulet of Health','I',2,1,{hp:3}],['Eye of Keenness','I',2,1,{kw:'keen',atk:1}],['Rod of Reaching','I',2,1,{rch:1}],['Bracers of Defense','I',3,1,{ac:-2,save:-1}],['Ring of Protection','I',3,2,{ac:-1,save:-2}],['Amulet of Warding','I',3,2,{kw:'mr',save:-2}],['Gauntlets of Ogre Power','I',3,2,{atk:2}],['Staff of Striking','I',3,2,{atk:2,thac0:-1,rch:1}],['Winged Boots','I',4,2,{init:2}],['Ring of Regeneration','I',5,3,{hp:2,kw:'regen'}],['Orb of Dragonkind','I',6,3,{atk:3,hp:3,ac:-2}]
-,['Deep Anvil Charm','I',2,1,{hp:1,save:-2}]
+,['Deep Anvil Charm','I',2,1,{hp:1,save:-2,kw:'ward'}]
 ].map(a=>({t:'i',name:a[0],cls:a[1],cost:a[2],rar:a[3],tg:'allyC',kind:'gear',d:a[4],txt:GT(a[4]),sub:CL[a[1]][0],slot:a[1]}));
 const ALL=[...CR,...SP,...IT],BN={};ALL.forEach(c=>BN[c.name]=c);
 // Starter decks: 30 cards, Common and Uncommon only, at most 3 copies each. Choosing one after the tutorial adds these cards to your collection.

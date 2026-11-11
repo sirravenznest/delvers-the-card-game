@@ -155,6 +155,10 @@ async function run(){
     for(const mode of ['pack','zoom']){
      document.getElementById('app').innerHTML=mode=='pack'?(()=>{V.pk={c:[c],i:0,sh:1,ph:2,n:1};return pkHTML()})():`<div id="zm">${zoomHTML(c,false)}</div>`;
      const el=document.querySelector('.card'),r=el.getBoundingClientRect();
+     if(el.querySelector('.cardName').textContent!==c.name||el.querySelector('.cost').textContent!==String(c.cost))bad.push(c.name+' '+mode+' incorrect name/cost');
+     if(el.querySelector('.rarityBadge').textContent!==RN[c.rar]||el.style.getPropertyValue('--rar')!==RC[c.rar])bad.push(c.name+' '+mode+' incorrect rarity');
+     if(c.t!=='c'&&el.querySelector('.effect').textContent!==c.txt)bad.push(c.name+' '+mode+' incorrect rules');
+     if(c.t==='c'&&[...el.querySelectorAll('[data-ability]:not([data-ability="reach"])')].map(e=>e.dataset.ability).join()!==kws(c).join())bad.push(c.name+' '+mode+' incorrect abilities');
      if(r.top<0||r.bottom>innerHeight+1||r.left<0||r.right>innerWidth+1)bad.push(c.name+' '+mode+' bounds');
      for(const e of el.querySelectorAll('.cardName,.identity,.abilities,.effect,.stats'))if(e.scrollHeight>e.clientHeight+1)bad.push(c.name+' '+mode+' clipped '+e.className);
      if(c.t=='c'&&[...el.querySelectorAll('.stat b')].map(e=>e.textContent).join()!=statDefs.map(x=>x[0]).join())bad.push(c.name+' stat order');
@@ -162,7 +166,7 @@ async function run(){
    }
    V.pk=null;document.getElementById('app').innerHTML=original;return bad;
   });
-  assert.deepEqual(clipping,[],`${w}x${h}: all 122 cards visible`);
+  assert.deepEqual(clipping,[],`${w}x${h}: all 130 cards visible`);
   await p.evaluate(()=>{V.v='duel';newGame(0,1);V.intro=null;G.p.hand=['Squire','Archmage','Goblin Skulker','Dagger'].map(n=>mk(BN[n]));render()});
   const turnBanner=await p.locator('.turn').evaluate(e=>{
    const r=e.getBoundingClientRect(),board=document.querySelector('.board').getBoundingClientRect(),rail=document.querySelector('.battleRail').getBoundingClientRect();
@@ -405,7 +409,13 @@ async function run(){
  await perform([['cell',12],['cell',8]]);
  await perform([['hand',0],['cell',8]]);
  await perform([['hand',0],['cell',16]]);
- await perform([['hand',0],['cell',16]]);
+ await p.click('#tutorialObjective [data-a="tutpromptclose"]');
+ await p.click('[data-a="hand"][data-i="0"]');await p.click('[data-a="cell"][data-i="16"]');
+ assert.equal(await p.evaluate(()=>G.lesson.done),false,'Haste requires more than summoning');
+ await p.click('#tutorialObjective [data-a="tutpromptclose"]');
+ await p.click('[data-a="cell"][data-i="16"]');await p.click('[data-a="cell"][data-i="12"]');
+ assert.equal(await p.evaluate(()=>G.lesson.done),false,'Haste also requires a summon-turn attack');
+ await perform([['cell',12],['cell',8]]);
  await perform([['cell',0],['ehero']]);
  assert(await p.evaluate(()=>G.tut&&!G.lesson),'lessons lead to practice');
  assert(await p.locator('#tutorialObjective').isVisible(),'practice opens with a prominent objective');
@@ -477,7 +487,7 @@ async function run(){
  for(const key of ['gold','prog','deck','stars','packs','avatar','sd'])assert.deepEqual(migrated[key],legacy[key],'old save retains '+key);
  for(const key of ['avatars','backgrounds','scene'])assert.deepEqual(migrated.cosmetics[key],legacy.cosmetics[key],'old cosmetic ownership retained');
  for(const [name,n] of Object.entries(legacy.col))assert.equal(migrated.col[name],n,'old collection retained '+name);
- assert.equal(Object.keys(migrated.col).length,122);
+ assert.equal(Object.keys(migrated.col).length,130);
  await p.evaluate(()=>{localStorage.setItem('delvers_consent','2026-11-04')});await p.reload();
  assert(await p.evaluate(()=>!agreed()),'new ranked bot terms require renewed agreement');
  assert.equal(await p.evaluate(()=>S.gold),731,'consent renewal does not reset progress');

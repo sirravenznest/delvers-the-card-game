@@ -253,14 +253,14 @@ body.battle .tile .tileGear>span{flex:none;font:inherit}
 @media(min-height:421px){body.battle .tile .tileGear{font-size:11px}}
 @media(max-height:420px){body.battle .tile .tileGear .gearName{display:none}body.battle .tile .tileGear{max-width:none}}
 #battleNotices{position:fixed;z-index:21;transform:translate(-50%,-50%);pointer-events:none}
-.battleNotice{display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;font:12px/1.15 Arial,sans-serif;animation:battleNoticeIn 2s ease-out both;filter:drop-shadow(0 3px 8px #000b)}
-.battleNotice>b,.battleNotice>span{display:block;padding:2px 6px;border-radius:3px;background:#111625ed;max-width:220px;overflow-wrap:anywhere;text-align:center}
+.battleNotice{display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;font:12px/1.15 Arial,sans-serif;animation:battleNoticeIn 2s linear both;filter:drop-shadow(0 3px 8px #000b)}
+.battleNotice>b,.battleNotice>span{display:block;padding:2px 6px;border-radius:3px;background:#111625ed;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;text-align:center}
 .battleNotice>b{color:#bcecff;font-size:11px}
 .battleNotice.equipped>b{color:#ffe297}
-.playedCard{width:calc(var(--card-width)*var(--played-scale));position:relative}
+.playedCard{width:calc(var(--card-width)*var(--played-scale,1));position:relative}
 .playedCard>.card{position:absolute;top:0;left:0;transform:scale(var(--played-scale));transform-origin:top left;margin:0}
 .fx-equip{animation:equipPulse .7s ease-out}
-@keyframes battleNoticeIn{0%{transform:translateY(8px) scale(.96);opacity:0}12%,80%{transform:none;opacity:1}100%{transform:translateY(-6px);opacity:0}}
+@keyframes battleNoticeIn{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
 @keyframes equipPulse{50%{outline:2px solid #ffe297;outline-offset:-4px}}
 @media(prefers-reduced-motion:reduce){.battleNotice,.fx-equip{animation:none}}
 body.battle .tile .ab{width:100%;flex:0 0 9px;min-height:9px;flex-wrap:nowrap;line-height:1;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
@@ -334,6 +334,16 @@ body.battle .hand .card.dim{border:2px dashed #7e899c;background:#171c28}
 .storyContinue{margin:5px 0;width:100%;text-align:left}
 .storyToolbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;flex:none}
 .storyToolbar>.btn{font-size:12px;padding:5px 8px;min-height:30px}
+.storyLinks{display:flex;gap:4px}.storyLinks .btn{font-size:11px;padding:4px 6px;min-height:30px}
+.storyIndex h2{font:700 clamp(18px,2.4vw,27px)/1.2 Georgia,serif;text-align:center;margin:6px 0}
+.storyIndex .indexContents{grid-column:1/-1}
+.storyIndex:after{top:64px;bottom:35px}
+.indexChapters{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,minmax(min-content,1fr));grid-auto-flow:column;column-gap:34px;scrollbar-width:thin}
+.storyIndex .indexEntry{display:flex;align-items:center;gap:6px;width:100%;padding:10px 0;border:0;border-bottom:1px dashed #9e8558;background:none;color:#543823;text-align:left;font:13px/1.2 Georgia,serif;min-height:52px}
+.storyIndex .indexEntry.current{background:#e2c893;box-shadow:inset 3px 0 #805b2b}
+.indexNumber{flex:none;padding:0 4px;font-size:19px;color:#7b352a}
+.indexTitle{flex:1;min-width:0}.indexTitle b{display:block}.indexTitle small{display:block;font:10px/1.3 Georgia,serif;margin-top:3px}
+.indexPage{flex:none;font:11px Georgia,serif;white-space:nowrap}
 .storyToolbar .storyContinue{font-size:12px;padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0}
 .chapterControls{display:flex;align-items:center;gap:5px;font-size:12px}.chapterControls .btn{padding:3px 6px;min-height:30px;font-size:10px;white-space:nowrap}.chapterControls b{white-space:nowrap}
 .storyProgress{display:flex;align-items:center;gap:8px;min-height:15px;font:10px Arial,sans-serif;color:#d9c9a7}.storyProgress>span:first-child{flex:none}.storyProgressTrack{display:block;flex:1;height:6px;overflow:hidden;border:1px solid #6a5638;border-radius:4px;background:#111625}.storyProgressTrack i{display:block;height:100%;background:#e0884a}

@@ -32,17 +32,19 @@ function turn(G, s) {
       let ok = false;
       if (c.kind == 'aoe') { if (foes().length >= 2) ok = act({ a: 'cast', h }); }
       else if (E.AREA[c.kind]) {
-        const sc = foes().map(([u, i]) => [E.hits(s, c, u).reduce((m, [x, n]) => m + Math.min(n, x.hp), 0), i]).sort((a, b) => b[0] - a[0])[0];
+        const sc = foes().map(([u, i]) => [E.hits(s, c, u).reduce((m, [x, n]) => m + Math.min(E.spellDamage(x,n), x.hp), 0), i]).sort((a, b) => b[0] - a[0])[0];
         ok = sc ? sc[0] >= c.n && act({ a: 'cast', h, t: { side: o, i: sc[1] } }) : act({ a: 'cast', h, t: { side: o, i: null } });
       }
       else if (c.kind == 'dmg') {
-        const k = foes().find(([u]) => u.hp <= c.n) || foes().sort((a, b) => b[0].atk - a[0].atk)[0];
+        const k = foes().find(([u]) => u.hp <= E.spellDamage(u,c.n)) || foes().sort((a, b) => b[0].atk - a[0].atk)[0];
         ok = k ? act({ a: 'cast', h, t: { side: o, i: k[1] } }) : (c.tg == 'any' && act({ a: 'cast', h, t: { side: o, i: null } }));
       } else if (c.kind == 'heal') {
         const hurt = mine().find(([u]) => u.hp < u.mhp - 2);
-        if (X.hp <= X.mx - 5) ok = act({ a: 'cast', h, t: { side: s, i: null } }); else if (hurt) ok = act({ a: 'cast', h, t: { side: s, i: hurt[1] } });
+        if (c.tg!=='allyC'&&X.hp <= X.mx - 5) ok = act({ a: 'cast', h, t: { side: s, i: null } }); else if (hurt) ok = act({ a: 'cast', h, t: { side: s, i: hurt[1] } });
       } else if (c.kind == 'sleep') { const k = foes().filter(([u]) => !C.imm(u)).sort((a, b) => b[0].atk - a[0].atk)[0]; if (k) ok = act({ a: 'cast', h, t: { side: o, i: k[1] } }); }
-      else if (c.kind == 'haste') { const k = mine().find(([u]) => !u.ready && u.fresh); if (k) ok = act({ a: 'cast', h, t: { side: s, i: k[1] } }); }
+      else if (c.kind == 'draw') { if (E.drawValue(G,s,c)>0) ok = act({a:'cast',h}); }
+      else if (c.kind == 'mana') { if (X.hand.some(x=>x.cost>X.mp&&x.cost<=X.mp+c.n)) ok = act({a:'cast',h}); }
+      else if (c.kind == 'haste') { const k = mine().filter(([u])=>E.refreshValue(G,s,u)>0).sort((a,b)=>E.refreshValue(G,s,b[0])-E.refreshValue(G,s,a[0]))[0]; if (k) ok = act({ a: 'cast', h, t: { side: s, i: k[1] } }); }
       else { const k = mine().filter(([u]) => c.kind != 'gear' || !c.slot || !u['s' + c.slot]).sort((a, b) => b[0].atk - a[0].atk)[0]; if (k) ok = act({ a: 'cast', h, t: { side: s, i: k[1] } }); }
       if (ok) { did = true; break; }
     }
