@@ -17,7 +17,7 @@ Run `tests/tutorial-menus-ui.js` with the local-server/Playwright setup below to
 
 ## Card cosmetics & Arcane Dust (development)
 
-Collection, Deck and pack results have **Copies & cosmetics** controls. Each individual copy can combine a metallic frame, metallic title lettering, holographic background and foil shine. Previewing is free; a confirmed purchase permanently unlocks the treatment on that copy, and switching unlocked treatments is free. Deck slots and saved builds retain the exact chosen copies. Existing collections migrate to plain copies without changing quantities, gold or decks.
+Collection, Deck and pack results have **Copies & cosmetics** controls. Each individual copy can combine a metallic frame, metallic title lettering, holographic background and foil shine. Holographic, Gold holographic and Foil shine share the **Finishes** section; backgrounds and foil can still be combined. Previewing is free; a confirmed purchase permanently unlocks the treatment on that copy, and switching unlocked treatments is free. Deck slots and saved builds retain the exact chosen copies. Existing collections migrate to plain copies without changing quantities, gold or decks.
 
 | Treatment | Arcane Dust per copy |
 |---|---:|
@@ -33,13 +33,23 @@ The **end-of-opening summary** shows every card obtained and offers **Review & b
 
 Every packed card independently has a **0.25% / 0.75% / 1.5%** cosmetic chance in Standard / Veteran / Legendary packs, without changing card-rarity odds. A cosmetic drop unlocks and equips one treatment for free. Basic foil and silver/red/blue treatments are possible even on Common cards in Standard packs. Gold treatments require at least Uncommon, holographic requires Rare or Legendary, and gold holographic requires Legendary. Higher card rarity improves the treatment mix; higher pack tiers weight gold, foil and holographic treatments more heavily. Exact conditional treatment odds are shown under Pull rates.
 
-Finishes use original procedural CSS, not third-party game assets. They appear in menus, pack reveals, full-card previews, battle hands and battlefield units. Gameplay colours always take precedence: playable/blocked cards, blue/red ownership, readiness, targets, changed stats, class bands and rarity indicators keep their original colours. In compact battle views, holographic backgrounds become decorative accents rather than replacing status backgrounds; exhausted unit names retain their muted appearance. All campaign difficulties, human ranked, rated bots and friendly matches support cosmetics. Tutorial lessons and guided practice use plain cards. Reduced-motion settings disable animated shimmer.
+Finishes use original procedural CSS, not third-party game assets. They appear in menus, pack reveals, full-card previews, battle hands and battlefield units. Gameplay colours always take precedence: playable/blocked cards, blue/red ownership, readiness, targets, changed stats, class bands and rarity indicators keep their original colours. Battle holographic finishes cover the inner card surface at reduced opacity rather than being squeezed into a thin strip, and shimmer keeps its phase across background refreshes. Exhausted unit names retain their muted appearance. All campaign difficulties, human ranked, rated bots and friendly matches support cosmetics. Tutorial lessons and guided practice use plain cards. Reduced-motion settings disable animated shimmer.
+
+Spells and gear briefly show the actual played card front and center over the battlefield, identifying who played it and its target. The presentation fades automatically, requires no dismissal, and never takes focus or blocks controls. Equipped units show gear markers; select or hold a unit to identify every item and inspect its effects. Larger battle views also show gear names beside the unit name. These are presentation-only changes, with existing gear slots and stat bonuses unchanged. Run `tests/battle-feedback-ui.js` with the local-server/Playwright setup below for centered presentations, equipment inspection, landscape sizes and online seat attribution.
+
+Battle-hand cards retain their class-coloured identity band even on compact screens, explicitly labelling Creature, Spell or Gear alongside class or equipment slot. The band remains separate from playable/blocked borders, selection outlines and cosmetic finishes.
+
+Auto-play, campaign AI and ranked bots evaluate draw spells using actual deck and hand space, including the slot freed by casting. They avoid empty-deck/fatal-fatigue draws and save Potion of Speed for useful restored attacks or movement instead of refreshing unused actions. Auto-play and campaign AI reconsider cards after units act, so Speed can grant a genuine extra action that turn. Ranked bots do not randomly end a turn while a useful action remains.
 
 Pack openings have an original Delvers seal, tear effects, rarity-specific halos and particles, and a distinct shimmer celebration and label for cosmetic discoveries. Muting still controls all generated sounds; reduced motion removes animated effects, and Skip stays reachable during every stage. Reveal effects never change the already-granted pack contents or rewards.
 
 Pack cards settle gently into view without a white opening flash or edge-on flip. Background cloud/online updates retain the active reveal instead of restarting its animation. Finishing or skipping opens the card summary with gold/Dust rewards, a separate destructive confirmation, and a keep-cards option. Cosmetics still require individual review.
 
 Cloud saves include Dust, individual-copy identifiers, unlock provenance, equipped treatments, deck choices and the latest pack receipt. Online protocol 6 shares only equipped appearances with match participants; both players must use a compatible build. No Firebase rules changes are required.
+
+## 2.2.22
+
+Restores class-coloured Creature/Spell/Gear labels in battle hands, improves cosmetic finish visibility and groups the three finishes together. Played spells and gear briefly appear front and center; equipped units identify their items. Auto-play, campaign AI and ranked bots use draw spells more reliably and save Potion of Speed for useful extra actions.
 
 ## 2.2.21
 

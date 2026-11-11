@@ -338,7 +338,7 @@ async function run(){
   fxOne({k:'atk',f:16,i:-1,s:'e'});const attack=document.querySelector('[data-i="16"]').classList.contains('fx-atk');
   DelversEngine.dmg('e',null,1);fxRun();
   fxOne({k:'heal',i:-1,s:'p',n:1});
-  fxOne({k:'spell',i:-1,s:'e'});
+  fxOne({k:'spell',kind:'dmg',name:'Magic Missile',caster:'p',target:'opposing hero',i:-1,s:'e'});
   fxOne({k:'sum',i:16,s:'p'});
   const heal=document.querySelector('[data-a="phero"]').classList.contains('fx-heal'),spell=document.querySelector('[data-a="ehero"]').classList.contains('fx-spell'),summon=document.querySelector('[data-i="16"]').classList.contains('fx-in');
   Object.assign(SFX,old);return{attack,heal,spell,summon,sounds};
