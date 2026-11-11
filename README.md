@@ -3,6 +3,14 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.28
+
+Audio unlock is retried on completed clicks/taps and keyboard input, including when a track is already selected but the audio context is suspended. Returning to the app resumes audio, with rejected audio operations reported to the console. Music and global mute retain their separate settings.
+
+Full cards retain their intended height inside column layouts instead of using their width as their flex height. Wrapped titles have room to grow, and taller-screen deck cards leave enough space for titles, stats and rarity labels without crossing the border. Battlefield cosmetics, abilities, gear and live stats are unchanged.
+
+`tests/music-playback-ui.js` checks real generated audio samples for all five music modes with touch activation restrictions, mute controls and suspend/recovery. `tests/card-text-ui.js` measures painted text against card borders for the entire collection, deck gallery and hand at seven landscape sizes.
+
 ## 2.2.27
 
 The deck list no longer repeats every card as a separate slot menu. Each grouped card instead opens Copies & cosmetics directly, with deck-copy choices shown above the treatments; owned copies already in the deck are marked. Purchases, individual copy selections and saved builds remain unchanged. Collection filters share the tools panel's single scroll surface, without overlapping scroll arrows.
