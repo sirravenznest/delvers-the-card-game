@@ -302,17 +302,18 @@ body.battle .hw{grid-area:hand;min-height:0;overflow:hidden;display:flex;flex-di
 .handLabel{display:block;flex:0 0 13px;font:10px/13px Arial,sans-serif;color:#c4e7ff;padding-left:22px}
 body.battle .hand{height:auto;min-height:0;flex:1;align-items:center;overflow-x:auto;gap:8px;padding:1px 22px 2px;scroll-padding:22px}
 body.battle .hw .sar.x{top:13px;bottom:0;width:18px;min-width:18px}
-body.battle .hand .card{width:clamp(135px,19vw,194px);flex-basis:clamp(135px,19vw,194px);height:var(--battle-card-height);padding:3px;gap:2px;box-shadow:none}
-body.battle .hand .card .cardHead{grid-template-columns:18px minmax(0,1fr);min-height:20px;flex:none}
+body.battle .hand .card{width:clamp(205px,25vw,230px);flex-basis:clamp(205px,25vw,230px);height:var(--battle-card-height);display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-rows:auto auto minmax(18px,1fr) auto;grid-template-areas:"head head" "identity identity" "art abilities" "stats stats";padding:3px;gap:2px;box-shadow:none}
+body.battle .hand .card .cardHead{grid-area:head;grid-template-columns:18px minmax(0,1fr);min-height:20px;flex:none}
 body.battle .hand .card .cost{width:18px;height:18px;line-height:16px;font-size:12px}
 body.battle .hand .card .cardName{font-size:10px;line-height:1.05}
-body.battle .hand .card .art,body.battle .hand .card .cardFoot{display:none}
-body.battle .hand .card .identity{display:block;flex:none;min-height:13px;padding:1px 3px;font-size:8px;line-height:11px;white-space:nowrap;overflow:hidden}
+body.battle .hand .card .art{display:block;width:100%;height:100%;min-height:0;object-fit:contain}
+body.battle .hand .card .cardFoot{display:none}
+body.battle .hand .card .identity{grid-area:identity;display:block;min-height:13px;padding:1px 3px;font-size:9px;line-height:11px;white-space:nowrap;overflow:hidden}
 body.battle .hand .card .identity small{display:none}
-body.battle .hand .card .abilities{min-height:0;overflow:auto;gap:2px;flex:1}
+body.battle .hand .card .abilities{grid-area:abilities;min-width:0;min-height:0;overflow:auto;gap:2px}
 body.battle .hand .card .abilityTag{font-size:8px;line-height:1.1;padding:1px 2px}
 body.battle .hand .card .effect{font-size:10px;line-height:1.2}
-body.battle .hand .card .stats{gap:1px}
+body.battle .hand .card .stats{grid-area:stats;gap:1px}
 body.battle .hand .card .stat{min-height:10px;padding:1px;flex-direction:row;justify-content:space-between}
 body.battle .hand .card .stat b{font-size:7px}
 body.battle .hand .card .stat strong{font-size:9px;line-height:1}
@@ -466,13 +467,13 @@ body.battle .emoteBubble.p{top:auto;bottom:calc(var(--battle-card-height) + 32px
 #ov>:last-child{margin-bottom:auto}
 @media(max-height:430px){
  :root{--card-height:254px;--card-width:177px}
- .card .art,.card.zoom .art,body.battle .hand .card .art,.pkface .card.zoom .art{height:36px;min-height:36px}
- .card .cardName,.card.zoom .cardName,body.battle .hand .card .cardName{font-size:12px}
+ .card .art,.card.zoom .art,.pkface .card.zoom .art{height:36px;min-height:36px}
+ .card .cardName,.card.zoom .cardName{font-size:12px}
  .card .cardHead{min-height:28px}.card .stat{min-height:27px}
  .hubTile{padding:9px;min-height:66px}.hubGrid{gap:6px}
  .bookArt{height:80px}.pkov{gap:3px}
 }
-@media(max-height:360px){:root{--card-height:234px;--card-width:170px}.card .cardHead{min-height:26px}.card .art,.card.zoom .art,body.battle .hand .card .art,.pkface .card.zoom .art{height:28px;min-height:28px}.card .identity{min-height:24px}.card .stat{min-height:25px}.abilityTag{font-size:10px}
+@media(max-height:360px){:root{--card-height:234px;--card-width:170px}.card .cardHead{min-height:26px}.card .art,.card.zoom .art,.pkface .card.zoom .art{height:28px;min-height:28px}.card .identity{min-height:24px}.card .stat{min-height:25px}.abilityTag{font-size:10px}
  .hubTile{min-height:58px;padding:7px}.hubTile strong{font-size:15px}.hubTile small{font-size:11px;line-height:1.15}
  body.battle #app{gap:3px;padding:4px 8px}
  body.battle .battleRail{gap:3px}
@@ -483,9 +484,6 @@ body.battle .emoteBubble.p{top:auto;bottom:calc(var(--battle-card-height) + 32px
  body.battle .tile b.tileName{font-size:9px;line-height:1}
 }
 @media(min-height:560px){
- body.battle .hand .card .art{display:block;height:26px;min-height:26px}
- body.battle .hand .card .identity{display:flex;min-height:22px;font-size:10px}
- body.battle .hand .card .identity small{display:block;font-size:9px}
  body.battle .tile .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
  body.battle .tile.u{gap:2px;padding:2px}
  body.battle .tile b.tileName{font-size:clamp(12px,1.8vh,18px);line-height:1.1}
