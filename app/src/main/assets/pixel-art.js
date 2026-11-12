@@ -3,12 +3,15 @@
 const palette={ink:'#111625',dark:'#242b40',stone:'#596178',light:'#d7dfdc',skin:'#e3ae79',gold:'#f3ca69',red:'#b84d51',green:'#529c74',blue:'#659bcd',white:'#f1eedb'};
 const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
 const rect=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
-function sprite(c){
+function sprite(c,transparent=false){
  const h=hash(c.name),p=palette,col=(root.DelversCards.CL[c.cls]||['',p.blue])[1];
- let a=rect(0,0,64,40,p.ink)+rect(0,24,64,16,p.dark);
- for(let i=0;i<9;i++)a+=rect((h+i*17)%64,(h+i*11)%22,1,1,p.light);
- for(let i=0;i<8;i++)a+=rect(i*8,26+(h+i*7)%7,8,14,p.ink);
- a+=rect(22,35,22,2,p.stone);
+ let a='';
+ if(!transparent){
+  a=rect(0,0,64,40,p.ink)+rect(0,24,64,16,p.dark);
+  for(let i=0;i<9;i++)a+=rect((h+i*17)%64,(h+i*11)%22,1,1,p.light);
+  for(let i=0;i<8;i++)a+=rect(i*8,26+(h+i*7)%7,8,14,p.ink);
+  a+=rect(22,35,22,2,p.stone);
+ }
  const r=(x,y,w,ht,k)=>{a+=rect(x,y,w,ht,k)};
  if(c.t=='s'){
   const healing=['heal','mheal','bless'].includes(c.kind),magic=healing?p.green:c.kind=='sleep'?p.blue:p.gold;
@@ -39,7 +42,7 @@ function sprite(c){
  }
  return a;
 }
-function art(c,cls='art'){return `<svg class="${cls}" viewBox="0 0 64 40" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} pixel artwork">${sprite(c)}</svg>`}
+function art(c,cls='art'){const unit=cls==='unitSprite';return `<svg class="${cls}" viewBox="${unit?'12 3 40 36':'0 0 64 40'}" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} pixel artwork">${sprite(c,unit)}</svg>`}
 function scene(seed,colors){
  const h=hash(String(seed)),p=palette,a=colors||[p.ink,p.dark,p.stone];let s=rect(0,0,128,64,a[0])+rect(0,28,128,36,a[1]);
  for(let i=0;i<20;i++)s+=rect((h+i*23)%128,(h+i*7)%26,1,1,p.light);

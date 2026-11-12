@@ -493,6 +493,11 @@ body.battle .emoteBubble.p{top:auto;bottom:calc(var(--battle-card-height) + 32px
  body.battle .tile .ab{flex-basis:16px;min-height:16px}
  body.battle .tile .ab .abilityTag{font-size:clamp(10px,1.4vh,14px)}
 }
+body.battle .tile.u .unitArt{position:absolute;inset:1px;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none}
+body.battle .tile.u .unitSprite{display:block;width:auto;height:100%;max-width:100%;image-rendering:pixelated}
+body.battle .tile.u .stats,body.battle .tile.u .ab,body.battle .tile.u .tileHeader{z-index:3}
+body.battle .tile.u .stat{background:#111625b3}
+body.battle .tile.u .stat b,body.battle .tile.u .stat strong{text-shadow:0 1px 2px #000,0 0 3px #000}
 @media(orientation:portrait){.rotateHint{display:block;position:fixed;inset:0;z-index:100;background:#111625;color:#fff;padding:20vh 24px;text-align:center;font:20px/1.5 Arial,sans-serif}.rotateHint strong{display:block;font-size:28px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}}
 
