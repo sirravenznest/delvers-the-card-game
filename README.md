@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.30
+
+Both players' battlefield units show their pixel artwork beneath the existing stats and indicators. The board keeps its existing size, ownership markers, gear, abilities and cosmetic effects. `tests/battlefield-art-ui.js` checks visible artwork and unit details across landscape sizes.
+
 ## 2.2.28
 
 Audio unlock is retried on completed clicks/taps and keyboard input, including when a track is already selected but the audio context is suspended. Returning to the app resumes audio, with rejected audio operations reported to the console. Music and global mute retain their separate settings.
