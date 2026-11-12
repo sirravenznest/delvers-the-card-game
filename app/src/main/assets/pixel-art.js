@@ -3,46 +3,214 @@
 const palette={ink:'#111625',dark:'#242b40',stone:'#596178',light:'#d7dfdc',skin:'#e3ae79',gold:'#f3ca69',red:'#b84d51',green:'#529c74',blue:'#659bcd',white:'#f1eedb'};
 const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
 const rect=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+const figures={
+ 'Squire':['cap','sword','shield'],'Town Guard':['helm','spear','shield'],
+ 'Tusk Raider':['horns','axe','tusks'],'Pikeman':['helm','pike','mail'],
+ 'Dwarf Fighter':['helm','hammer','beard'],'Paladin':['crest','sword','sun'],
+ 'Bladedancer':['hair','twins','sash'],'Emberguard Knight':['crest','sword','flame'],
+ 'Apprentice':['cap','wand','book'],'Illusionist':['hood','orb','mirrors'],
+ 'Evoker':['point','staff','flame'],'Archmage':['point','orb','stars'],
+ 'Battle Mage':['helm','staff','mail'],'Acolyte':['hood','candle','robe'],
+ 'Priest':['cap','staff','sun'],'War Cleric':['helm','hammer','sun'],
+ 'High Priestess':['crown','staff','robe'],'Cutpurse':['cap','knife','purse'],
+ 'Goblin Skulker':['hood','knife','goblin'],'Cat Burglar':['hood','rope','mask'],
+ 'Assassin':['hood','twins','mask'],'Woodsman':['cap','axe','beard'],
+ 'Hunter':['hood','bow','quiver'],'Elven Ranger':['hair','bow','ears'],
+ 'Beastmaster':['hair','staff','paw'],'Druid':['antlers','staff','leaves'],
+ 'Sister Cera, Last Candle':['veil','candle','sun'],'Nim, Gatemarket Guide':['cap','lantern','map'],
+ 'Ashen Road Escort':['helm','spear','sash'],'Hollow Seal Scribe':['hood','book','runes'],
+ 'Gloamwood Lookout':['hood','bow','leaves'],'Rustfang Runner':['hair','knife','goblin'],
+ 'Ashen Standard-Bearer':['helm','banner','mail'],'Lanternbound Adept':['point','lantern','runes'],
+ 'Emberheart Confessor':['veil','staff','flame'],'Vaultstep Infiltrator':['hood','key','mask'],
+ 'Embertrail Archer':['cap','bow','flame']
+};
 function sprite(c,transparent=false){
  const h=hash(c.name),p=palette,col=(root.DelversCards.CL[c.cls]||['',p.blue])[1];
+ const accent=[p.gold,p.blue,p.green,p.red,p.light][h%5],shade=['#73533e','#ad7754','#e3ae79','#c99570'][h%4];
  let a='';
- if(!transparent){
-  a=rect(0,0,64,40,p.ink)+rect(0,24,64,16,p.dark);
-  for(let i=0;i<9;i++)a+=rect((h+i*17)%64,(h+i*11)%22,1,1,p.light);
-  for(let i=0;i<8;i++)a+=rect(i*8,26+(h+i*7)%7,8,14,p.ink);
-  a+=rect(22,35,22,2,p.stone);
- }
  const r=(x,y,w,ht,k)=>{a+=rect(x,y,w,ht,k)};
- if(c.t=='s'){
-  const healing=['heal','mheal','bless'].includes(c.kind),magic=healing?p.green:c.kind=='sleep'?p.blue:p.gold;
-  r(27,8,10,3,p.light);r(25,11,14,18,col);r(28,14,8,13,p.white);
-  if(healing){r(31,16,2,9,magic);r(28,19,8,3,magic)}
-  else{r(31,13,5,4,magic);r(28,17,5,4,magic);r(31,21,5,6,magic)}
-  r(22,30,20,2,p.stone);
- }else if(c.t=='i'){
-  if(c.cls=='P'){r(29,7,5,19,p.light);r(31,7,2,16,p.white);r(24,25,15,3,p.gold);r(30,28,4,7,col)}
-  else if(c.cls=='A'){r(23,9,19,17,p.stone);r(26,12,13,17,col);r(29,29,7,3,col);r(31,14,3,12,p.gold)}
-  else{r(25,12,14,17,p.gold);r(22,16,20,9,p.gold);r(28,15,8,11,col);r(30,16,4,4,p.white)}
- }else if(['B','D'].includes(c.cls)){
-  r(24,18,18,12,col);r(20,15,10,11,col);r(18,12,4,5,col);r(26,12,4,5,col);
-  r(21,18,3,2,p.white);r(23,18,1,2,p.ink);r(23,30,5,5,col);r(36,30,5,5,col);r(41,17,6,5,col);
-  if(c.cls=='D'){r(34,8,13,3,col);r(36,11,9,8,col);r(46,20,4,6,p.gold)}
-  if(/Spider/.test(c.name))for(let i=0;i<3;i++){r(15,18+i*5,10,2,col);r(40,18+i*5,10,2,col)}
- }else if(c.cls=='E'){
-  for(let i=0;i<5;i++)r(22+i*4,11+(i*7+h)%9,4,19-(i*7+h)%9,col);
-  r(27,17,10,12,p.gold);r(30,20,4,8,p.white);
- }else{
-  const undead=c.cls=='U',construct=c.cls=='K',giant=c.cls=='G',skin=undead?p.light:construct?p.stone:palette.skin,x=giant?22:25,w=giant?20:14;
-  r(x,7,w,4,col);r(x+1,11,w-2,9,skin);r(x+3,14,2,2,p.ink);r(x+w-5,14,2,2,p.ink);
-  r(x,21,w,10,col);r(x-4,22,4,8,skin);r(x+w,22,4,8,skin);r(x+1,31,5,5,p.stone);r(x+w-6,31,5,5,p.stone);
-  if(['W','C'].includes(c.cls)){r(43,13,2,22,p.gold);r(41,10,6,5,c.cls=='C'?p.gold:p.blue);r(x-1,4,w+2,3,col)}
-  if(['F','G'].includes(c.cls)){r(16,19,7,12,p.stone);r(18,21,3,7,p.gold);r(45,14,2,15,p.light)}
-  if(c.cls=='R'){r(43,16,2,16,p.gold);r(45,19,2,10,p.gold);r(42,22,7,1,p.light)}
-  if(c.cls=='T'){r(x-1,7,w+2,5,col);r(45,23,2,9,p.light)}
+ const path=(d,fill)=>{a+=`<path d="${d}" fill="${fill}"/>`};
+ const cross=(x,y,k)=>{r(x+3,y,3,11,k);r(x,y+3,9,3,k)};
+ const bolt=(x,y,k)=>path(`M${x+6} ${y}h7l-6 10h6l-15 17 5-13h-6Z`,k);
+ if(!transparent){
+  r(0,0,64,40,p.ink);r(0,28,64,12,p.dark);
+  for(let i=0;i<9;i++)r((h+i*17)%64,(h+i*11)%24,1,1,p.light);
+  r(18,36,29,2,p.stone);
  }
+ function tool(kind,x=43){
+  if(kind==='bow'){path(`M${x} 8l8 6v14l-8 7 4-10V18Z`,p.gold);r(x,10,1,23,p.light);r(x-5,21,16,1,p.light)}
+  else if(['staff','spear','pike','banner','lantern','candle'].includes(kind)){
+   r(x,kind==='pike'?4:9,2,27,p.gold);
+   if(kind==='spear'||kind==='pike')path(`M${x+1} 2l4 8h-8Z`,p.light);
+   if(kind==='staff'){r(x-2,7,6,6,accent);r(x,8,2,2,p.white)}
+   if(kind==='banner'){r(x+2,6,9,14,col);path(`M${x+2} 20h9l-4 5-5-3Z`,accent)}
+   if(kind==='lantern'){r(x-4,12,10,12,p.gold);r(x-2,14,6,8,'#ffb74c');r(x,16,2,5,p.white)}
+   if(kind==='candle'){r(x-2,18,6,12,p.white);r(x,12,2,5,p.gold);r(x-4,30,10,2,p.gold)}
+  }else if(kind==='book'){r(x-5,19,12,13,accent);r(x-3,20,8,10,p.light);r(x+1,20,1,10,p.gold)}
+  else if(kind==='orb'){r(x-4,15,11,10,accent);r(x-2,13,7,14,accent);r(x,16,3,3,p.white)}
+  else if(kind==='axe'||kind==='hammer'){r(x,12,2,23,p.gold);r(x-5,10,12,kind==='hammer'?7:10,p.stone);r(x-5,10,3,8,p.light)}
+  else if(kind==='key'){r(x-3,18,8,7,p.gold);r(x,23,2,11,p.gold);r(x+2,30,4,2,p.gold)}
+  else if(kind==='rope'){path(`M${x-4} 17h10v15h-10Zm2 2v11h6V19Z`,p.gold)}
+  else{
+   const short=kind==='knife',y=short?22:10;
+   r(x,y,3,short?8:18,p.light);r(x-3,y+(short?8:18),9,2,accent);r(x+1,y+(short?10:20),2,5,p.gold);
+   if(kind==='twins'){r(16,16,3,15,p.light);r(14,29,7,2,accent)}
+  }
+ }
+ function person(){
+  const [hat,weapon,detail]=figures[c.name]||[c.cls==='W'?'point':'hood',c.cls==='R'?'bow':'staff','robe'];
+  const dwarf=/Dwarf/.test(c.name),goblin=detail==='goblin',x=dwarf?24:26,w=dwarf?17:13,skin=goblin?p.green:shade;
+  r(x+1,10,w-2,10,skin);r(x+3,14,2,2,p.ink);r(x+w-5,14,2,2,p.ink);
+  path(`M${x} 21h${w}l3 11H${x-3}Z`,col);r(x-3,22,4,8,skin);r(x+w,22,4,8,skin);
+  r(x,32,5,4,p.stone);r(x+w-5,32,5,4,p.stone);r(x,29,w,2,accent);
+  if(hat==='helm'||hat==='crest'){r(x-1,7,w+2,5,p.stone);r(x-2,11,3,7,p.stone);if(hat==='crest')r(x+5,3,3,6,p.red)}
+  else if(hat==='point'){path(`M${x-3} 10l10-9 7 9Z`,col);r(x-3,10,w+6,2,accent)}
+  else if(hat==='crown'){r(x,6,w,4,p.gold);for(let i=0;i<3;i++)r(x+i*5,3,2,4,p.gold)}
+  else if(hat==='antlers'){path(`M${x+2} 11l-7-8h3l5 4 2-5h2v9Zm8 0 7-8h-3l-5 4-2-5h-2v9Z`,p.gold)}
+  else if(hat==='horns'){r(x,6,w,5,p.stone);r(x-3,4,4,7,p.light);r(x+w-1,4,4,7,p.light)}
+  else{r(x-1,7,w+2,4,hat==='hair'?accent:col);if(hat==='hood'||hat==='veil'){r(x-2,10,3,12,col);r(x+w-1,10,3,12,col)}}
+  if(detail==='beard')path(`M${x+1} 17h${w-2}l-3 9h-5Z`,p.light);
+  if(detail==='mask')r(x,16,w,4,p.dark);
+  if(detail==='ears'||goblin){path(`M${x} 12l-5-3 2 7h3Zm${w} 0 5-3-2 7h-3Z`,skin)}
+  if(detail==='shield'){r(16,21,8,12,p.stone);r(18,23,4,7,accent)}
+  if(detail==='sun')cross(x+3,21,p.gold);
+  if(detail==='flame')path(`M${x+3} 29l-1-5 3 2 2-6 4 9Z`,'#ffb74c');
+  if(detail==='sash')path(`M${x} 21h3l${w-3} 9h-3Z`,accent);
+  if(detail==='mail')for(let j=0;j<3;j++)for(let i=0;i<3;i++)r(x+2+i*4,22+j*3,2,1,p.light);
+  if(['runes','stars','mirrors'].includes(detail))for(let i=0;i<3;i++){r(16,8+i*7,3,3,accent);r(x+3+i*3,23,1,4,p.light)}
+  if(detail==='map'){r(16,21,9,9,p.light);r(18,23,5,1,p.red);r(20,24,1,4,p.red)}
+  if(detail==='purse'){r(16,25,8,8,p.gold);r(18,23,4,2,p.gold)}
+  if(detail==='quiver'){r(18,18,5,14,p.gold);r(18,12,1,9,p.light);r(21,11,1,9,p.light)}
+  if(detail==='leaves'||detail==='paw'){r(16,22,6,6,p.green);r(14,19,3,3,p.green);r(20,18,3,3,p.green)}
+  if(detail==='tusks'){r(x+2,17,2,4,p.light);r(x+w-4,17,2,4,p.light)}
+  tool(weapon);
+ }
+ function monster(){
+  const n=c.name;
+  if(/Spider/.test(n)){
+   r(25,16,15,15,'#744a85');r(28,10,9,8,p.dark);
+   for(let i=0;i<4;i++){path(`M26 ${17+i*3}l-10 ${i*3-6}h-4v3h3l11 6Zm13 0 10 ${i*3-6}h4v3h-3l-11 6Z`,p.stone)}
+   r(29,12,2,2,p.red);r(34,12,2,2,p.red);
+  }else if(/Cube/.test(n)){
+   r(19,8,28,27,'#459b9b');r(21,10,24,23,'#75c6b0');r(24,14,2,17,p.white);r(29,20,9,2,p.light);r(33,16,2,10,p.light);r(39,12,3,3,p.white);
+  }else if(/Treant|Briar/.test(n)){
+   const k=n.includes('Briar')?'#45935a':'#806344';
+   path('M25 35V20l-10-8 3-3 10 5 1-10h8l2 11 10-8 3 4-12 12 3 12h-8l-3-10-1 10Z',k);
+   for(let i=0;i<5;i++)r(18+i*6,7+(i%2)*4,8,5,p.green);
+   r(29,17,2,2,p.gold);r(35,17,2,2,p.gold);
+  }else if(/Elemental/.test(n)){
+   if(n.startsWith('Fire')){path('M20 33l-4-10 8 3-2-12 7 5 5-16 5 17 7-7-1 12 6-2-6 10Z',p.red);path('M26 33l2-13 5 6 3-10 5 17Z',p.gold)}
+   if(n.startsWith('Air')){for(let i=0;i<5;i++){r(16+i*3,9+i*5,31-i*5,2,p.light);r(42-i*2,11+i*5,3,3,p.blue)}}
+   if(n.startsWith('Earth')){path('M21 34l-4-12 5-5-2-8 12-5 13 7-2 11 5 12Z',p.stone);r(24,13,8,5,'#8e8067');r(33,22,7,8,'#ad9870')}
+   r(28,19,2,2,p.white);r(35,19,2,2,p.white);
+  }else if(n==='Harpy'){
+   path('M25 21 12 7v15l13 8Zm14 0L52 7v15l-13 8Z','#9b6789');
+   r(27,8,11,11,shade);r(26,6,13,5,'#734957');r(29,12,2,2,p.ink);r(34,12,2,2,p.ink);
+   path('M27 21h11l3 10H24Z','#9b6789');r(26,30,3,5,p.gold);r(35,30,3,5,p.gold);r(23,35,7,1,p.gold);r(35,35,7,1,p.gold);
+  }else if(c.ct==='Beast'||c.ct==='Dragon'){
+   const colors={'Giant Rat':'#9b7e72','Dire Wolf':'#8c9ca8','Owlbear':'#9c7951','Griffon':'#bb9c55','Harpy':'#9b6789','Pseudodragon':'#8e70b6','Wyvern':'#639266','Red Dragon':'#bd4435'};
+   const k=colors[n]||col,winged=['Griffon','Harpy','Pseudodragon','Wyvern','Red Dragon'].includes(n);
+   r(24,20,19,10,k);r(18,14,12,12,k);r(16,20,7,5,k);r(24,30,5,5,k);r(37,30,5,5,k);
+   r(21,17,2,2,p.white);
+   if(winged){path('M30 22 17 3 16 15 11 18 27 28Zm6 0L48 3l1 12 5 3-15 10Z',k);r(34,22,7,2,accent)}
+   if(n==='Giant Rat'){r(18,11,5,6,p.red);path('M43 24h7v8h-7v-2h5v-4h-5Z',p.red)}
+   if(n==='Dire Wolf'){path('M18 15v-7l5 6 5-6v8Z',k);r(15,24,8,2,p.light)}
+   if(n==='Owlbear'){r(17,14,15,9,p.light);r(19,16,3,3,p.ink);r(26,16,3,3,p.ink);r(23,20,3,3,p.gold)}
+   if(n==='Griffon'){r(18,14,12,10,p.light);r(21,17,2,2,p.ink);r(15,21,7,3,p.gold);r(24,32,3,4,p.gold);r(37,32,3,4,p.gold)}
+   if(c.ct==='Dragon'){r(18,10,2,6,p.gold);r(26,10,2,6,p.gold);path('M42 25l10-5v7l-10 3Z',k)}
+  }else if(c.ct==='Undead'){
+   const ghost=['Shadow','Wraith'].includes(n),k=n==='Zombie'?'#86a66c':n==='Ghoul'?'#8f779f':p.light;
+   if(ghost){path('M20 35V16l4-9h13l6 9v19l-7-4-4 5-5-5Z',n==='Shadow'?'#655080':'#9db9ca');r(27,14,2,3,p.gold);r(34,14,2,3,p.gold)}
+   else{r(26,8,13,12,k);r(28,12,3,3,p.ink);r(34,12,3,3,p.ink);r(29,18,7,2,p.ink);
+    if(n==='Skeleton'){r(31,20,3,12,k);for(let i=0;i<3;i++)r(26,22+i*3,13,1,k);r(26,32,3,4,k);r(36,32,3,4,k);tool('sword')}
+    else{path('M25 21h15l5 14H20Z',n==='Vampire Spawn'?'#8e3b58':col);r(19,23,6,5,k);r(40,23,6,5,k);
+     if(n==='Lich'){r(25,5,15,4,p.gold);tool('staff')}
+     if(n==='Wight'){r(25,7,15,4,p.stone);tool('sword')}
+     if(n==='Vampire Spawn'){r(29,17,2,4,p.white);r(35,17,2,4,p.white);path('M24 21l-9-5 5 19h5Zm16 0 9-5-5 19h-5Z',p.red)}
+     if(n==='Ghoul'){r(16,26,8,2,k);r(43,26,8,2,k);r(17,28,2,5,k);r(48,28,2,5,k)}
+    }
+   }
+  }else{
+   const k=n==='Troll'?'#6c9a60':n==='Clay Golem'?'#b47754':n==='Gargoyle'?p.stone:'#b89b72';
+   path('M23 18h19l4 13H19Z',k);r(25,7,15,13,k);r(17,21,6,12,k);r(42,21,6,12,k);r(23,31,7,5,k);r(36,31,7,5,k);
+   if(n==='Cyclops')r(29,12,7,4,p.white);else{r(28,12,2,2,p.ink);r(35,12,2,2,p.ink)}
+   if(n==='Ogre'){tool('hammer');r(28,18,2,4,p.light)}
+   if(n==='Hill Giant'){r(12,23,12,10,p.stone);r(14,21,8,2,p.stone)}
+   if(n==='Troll'){r(29,17,7,5,p.light);r(15,30,10,2,p.light)}
+   if(n==='Gargoyle'){path('M24 20 12 6v18l12 6Zm17 0L53 6v18l-12 6Z',p.stone);r(25,4,3,6,p.stone);r(37,4,3,6,p.stone)}
+   if(n==='Clay Golem'){r(27,23,12,2,p.gold);r(30,10,6,3,p.red)}
+  }
+ }
+ function magic(){
+  const n=c.name;
+  if(n.startsWith('Potion')||n==='Mana Potion'){
+   r(27,7,10,4,p.gold);r(28,11,8,5,p.light);path('M27 16h10l6 7v11H21V23Z',p.light);
+   r(23,23,18,9,n==='Mana Potion'?p.blue:n==='Potion of Healing'?p.red:n==='Potion of Speed'?p.green:p.gold);
+   if(n==='Potion of Healing')cross(28,21,p.white);else if(n==='Potion of Speed')bolt(27,18,p.white);else r(29,24,6,4,p.white);
+  }else if(n==='Wand of Lightning'){tool('wand',26);bolt(36,5,p.gold)}
+  else if(/Lightning|Reprisal/.test(n)){bolt(19,5,p.gold);if(n==='Chain Lightning'||n==='Ashen Reprisal')bolt(39,13,n==='Ashen Reprisal'?p.red:p.blue)}
+  else if(n==='Fireball'||n==='Meteor Swarm'||n==='Burning Hands'){
+   const points=n==='Meteor Swarm'?[[18,16],[34,8],[42,25]]:[[32,23]];
+   for(const [x,y] of points){path(`M${x-6} ${y+7}l-3-7 14-14-4 14 2 7Z`,p.red);r(x-4,y-3,8,9,p.gold);r(x-2,y,4,4,p.white)}
+   if(n==='Burning Hands'){r(17,24,10,9,shade);r(38,24,10,9,shade)}
+  }else if(n==='Cone of Cold'){path('M16 20 47 5v30Z',p.blue);for(let i=0;i<3;i++){cross(29+i*6,11+i*4,p.white)}}
+  else if(n==='Sleep'){path('M34 5h10L32 20h12v3H27v-3L39 8H34Z',p.blue);r(19,27,22,6,p.light)}
+  else if(n==='Hold Person'){r(27,12,10,10,shade);r(25,23,14,12,col);for(let i=0;i<5;i++)r(18+i*6,7,3,28,p.stone)}
+  else if(/Insight|Study/.test(n)){r(18,13,28,20,p.gold);r(20,15,11,16,p.light);r(33,15,11,16,p.white);for(let i=0;i<3;i++)r(22,18+i*4,6,1,p.blue);if(n==='Lantern Study')tool('lantern',49);else r(29,6,7,5,p.blue)}
+  else if(n==='Magic Missile'){for(let i=0;i<3;i++){r(18+i*9,8+i*7,12,3,p.blue);r(28+i*9,7+i*7,4,5,p.white)}}
+  else if(n==='Disintegrate'){r(17,18,27,3,p.green);for(let i=0;i<8;i++)r(41+(i*3)%11,8+i*3,2,2,p.green)}
+  else{
+   cross(27,n==='Cure Serious Wounds'?7:15,n==='Smite'?p.gold:p.green);
+   if(n==='Mass Cure Wounds'){cross(15,22,p.green);cross(42,22,p.green)}
+   if(n==='Cure Serious Wounds'){r(21,23,22,10,shade);cross(27,20,p.white)}
+   if(n==='Turn Undead'){r(18,20,8,9,p.light);r(20,22,2,2,p.ink);r(24,22,2,2,p.ink);bolt(36,5,p.gold)}
+   if(n==='Bless'){r(21,7,22,2,p.gold);r(18,9,3,4,p.gold);r(43,9,3,4,p.gold)}
+   if(n==='Smite')tool('sword',42);
+   if(n==='Emberwatch Vigil'){tool('lantern',18);tool('lantern',45)}
+   if(n==='Hearthward Prayer'){path('M16 19 32 6l16 13Z',p.red);r(19,19,26,17,p.gold);cross(28,21,p.white)}
+   if(n==='Cure Light Wounds'){r(18,27,9,5,shade);r(38,27,9,5,shade)}
+  }
+ }
+ function gear(){
+  const n=c.name;
+  if(c.slot==='P'){
+   if(/Bow/i.test(n))tool('bow',30);
+   else if(/Axe/.test(n)){tool('axe',23);tool('axe',41)}
+   else if(/Hammer|Club/.test(n)){if(n==='Club'){r(29,9,7,23,'#98603a');r(27,8,11,13,'#98603a');r(30,10,2,9,p.gold)}else tool('hammer',31)}
+   else if(/Spear|Halberd/.test(n)){tool('pike',31);if(n==='Halberd')r(32,10,9,9,p.stone)}
+   else{tool(/Dagger|Knife/.test(n)?'knife':'sword',31);
+    if(/Poison/.test(n))r(29,21,7,5,p.green);
+    if(n==='Assassin Knife')r(30,15,5,8,p.dark);
+    if(n==='Rapier'){r(30,5,1,22,p.white);r(25,25,12,4,p.gold)}
+    if(n==='Vampiric Blade')r(29,10,7,14,p.red);
+    if(n==='Flame Tongue')path('M26 25l-4-9 5 2 3-13 5 10 4-5-3 15Z',p.gold);
+    if(n==='Vorpal Blade'){r(28,9,2,18,p.blue);r(35,8,2,19,p.blue)}
+   }
+  }else if(c.slot==='A'){
+   if(/Shield|Buckler/.test(n)){const big=n==='Tower Shield',w=n==='Buckler'?14:22;r(32-w/2,big?6:11,w,big?29:20,col);r(30,13,4,15,p.gold);r(25,19,14,3,p.gold)}
+   else{path('M23 9h18l9 9-6 5-4-5v17H24V18l-4 5-6-5Z',n==='Leather Armor'?'#98603a':n==='Warding Robes'?col:p.stone);
+    if(/Mail|Shirt/.test(n))for(let y=14;y<33;y+=4)for(let x=25;x<40;x+=4)r(x,y,2,2,n==='Mithril Shirt'?p.white:n==='Dragonscale Mail'?p.red:p.light);
+    if(n==='Plate Armor'){r(25,13,14,12,p.light);r(30,26,4,9,p.gold)}
+    if(n==='Spiked Mail')for(let x=21;x<45;x+=5)path(`M${x} 15l2-7 2 7Z`,p.light);
+    if(n==='Warding Robes')cross(28,18,p.gold);
+   }
+  }else if(/Boots/.test(n)){r(21,14,8,19,p.gold);r(35,14,8,19,p.gold);r(17,28,12,6,col);r(35,28,12,6,col);if(n==='Winged Boots'){path('M21 19 12 9v13l9 5Zm22 0 9-10v13l-9 5Z',p.light)}else bolt(28,5,p.blue)}
+  else if(/Ring/.test(n)){path('M22 14h20v18H22Zm4 4v10h12V18Z',p.gold);r(28,10,8,8,n==='Ring of Regeneration'?p.green:p.blue)}
+  else if(/Cloak/.test(n)){path('M25 7h14l10 28H15Z',p.green);r(27,8,10,8,p.dark);r(31,19,2,13,p.gold)}
+  else if(/Staff|Rod/.test(n)){tool('staff',30);if(n==='Rod of Reaching'){r(22,10,20,2,p.light);r(20,8,3,6,p.gold);r(42,8,3,6,p.gold)}}
+  else if(/Bracers|Gauntlets/.test(n)){r(19,14,11,20,p.stone);r(35,14,11,20,p.stone);r(19,18,11,3,p.gold);r(35,18,11,3,p.gold);if(n==='Gauntlets of Ogre Power'){r(18,10,13,8,p.green);r(34,10,13,8,p.green)}}
+  else if(n==='Eye of Keenness'){path('M15 21l10-9h14l10 9-10 9H25Z',p.light);r(27,15,10,13,p.blue);r(31,17,3,9,p.ink)}
+  else if(n==='Orb of Dragonkind'){r(23,11,18,20,p.red);path('M25 25l4-10 8-2-3 8 5 7Z',p.gold)}
+  else if(n==='Deep Anvil Charm'){r(23,8,18,2,p.gold);path('M18 16h28v6H35v7h6v5H23v-5h6v-7H18Z',p.stone)}
+  else{path('M22 6v8l10 9 10-9V6h-2v7l-8 7-8-7V6Z',p.gold);r(27,21,11,12,n==='Amulet of Health'?p.red:p.blue);cross(28,21,p.white)}
+ }
+ if(c.t==='s')magic();
+ else if(c.t==='i')gear();
+ else if(figures[c.name]||c.ct==='Humanoid')person();
+ else monster();
  return a;
 }
-function art(c,cls='art'){const unit=cls==='unitSprite';return `<svg class="${cls}" viewBox="${unit?'12 3 40 36':'0 0 64 40'}" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} pixel artwork">${sprite(c,unit)}</svg>`}
+function art(c,cls='art'){const unit=cls==='unitSprite';return `<svg class="${cls}" viewBox="${unit?'8 0 48 38':'0 0 64 40'}" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} pixel artwork">${sprite(c,unit)}</svg>`}
 function scene(seed,colors){
  const h=hash(String(seed)),p=palette,a=colors||[p.ink,p.dark,p.stone];let s=rect(0,0,128,64,a[0])+rect(0,28,128,36,a[1]);
  for(let i=0;i<20;i++)s+=rect((h+i*23)%128,(h+i*7)%26,1,1,p.light);

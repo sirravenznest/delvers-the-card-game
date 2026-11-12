@@ -3,6 +3,14 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.32
+
+Cards have individual pixel-art foregrounds: named characters carry distinct equipment and details, monsters have creature-specific silhouettes, and spells and gear depict their effects or items. Battlefield sprites omit the scene background; cosmetic finishes, stats and layouts remain separate.
+
+For future sets, keep `cls` (the existing class/group code) separate from `ct` (creature type). `CLASS` names the five adventurer classes; legacy monster codes in `CL` are visual groups, not additional adventurer classes. Each creature already carries an explicit `ct`, which the battle engine preserves. The first set's broad types and current rules are unchanged; names and artwork do not assign gameplay species or abilities. Future type-driven mechanics should use explicit card metadata rather than infer type from class or art. A future creature's `ct` can differ from `CTYPE[cls]`, which is only the first set's construction default.
+
+`tests/pixel-art.test.js` checks unique deterministic foregrounds and independent class/type preservation. `tests/pixel-art-ui.js` checks distinct rendered pixels and transparent battlefield backgrounds for all cards.
+
 ## 2.2.31
 
 Breakdown confirmations identify each card's rarity alongside its name and copy ID.
