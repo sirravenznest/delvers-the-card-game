@@ -7,6 +7,10 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
@@ -38,7 +42,36 @@ public final class MainActivity extends Activity {
         webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         webView.addJavascriptInterface(new NativeBridge(), "DelversNative");
         setContentView(webView);
+        restoreGameWindow();
         webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        restoreGameWindow();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            restoreGameWindow();
+        }
+    }
+
+    private void restoreGameWindow() {
+        // Keep transient phone controls outside the game and restore immersive mode after Home.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+        WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        controller.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        if (webView != null) {
+            ViewCompat.requestApplyInsets(webView);
+            webView.requestLayout();
+        }
     }
 
     private void toJs(String token, String error) {

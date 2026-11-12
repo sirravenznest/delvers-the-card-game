@@ -3,6 +3,12 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.33
+
+Avatar portraits have more distinct silhouettes: a dragon, crowned skeletal lich, wolf-like beast, firebird, veiled moonseer, bearded stormcaller and scaled wyrmkin. The existing Wyrm and Undying options are now labelled Dragon and Lich. Avatar IDs, ownership, prices and saved selections are unchanged.
+
+Android restores immersive system bars and requests fresh WebView insets/layout on resume and window focus, including returning after pressing Home.
+
 ## 2.2.32
 
 Cards have individual pixel-art foregrounds: named characters carry distinct equipment and details, monsters have creature-specific silhouettes, and spells and gear depict their effects or items. Battlefield sprites omit the scene background; cosmetic finishes, stats and layouts remain separate.
