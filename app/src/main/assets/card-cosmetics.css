@@ -60,6 +60,9 @@ body.battle .tile.u.done[class*="cc-lettering-"] .tileName{color:#bec6d2;backgro
 .copyDeckChoices .btn small{display:block;font:10px/1.2 Arial,sans-serif}
 .copyControls fieldset{margin:6px 0;padding:6px;border:1px solid #6a6380;border-radius:6px}
 .cosmeticChoices{display:flex;flex-wrap:wrap;gap:5px}.cosmeticChoices .btn{padding:6px;flex:1 1 85px}
+.cosmeticOption{flex:1 1 85px;min-width:0}.cosmeticOption>.btn{width:100%;height:auto;min-height:44px}
+.cosmeticOption.pending{flex-basis:100%}
+.cosmeticOption .cosmeticConfirm .btn{min-height:44px}
 .cosmeticChoices small{display:block;font:11px Arial,sans-serif}
 .cosmeticChoices [aria-pressed="true"],.copyControls [data-a="copydeck"][aria-pressed="true"]{border-color:#bcecff;background:#314451}
 .cosmeticConfirm{padding:8px;margin:6px 0;background:#382c23;border:2px solid #ffe297;border-radius:6px}
