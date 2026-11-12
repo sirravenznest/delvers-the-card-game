@@ -26,6 +26,14 @@ let browser;
  await p.click('[data-a="packextrasask"]');
  const quote=await p.evaluate(()=>V.packQuote);
  assert.equal(quote.cards.length,12,'plain extras from all three packs are eligible');
+ assert.equal(await p.locator('.packExtras .cosmeticConfirm li').count(),quote.cards.length);
+ assert((await p.locator('.packExtras .cosmeticConfirm li').allTextContents()).every(text=>text.includes('Squire · Common · ')),'breakdown confirmation identifies each copy and its rarity');
+ const rarityLines=await p.evaluate(()=>{
+  const cards=RN.map((_,r)=>({name:ALL.find(c=>c.rar===r).name,id:'fixture-'+r,bonus:0}));
+  const container=document.createElement('div');container.innerHTML=breakdownConfirmHTML({cards,gold:0,dust:0},'confirm','cancel');
+  return [...container.querySelectorAll('li')].map(e=>e.textContent);
+ });
+ assert(await p.evaluate(lines=>lines.every((line,r)=>line.includes(' · '+RN[r]+' · fixture-'+r)),rarityLines),'all four rarities are named correctly');
  assert(await p.evaluate(()=>V.packQuote.cards.every(c=>V.rev.some(r=>r.copyId===c.id)&&!window.oldIds.includes(c.id)&&!CF.cosmeticCopy(CF.find(S,c.id).copy))),'neither older collection nor cosmetics enter bulk breakdown');
  await p.click('[data-a="packextrascancel"]');
  assert.deepEqual(await p.evaluate(()=>({gold:S.gold,dust:S.dust,count:S.col.Squire})),{...before,count:before.count+15});

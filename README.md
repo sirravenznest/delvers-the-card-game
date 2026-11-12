@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.31
+
+Breakdown confirmations identify each card's rarity alongside its name and copy ID.
+
 ## 2.2.30
 
 Both players' battlefield units show their pixel artwork beneath the existing stats and indicators. The board keeps its existing size, ownership markers, gear, abilities and cosmetic effects. `tests/battlefield-art-ui.js` checks visible artwork and unit details across landscape sizes.
