@@ -9,7 +9,7 @@ Audio unlock is retried on completed clicks/taps and keyboard input, including w
 
 Full cards retain their intended height inside column layouts instead of using their width as their flex height. Wrapped titles have room to grow, and taller-screen deck cards leave enough space for titles, stats and rarity labels without crossing the border. Battlefield cosmetics, abilities, gear and live stats are unchanged.
 
-`tests/music-playback-ui.js` checks real generated audio samples for all five music modes with touch activation restrictions, mute controls and suspend/recovery. `tests/card-text-ui.js` measures painted text against card borders for the entire collection, deck gallery and hand at seven landscape sizes.
+`tests/music-playback-ui.js` checks real generated audio samples for all five music modes with touch activation restrictions, mute controls and suspend/recovery. `tests/card-text-ui.js` measures painted text against card borders for the entire collection, deck gallery and hand at seven landscape sizes. Battle hand cards show pixel artwork alongside their class band, abilities and stats; `tests/hand-card-art-ui.js` checks these and cosmetic layers across landscape sizes.
 
 ## 2.2.27
 

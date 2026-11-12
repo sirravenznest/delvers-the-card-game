@@ -13,7 +13,7 @@
 .finishSurface{position:absolute;inset:5px;z-index:0;pointer-events:none;background-image:var(--cf-holo,none);background-size:100% 100%,250% 250%;animation:card-holographic 12s ease-in-out infinite;animation-delay:var(--cf-holo-delay,0ms)}
 .card>.cardHead,.card>.artFrame,.card>.identity,.card>.abilities,.card>.stats,.card>.cardFoot,.tile>.tileHeader,.tile>.stats,.tile>.ab{position:relative;z-index:1}
 .artFrame{display:block;position:relative;flex:none;line-height:0;overflow:hidden}
-body.battle .hand .card .artFrame{display:none}
+body.battle .hand .card .artFrame{display:block;grid-area:art;min-width:0;min-height:0}
 body.battle .hand .card .finishSurface,body.battle .tile.u .finishSurface{inset:5px;width:auto;opacity:.5}
 .cc-lettering-silver{--cf-lettering:#e2ebff}.cc-lettering-red{--cf-lettering:#ffadb1}.cc-lettering-blue{--cf-lettering:#a4d8ff}.cc-lettering-gold{--cf-lettering:#ffe297}
 .card[class*="cc-lettering-"] .cardName,.card.zoom[class*="cc-lettering-"] .cardName,body.battle .hand .card[class*="cc-lettering-"] .cardName,body.battle .tile.u[class*="cc-lettering-"] .tileName{color:var(--cf-lettering);background:linear-gradient(175deg,#fff 5%,var(--cf-lettering) 25%,var(--cf-lettering) 45%,#fff 49%,var(--cf-lettering) 55%,var(--cf-lettering) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(0 1px 1px #000)}
