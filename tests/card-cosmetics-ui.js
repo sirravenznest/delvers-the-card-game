@@ -26,6 +26,11 @@ let browser;
   assert.equal(await p.evaluate(()=>S.dust),dust,'preview spends no currency');
   assert(await p.locator(`.copyPreview .cc-${slot}-${treatment}`).count(),'preview has treatment');
   assert.equal(await p.evaluate(({id,slot})=>CF.find(S,id).copy.look[slot]||null,{id,slot}),null,'preview does not equip an unowned treatment');
+  assert(await p.locator('[data-a="lookbuy"]').evaluate((button,{slot,treatment})=>{
+   const option=button.closest('.cosmeticOption'),preview=option?.querySelector('[data-a="lookpreview"]');
+   const r=button.getBoundingClientRect(),panel=button.closest('.copyControls').getBoundingClientRect();
+   return preview?.dataset.slot===slot&&preview.dataset.k===treatment&&r.top>=panel.top&&r.bottom<=panel.bottom+1;
+  },{slot,treatment}),'purchase is next to the selected treatment and visible without scrolling up');
   await p.click('[data-a="lookbuy"]');
   dust-=cost;assert.equal(await p.evaluate(()=>S.dust),dust);
   assert.equal(await p.evaluate(({id,slot})=>CF.find(S,id).copy.look[slot],{id,slot}),treatment);

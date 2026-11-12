@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.35
+
+Cosmetic purchase confirmation appears directly below the selected treatment and scrolls into view. Previewing remains free and purchases still require confirmation.
+
 ## 2.2.34
 
 Seven new gold-unlocked store portraits: Anvil Thane, Mosskeeper, Tide Oracle, Foxblade, Raven Knight, Sun Lion and Crystalheart. There are now 11 store portraits and 10 free portraits. Existing selections, ownership and free avatars are unchanged.
