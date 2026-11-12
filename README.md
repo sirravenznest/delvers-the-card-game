@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.34
+
+Seven new gold-unlocked store portraits: Anvil Thane, Mosskeeper, Tide Oracle, Foxblade, Raven Knight, Sun Lion and Crystalheart. There are now 11 store portraits and 10 free portraits. Existing selections, ownership and free avatars are unchanged.
+
 ## 2.2.33
 
 Avatar portraits have more distinct silhouettes: a dragon, crowned skeletal lich, wolf-like beast, firebird, veiled moonseer, bearded stormcaller and scaled wyrmkin. The existing Wyrm and Undying options are now labelled Dragon and Lich. Avatar IDs, ownership, prices and saved selections are unchanged.
