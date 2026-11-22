@@ -15,10 +15,10 @@ let browser;
   await p.setViewportSize({width,height});
   const issues=await p.evaluate(()=>{
    const issues=[],names=['Sister Cera, Last Candle','Ashen Standard-Bearer','Emberheart Confessor','Nim, Gatemarket Guide'];
-   for(const lettering of ['silver','red','blue','gold'])for(const background of ['holographic','gold-holographic'])for(const foil of [false,true]){
+   for(const lettering of ['silver','red','blue','gold','green'])for(const background of ['holographic','gold-holographic'])for(const foil of [false,'foil','silver']){
     G.b=Array.from({length:NT},(_,i)=>{
      const u=mk(BN[names[i%names.length]]);u.o=i%2?'e':'p';u.ready=i%3!==0;u.mv=u.ready?1:0;
-     u.look={frame:lettering,lettering,background,...(foil?{foil:'foil'}:{})};
+     u.look={frame:lettering,lettering,background,...(foil?{foil}:{})};
      u.gear={P:'Dagger',A:'Shield',I:'Deep Anvil Charm'};u.sP=u.sA=u.sI=1;
      return u;
     });render();
@@ -43,7 +43,7 @@ let browser;
    return [...new Set(issues)];
   });
   assert.deepEqual(issues,[],'stable battlefield names and finish layers '+width+'x'+height);
-  for(const look of [{foil:'foil'},{background:'holographic'},{background:'gold-holographic'},{background:'holographic',foil:'foil'}]){
+  for(const look of [{foil:'foil'},{foil:'silver'},{background:'holographic'},{background:'gold-holographic'},{background:'holographic',foil:'foil'},{background:'holographic',foil:'silver'}]){
    await p.evaluate(look=>{
     G.b=Array(NT).fill(null);const u=mk(BN['Town Guard']);u.o='p';u.ready=true;u.mv=u.init;
     G.b[16]=u;G.fx=false;DelversEngine.use(G);

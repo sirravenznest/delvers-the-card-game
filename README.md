@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.36
+
+Added green lettering (25 Dust) and silver foil (300 Dust) as per-copy cosmetic treatments. Both can also appear on pack cards.
+
 ## 2.2.35
 
 Cosmetic purchase confirmation appears directly below the selected treatment and scrolls into view. Previewing remains free and purchases still require confirmation.

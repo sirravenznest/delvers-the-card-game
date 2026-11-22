@@ -54,6 +54,16 @@ for(let r=0;r<4;r++){
 const poor=fresh();poor.dust=24;const poorId=F.add(poor,'Squire')[0];
 assert.throws(()=>F.unlock(poor,poorId,'frame','blue'),/Not enough/);
 assert.equal(poor.dust,24);assert.equal(F.protectedCopy(F.find(poor,poorId).copy),false);
+{
+ const x=fresh(),id=F.add(x,'Squire')[0];
+ F.unlock(x,id,'lettering','green');F.unlock(x,id,'foil','silver');
+ assert.equal(x.dust,4675);
+ const restored=F.normalize(JSON.parse(JSON.stringify(x)));
+ assert.deepEqual(F.find(restored,id).copy.look,{lettering:'green',foil:'silver'});
+ assert(F.protectedCopy(F.find(restored,id).copy));
+ assert(F.packTreatments(0,1).some(item=>item.slot==='lettering'&&item.id==='green'));
+ assert(F.packTreatments(0,1).some(item=>item.slot==='foil'&&item.id==='silver'));
+}
 assert.deepEqual(F.cleanLook({frame:'<script>',lettering:'red',background:'holographic',foil:'invalid'}),{lettering:'red',background:'holographic'});
 assert.deepEqual(F.PACK_CHANCE,[0,.0025,.0075,.015]);
 for(let tier=1;tier<=3;tier++)for(let rarity=0;rarity<=3;rarity++){
