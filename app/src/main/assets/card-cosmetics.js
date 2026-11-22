@@ -5,9 +5,9 @@ const DUST=[5,15,50,150],SLOTS=['frame','lettering','background','foil'];
 const colors=[['silver','Silver',25],['red','Red',25],['blue','Blue',25],['gold','Gold',75]];
 const options=rows=>rows.map(([id,name,cost])=>({id,name,cost}));
 const CATALOG={
- frame:options(colors),lettering:options(colors),
+ frame:options(colors),lettering:options([...colors,['green','Green',25]]),
  background:options([['holographic','Holographic',600],['gold-holographic','Gold holographic',1200]]),
- foil:options([['foil','Foil shine',300]])
+ foil:options([['foil','Foil shine',300],['silver','Silver foil',300]])
 };
 const PACK_CHANCE=[0,.0025,.0075,.015];
 const option=(slot,id)=>CATALOG[slot]?.find(x=>x.id===id);

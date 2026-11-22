@@ -18,7 +18,7 @@ let browser;
  assert.equal(await p.locator('#copySelect').inputValue(),id);
  assert.deepEqual(await p.locator('.copyControls fieldset legend').allTextContents(),['Frame','Lettering','Finishes']);
  const finishes=p.locator('.copyControls fieldset').filter({has:p.locator('legend', {hasText:'Finishes'})});
- assert.equal(await finishes.locator('[data-a="lookpreview"]').count(),3,'all three finishes share one section');
+ assert.equal(await finishes.locator('[data-a="lookpreview"]').count(),4,'all finishes share one section');
  const treatments=[['frame','gold',75],['lettering','blue',25],['background','gold-holographic',1200],['foil','foil',300]];
  let dust=4000;
  for(const [slot,treatment,cost] of treatments){
@@ -34,6 +34,17 @@ let browser;
   await p.click('[data-a="lookbuy"]');
   dust-=cost;assert.equal(await p.evaluate(()=>S.dust),dust);
   assert.equal(await p.evaluate(({id,slot})=>CF.find(S,id).copy.look[slot],{id,slot}),treatment);
+ }
+ for(const [slot,treatment,cost,old] of [['lettering','green',25,'blue'],['foil','silver',300,'foil']]){
+  await p.click(`[data-a="lookpreview"][data-slot="${slot}"][data-k="${treatment}"]`);
+  assert.equal(await p.evaluate(()=>S.dust),dust,'new treatment preview is free');
+  assert(await p.locator(`.copyPreview .cc-${slot}-${treatment}`).count());
+  if(slot==='lettering')assert.equal(await p.locator('.copyPreview .cardName').evaluate(e=>getComputedStyle(e).getPropertyValue('--cf-lettering').trim()),'#a4e8a9','green lettering is rendered');
+  if(slot==='foil')assert.match(await p.locator('.copyPreview .card').evaluate(e=>getComputedStyle(e,'::before').backgroundImage),/156, 174, 194/,'silver foil has its own silver shimmer');
+  await p.click('[data-a="lookbuy"]');dust-=cost;
+  assert.equal(await p.evaluate(({id,slot})=>CF.find(S,id).copy.look[slot],{id,slot}),treatment);
+  assert.equal(await p.evaluate(()=>S.dust),dust);
+  await p.click(`[data-a="lookpreview"][data-slot="${slot}"][data-k="${old}"]`);
  }
  await p.click('[data-a="lookdefault"][data-slot="foil"]');
  assert.equal(await p.evaluate(()=>S.dust),dust,'switching off is free');
@@ -61,6 +72,7 @@ let browser;
  const save=await p.evaluate(()=>({...S,ts:0}));
  await p.reload();await p.locator('.titleActions .pri').click();
  assert.deepEqual(await p.evaluate(()=>({...S,ts:0})),save,'reload preserves all per-copy ownership and deck selections');
+ assert(await p.evaluate(id=>{const c=CF.find(S,id).copy;return c.unlocked.lettering.includes('green')&&c.unlocked.foil.includes('silver')},id),'new unlocks survive reload even when another treatment is selected');
  await p.evaluate(()=>{V.v='deck';render()});
  assert.equal(await p.locator(`[data-copy="${id}"].card.cc-frame-gold.cc-lettering-blue.cc-background-gold-holographic.cc-foil-foil`).count(),1,'collection/deck displays selected copy cosmetics');
  await p.locator(`[data-copy="${id}"].card`).dispatchEvent('contextmenu');
