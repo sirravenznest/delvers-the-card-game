@@ -25,11 +25,23 @@ const figures={
  'Embertrail Archer':['cap','bow','flame']
 };
 function sprite(c,transparent=false){
- const h=hash(c.name),p=palette,col=(root.DelversCards.CL[c.cls]||['',p.blue])[1];
+ const h=hash(c.name),p=palette,col=(root.DelversCards.CL[c.cls]||['',p.blue])[1],pigments=new Map(),paintDefs=[];
  const accent=[p.gold,p.blue,p.green,p.red,p.light][h%5],shade=['#73533e','#ad7754','#e3ae79','#c99570'][h%4];
  let a='';
- const r=(x,y,w,ht,k)=>{a+=rect(x,y,w,ht,k)};
- const path=(d,fill)=>{a+=`<path d="${d}" fill="${fill}"/>`};
+ const pigment=color=>{
+  if(!/^#[\da-f]{6}$/i.test(color))return color;
+  if(!pigments.has(color)){
+   const id=`pigment${pigments.size}`,rgb=parseInt(color.slice(1),16),mix=(target,amount)=>{
+    const other=parseInt(target.slice(1),16),channel=shift=>Math.round(((rgb>>shift)&255)*(1-amount)+((other>>shift)&255)*amount).toString(16).padStart(2,'0');
+    return `#${channel(16)}${channel(8)}${channel(0)}`;
+   };
+   paintDefs.push(`<linearGradient id="${id}" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="${mix('#fff0d2',.2)}"/><stop offset=".42" stop-color="${color}"/><stop offset="1" stop-color="${mix('#101522',.24)}"/></linearGradient>`);
+   pigments.set(color,`url(#${id})`);
+  }
+  return pigments.get(color);
+ };
+ const r=(x,y,w,ht,k)=>{a+=`<rect x="${x}" y="${y}" width="${w}" height="${ht}" fill="${pigment(k)}"/>`};
+ const path=(d,fill)=>{a+=`<path d="${d}" fill="${pigment(fill)}"/>`};
  const cross=(x,y,k)=>{r(x+3,y,3,11,k);r(x,y+3,9,3,k)};
  const bolt=(x,y,k)=>path(`M${x+6} ${y}h7l-6 10h6l-15 17 5-13h-6Z`,k);
  if(!transparent){
@@ -208,9 +220,10 @@ function sprite(c,transparent=false){
  else if(c.t==='i')gear();
  else if(figures[c.name]||c.ct==='Humanoid')person();
  else monster();
- return a;
+ const filterId=`pigmentTexture${h}`;
+ return `<defs>${paintDefs.join('')}<filter id="${filterId}" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="${h%997}" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale=".28" xChannelSelector="R" yChannelSelector="G" result="painted"/><feComposite in="grain" in2="painted" operator="in" result="grainInPaint"/><feComponentTransfer in="grainInPaint" result="softGrain"><feFuncA type="table" tableValues="0 .13"/></feComponentTransfer><feBlend in="painted" in2="softGrain" mode="soft-light"/></filter></defs><g filter="url(#${filterId})">${a}</g>`;
 }
-function art(c,cls='art'){const unit=cls==='unitSprite';return `<svg class="${cls}" viewBox="${unit?'8 0 48 38':'0 0 64 40'}" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} pixel artwork">${sprite(c,unit)}</svg>`}
+function art(c,cls='art'){const unit=cls==='unitSprite';return `<svg class="${cls}" viewBox="${unit?'8 0 48 38':'0 0 64 40'}" shape-rendering="geometricPrecision" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.name.replace(/["&<>]/g,'')} fantasy illustration">${sprite(c,unit)}</svg>`}
 function scene(seed,colors){
  const h=hash(String(seed)),p=palette,a=colors||[p.ink,p.dark,p.stone];let s=rect(0,0,128,64,a[0])+rect(0,28,128,36,a[1]);
  for(let i=0;i<20;i++)s+=rect((h+i*23)%128,(h+i*7)%26,1,1,p.light);

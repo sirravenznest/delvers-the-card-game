@@ -3,6 +3,10 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
+## 2.2.37
+
+Card illustrations have warm directional pigment shading and subtle painted texture, drawing on the heroic, story-driven fantasy of the 1980s and early 1990s. Individual subjects, transparent battlefield sprites, card readability and mechanics are preserved.
+
 ## 2.2.36
 
 Added green lettering (25 Dust) and silver foil (300 Dust) as per-copy cosmetic treatments. Both can also appear on pack cards.
@@ -238,7 +242,7 @@ Improved gold readout contrast: dark bordered pill and a cool-toned moon in the 
 
 ## 2.2.4
 
-Landscape-only play, a destination hub and chapter-book Story, a shared six-stat card template, and original cohesive pixel-art sprites/scenes. Hold a card or battlefield creature to zoom and read its rules; mouse hover and right-click also work. Eight interactive lessons lead into a practice fight, and single-player defeats offer Retry at the same difficulty.
+Landscape-only play, a destination hub and chapter-book Story, a shared six-stat card template, original illustrated card sprites and pixel-art scenes. Hold a card or battlefield creature to zoom and read its rules; mouse hover and right-click also work. Eight interactive lessons lead into a practice fight, and single-player defeats offer Retry at the same difficulty.
 
 All 60 Story encounters now connect through discoveries, original text dialogue and victory transitions. Next encounter continues directly to the following briefing; Continue story resumes the next uncleared encounter. Dialogue is text only. Battle emotes include free text phrases and original graphic pixel emotes unlocked for gold in the Store, usable in solo and online matches. Opponent emotes can be muted; fixed-choice messages are limited to one every three seconds.
 
