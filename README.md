@@ -3,7 +3,7 @@
 Delvers: The Card Game is an Android WebView app with its game assets in `app/src/main/assets/`.
 Progress is saved in the WebView's `localStorage` (key `delvers2`, with older saves migrated).
 
-## Unreleased
+## 2.2.38
 
 Removed the shared paint filter. The first subject-specific redraws give dragons, beasts, undead, weapons, armor, healing spells, and potions more recognizable forms. Other cards still need individual art work.
 
