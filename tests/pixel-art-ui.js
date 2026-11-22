@@ -9,6 +9,7 @@ let browser;
   const issues=[],seen=new Map();
   for(const c of ALL){
    const svg=DelversArt.art(c,'unitSprite').replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ');
+   if(!svg.includes('linearGradient')||!svg.includes('feTurbulence')||!svg.includes('soft-light'))issues.push(c.name+' missing painterly pigment treatment');
    const image=new Image();image.src='data:image/svg+xml,'+encodeURIComponent(svg);await image.decode();
    const canvas=document.createElement('canvas');canvas.width=96;canvas.height=76;
    const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,96,76);
